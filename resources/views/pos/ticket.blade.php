@@ -87,28 +87,37 @@
     {{-- PRODUCTOS --}}
     <table>
         <thead>
-            <tr style="border-bottom: 1px solid #000;">
-                <th class="text-left" style="width: 15%;">Cant</th>
-                <th class="text-left" style="width: 55%;">Descripción</th>
-                <th class="text-right" style="width: 30%;">Importe</th>
+            <tr style="border-bottom: 1px solid #000; margin-bottom: 5px;">
+                <th class="text-left" style="width: 15%; padding-bottom: 5px;">Cant</th>
+                <th class="text-left" style="width: 60%; padding-bottom: 5px;">Descripción</th>
+                <th class="text-right" style="width: 25%; padding-bottom: 5px;">Importe</th>
             </tr>
         </thead>
         <tbody>
             @foreach($order->items as $item)
                 <tr>
-                    <td class="text-center">{{ $item->quantity }}</td>
-                    <td>
-                        <span class="item-name">{{ $item->product->name ?? 'Producto Eliminado' }}</span>
-                        {{-- Extras del producto --}}
-                        @if(!empty($item->extras))
-                            <div class="extras">
-                                @foreach($item->extras as $extra)
-                                    + {{ $extra['name'] }}<br>
-                                @endforeach
-                            </div>
-                        @endif
+                    <td class="text-center" style="padding-top: 5px;">
+                        <span class="bold">{{ $item->quantity }}</span>
                     </td>
-                    <td class="text-right">${{ number_format($item->subtotal, 2) }}</td>
+                    <td style="padding-top: 5px;">
+                        <span class="item-name bold">{{ $item->product->name ?? 'Producto Eliminado' }}</span>
+                        
+                        <div class="extras" style="margin-top: 3px; color: #333;">
+                            {{-- Muestra el precio base unitario --}}
+                            Precio Base: ${{ number_format($item->unit_price, 2) }}<br>
+                            
+                            {{-- Lista los extras con su precio si es que tiene --}}
+                            @if(!empty($item->extras))
+                                @foreach($item->extras as $extra)
+                                    + {{ $extra['name'] }} (${{ number_format($extra['price'], 2) }})<br>
+                                @endforeach
+                            @endif
+                        </div>
+                    </td>
+                    {{-- Total de la línea (Base + Extras) * Cantidad --}}
+                    <td class="text-right bold" style="vertical-align: bottom; padding-top: 5px;">
+                        ${{ number_format($item->subtotal, 2) }}
+                    </td>
                 </tr>
             @endforeach
         </tbody>
