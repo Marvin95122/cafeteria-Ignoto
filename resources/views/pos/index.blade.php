@@ -10,8 +10,8 @@
         
         <div class="flex items-center justify-between mb-4 bg-white p-4 rounded-xl shadow-sm border border-stone-100">
             <div>
-                <h1 class="font-serif text-2xl font-bold text-amber-900">Caja Registradora</h1>
-                <p class="text-xs text-stone-500">Selecciona los productos para cobrar.</p>
+                <h1 class="font-serif text-3xl font-bold text-amber-900">Caja Registradora</h1>
+                <p class="text-stone-500 mt-1">Selecciona los productos para cobrar.</p>
             </div>
             <div class="relative w-64">
                 <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-stone-400">

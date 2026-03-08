@@ -72,6 +72,11 @@
                    {{ request()->routeIs('products.*') ? 'bg-amber-800 text-white shadow-md' : 'text-amber-200 hover:bg-amber-800 hover:text-white' }}">
                     <span class="text-xl">☕</span> <span class="font-medium">Productos</span>
                 </a>
+                <a href="{{ route('pos.index') }}"
+                   class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors duration-200
+                   {{ request()->routeIs('pos.*') ? 'bg-amber-800 text-white shadow-md' : 'text-amber-200 hover:bg-amber-800 hover:text-white' }}">
+                    <span class="text-xl">📠</span> <span class="font-medium">Ventas(Pos)</span>
+                </a>
             </nav>
 
             <div class="p-4 border-t border-amber-800 text-xs text-amber-400 text-center">
@@ -89,6 +94,7 @@
                         @elseif(request()->routeIs('employees.*')) Equipo de Trabajo Ignoto
                         @elseif(request()->routeIs('categories.*')) Gestión de Categorias de Productos
                         @elseif(request()->routeIs('ingredients.*')) Gestión de Materia Prima
+                        @elseif(request()->routeIs('pos.*')) No se que poner aqui arriba xd Carlos tengo hambre
                         @else Bienvenido
                         @endif
                     </h2>
