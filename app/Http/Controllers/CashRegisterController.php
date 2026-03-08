@@ -11,35 +11,30 @@ use Carbon\Carbon;
 
 class CashRegisterController extends Controller
 {
-    // Mostrar la pantalla principal de la Caja
     public function index()
     {
-        //Buscamos si hay una caja abierta actualmente
         $activeRegister = CashRegister::where('status', 'abierta')->latest()->first();
 
         $stats = [];
         $expenses = collect();
+        $orders = collect();
 
-        //si hay una caja abierta, calculamos todo lo que ha pasado en ese turno
         if ($activeRegister) {
-            
-            // Traemos todos los gastos de este turno
             $expenses = Expense::where('cash_register_id', $activeRegister->id)->latest()->get();
             $totalExpenses = $expenses->sum('amount');
 
-            // Traemos todas las ventas desde que se abrió la caja hasta ahorita
-            $orders = Order::where('created_at', '>=', $activeRegister->opened_at)->get();
+            //Traemos las ventas de hoy, incluyendo el nombre del cajero y los productos que se llevó el cliente
+            $orders = Order::with(['user', 'items.product'])
+                           ->where('created_at', '>=', $activeRegister->opened_at)
+                           ->latest()
+                           ->get();
 
-            // Sumamos las ventas por método de pago
             $salesCash = $orders->where('payment_method', 'efectivo')->sum('total');
             $salesCard = $orders->where('payment_method', 'tarjeta')->sum('total');
             $totalSales = $salesCash + $salesCard;
 
-            //¿Cuánto dinero físico debe haber en el cajón?
-            // (Fondo Inicial) + (Ventas en Efectivo) - (Gastos que salieron de la caja)
             $expectedCash = $activeRegister->opening_amount + $salesCash - $totalExpenses;
 
-            // Guardamos todo en un arreglo para mandarlo a la vista
             $stats = [
                 'total_sales' => $totalSales,
                 'sales_cash' => $salesCash,
@@ -50,35 +45,27 @@ class CashRegisterController extends Controller
             ];
         }
 
-        // Traemos el historial de cajas pasadas (para que el gerente vea días anteriores)
-        $history = CashRegister::where('status', 'cerrada')->latest()->take(10)->get();
+        //Traemos las últimas 10 cajas cerradas y quién las cerró
+        $history = CashRegister::with('user')->where('status', 'cerrada')->latest()->take(10)->get();
 
-        return view('cash_registers.index', compact('activeRegister', 'stats', 'expenses', 'history'));
+        return view('cash_registers.index', compact('activeRegister', 'stats', 'expenses', 'history', 'orders'));
     }
 
-    // Abrir una nueva caja
     public function open(Request $request)
     {
-        $request->validate([
-            'opening_amount' => 'required|numeric|min:0'
-        ]);
-
-        // Verificamos que no haya ya una caja abierta
+        $request->validate(['opening_amount' => 'required|numeric|min:0']);
         if (CashRegister::where('status', 'abierta')->exists()) {
-            return back()->with('error', 'Ya existe una caja abierta. Ciérrala primero.');
+            return back()->with('error', 'Ya existe una caja abierta.');
         }
-
         CashRegister::create([
             'user_id' => Auth::id(),
             'opening_amount' => $request->opening_amount,
             'status' => 'abierta',
             'opened_at' => Carbon::now(),
         ]);
-
-        return back()->with('success', 'Caja abierta correctamente. ¡Buen turno!');
+        return back()->with('success', 'Caja abierta correctamente.');
     }
 
-    // Registrar un gasto (Ej: Comprar agua)
     public function storeExpense(Request $request)
     {
         $request->validate([
@@ -86,12 +73,8 @@ class CashRegisterController extends Controller
             'amount' => 'required|numeric|min:1',
             'category' => 'required|string'
         ]);
-
         $activeRegister = CashRegister::where('status', 'abierta')->first();
-
-        if (!$activeRegister) {
-            return back()->with('error', 'No puedes registrar gastos si la caja está cerrada.');
-        }
+        if (!$activeRegister) return back()->with('error', 'Caja cerrada.');
 
         Expense::create([
             'user_id' => Auth::id(),
@@ -100,24 +83,18 @@ class CashRegisterController extends Controller
             'amount' => $request->amount,
             'category' => $request->category,
         ]);
-
-        return back()->with('success', 'Gasto registrado. Se ha restado del total esperado en caja.');
+        return back()->with('success', 'Gasto registrado.');
     }
 
-    // Cerrar la caja (Corte Final)
     public function close(Request $request)
     {
         $request->validate([
-            'actual_amount' => 'required|numeric|min:0', // Lo que el gerente contó físicamente
-            'expected_amount' => 'required|numeric',     // Lo que el sistema dice que debería haber
+            'actual_amount' => 'required|numeric|min:0',
+            'expected_amount' => 'required|numeric',
             'notes' => 'nullable|string'
         ]);
-
         $activeRegister = CashRegister::where('status', 'abierta')->first();
-
-        if (!$activeRegister) {
-            return back()->with('error', 'No hay ninguna caja abierta.');
-        }
+        if (!$activeRegister) return back()->with('error', 'No hay caja abierta.');
 
         $activeRegister->update([
             'expected_amount' => $request->expected_amount,
@@ -126,7 +103,6 @@ class CashRegisterController extends Controller
             'status' => 'cerrada',
             'closed_at' => Carbon::now(),
         ]);
-
         return back()->with('success', '¡Corte de caja realizado con éxito!');
     }
 }

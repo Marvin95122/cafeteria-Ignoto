@@ -3,16 +3,15 @@
 @section('content')
 <div class="max-w-7xl mx-auto">
 
-    {{-- CABECERA --}}
     <div class="flex justify-between items-center mb-6">
         <div>
             <h1 class="font-serif text-3xl font-bold text-amber-900">Control de Caja</h1>
-            <p class="text-stone-500">Administra el flujo de efectivo y registra gastos operativos.</p>
+            <p class="text-stone-500">Administra el flujo de efectivo y auditoría de ventas.</p>
         </div>
         @if($activeRegister)
             <div class="bg-green-100 text-green-800 px-4 py-2 rounded-lg font-bold flex items-center gap-2 border border-green-200">
                 <span class="w-3 h-3 rounded-full bg-green-500 animate-pulse"></span>
-                Caja Abierta
+                Caja Abierta (Cajero: {{ $activeRegister->user->name }})
             </div>
         @else
             <div class="bg-red-100 text-red-800 px-4 py-2 rounded-lg font-bold flex items-center gap-2 border border-red-200">
@@ -22,14 +21,14 @@
         @endif
     </div>
 
-    {{-- SI LA CAJA ESTÁ CERRADA: PANTALLA DE APERTURA --}}
+    {{-- SI LA CAJA ESTÁ CERRADA --}}
     @if(!$activeRegister)
-        <div class="bg-white p-8 rounded-2xl shadow-sm border border-stone-200 max-w-md mx-auto text-center mt-10">
+        <div class="bg-white p-8 rounded-2xl shadow-sm border border-stone-200 max-w-md mx-auto text-center mt-10 mb-10">
             <div class="w-20 h-20 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <span class="text-4xl">💰</span>
             </div>
             <h2 class="text-2xl font-bold text-stone-800 mb-2">Abrir Turno</h2>
-            <p class="text-stone-500 mb-6 text-sm">Ingresa el fondo de caja (morralla) con el que vas a empezar el día para dar cambio.</p>
+            <p class="text-stone-500 mb-6 text-sm">Ingresa el fondo de caja (morralla) con el que vas a empezar el día.</p>
             
             <form action="{{ route('cash_registers.open') }}" method="POST">
                 @csrf
@@ -44,7 +43,7 @@
             </form>
         </div>
     
-    {{-- SI LA CAJA ESTÁ ABIERTA: DASHBOARD DE CAJA --}}
+    {{-- SI LA CAJA ESTÁ ABIERTA --}}
     @else
         
         {{-- Tarjetas de Resumen --}}
@@ -58,7 +57,7 @@
             <div class="bg-white p-5 rounded-2xl shadow-sm border border-stone-200 border-l-4 border-l-green-500">
                 <p class="text-stone-500 text-sm font-bold">Ventas (Solo Efectivo)</p>
                 <h3 class="text-2xl font-black text-green-700">+ ${{ number_format($stats['sales_cash'], 2) }}</h3>
-                <p class="text-xs text-stone-400 mt-1">Ventas con Tarjeta: ${{ number_format($stats['sales_card'], 2) }}</p>
+                <p class="text-xs text-stone-400 mt-1">Tarjetas (No en caja): ${{ number_format($stats['sales_card'], 2) }}</p>
             </div>
 
             <div class="bg-white p-5 rounded-2xl shadow-sm border border-stone-200 border-l-4 border-l-red-500">
@@ -87,38 +86,84 @@
             </button>
         </div>
 
-        {{-- Tabla de Gastos del Turno --}}
-        <div class="bg-white rounded-2xl shadow-sm border border-stone-200 overflow-hidden mb-8">
-            <div class="bg-stone-50 px-6 py-4 border-b border-stone-200">
-                <h3 class="font-bold text-stone-800">Gastos Registrados en este Turno</h3>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+            {{-- SECCIÓN: GASTOS DEL TURNO --}}
+            <div class="bg-white rounded-2xl shadow-sm border border-stone-200 overflow-hidden">
+                <div class="bg-stone-50 px-6 py-4 border-b border-stone-200">
+                    <h3 class="font-bold text-stone-800">Gastos Registrados</h3>
+                </div>
+                <div class="overflow-y-auto max-h-96">
+                    <table class="w-full text-left text-sm text-stone-600">
+                        <thead class="bg-stone-50 text-stone-500 uppercase text-xs sticky top-0">
+                            <tr>
+                                <th class="px-4 py-3">Hora</th>
+                                <th class="px-4 py-3">Descripción</th>
+                                <th class="px-4 py-3 text-right">Monto</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-stone-200">
+                            @forelse($expenses as $expense)
+                                <tr class="hover:bg-stone-50">
+                                    <td class="px-4 py-3">{{ $expense->created_at->format('h:i A') }}</td>
+                                    <td class="px-4 py-3 font-medium text-stone-800">{{ $expense->description }}</td>
+                                    <td class="px-4 py-3 text-right text-red-600 font-bold">-${{ number_format($expense->amount, 2) }}</td>
+                                </tr>
+                            @empty
+                                <tr><td colspan="3" class="px-4 py-8 text-center text-stone-400 italic">No hay gastos.</td></tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
             </div>
-            <table class="w-full text-left text-sm text-stone-600">
-                <thead class="bg-stone-50 text-stone-500 uppercase text-xs">
-                    <tr>
-                        <th class="px-6 py-3">Hora</th>
-                        <th class="px-6 py-3">Descripción</th>
-                        <th class="px-6 py-3">Categoría</th>
-                        <th class="px-6 py-3 text-right">Monto</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-stone-200">
-                    @forelse($expenses as $expense)
-                        <tr class="hover:bg-stone-50">
-                            <td class="px-6 py-3">{{ $expense->created_at->format('h:i A') }}</td>
-                            <td class="px-6 py-3 font-medium text-stone-800">{{ $expense->description }}</td>
-                            <td class="px-6 py-3"><span class="bg-stone-100 px-2 py-1 rounded text-xs">{{ $expense->category }}</span></td>
-                            <td class="px-6 py-3 text-right text-red-600 font-bold">-${{ number_format($expense->amount, 2) }}</td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="4" class="px-6 py-8 text-center text-stone-400 italic">No hay gastos registrados en este turno.</td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
+
+            {{-- SECCIÓN: VENTAS DEL TURNO--}}
+            <div class="bg-white rounded-2xl shadow-sm border border-stone-200 overflow-hidden">
+                <div class="bg-stone-50 px-6 py-4 border-b border-stone-200">
+                    <h3 class="font-bold text-stone-800">Ventas Registradas</h3>
+                </div>
+                <div class="overflow-y-auto max-h-96">
+                    <table class="w-full text-left text-sm text-stone-600">
+                        <thead class="bg-stone-50 text-stone-500 uppercase text-xs sticky top-0">
+                            <tr>
+                                <th class="px-4 py-3">Hora/Cajero</th>
+                                <th class="px-4 py-3">Productos Vendidos</th>
+                                <th class="px-4 py-3 text-right">Pago</th>
+                                <th class="px-4 py-3 text-right">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-stone-200">
+                            @forelse($orders as $order)
+                                <tr class="hover:bg-stone-50">
+                                    <td class="px-4 py-3">
+                                        <span class="block font-bold text-stone-800">#{{ $order->id }} - {{ $order->created_at->format('h:i A') }}</span>
+                                        <span class="block text-xs text-stone-400">👤 {{ $order->user->name ?? 'N/A' }}</span>
+                                    </td>
+                                    <td class="px-4 py-3">
+                                        <ul class="list-disc list-inside text-xs space-y-1">
+                                            @foreach($order->items as $item)
+                                                <li>{{ $item->quantity }}x {{ $item->product->name ?? 'Producto borrado' }}</li>
+                                            @endforeach
+                                        </ul>
+                                    </td>
+                                    <td class="px-4 py-3 text-right">
+                                        @if($order->payment_method == 'efectivo')
+                                            <span class="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-bold">💵 Efectivo</span>
+                                        @else
+                                            <span class="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs font-bold">💳 Tarjeta</span>
+                                        @endif
+                                    </td>
+                                    <td class="px-4 py-3 text-right font-bold text-stone-800">${{ number_format($order->total, 2) }}</td>
+                                </tr>
+                            @empty
+                                <tr><td colspan="4" class="px-4 py-8 text-center text-stone-400 italic">No hay ventas en este turno.</td></tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
 
-        {{-- MODAL REGISTRAR GASTO --}}
+        {{-- MODALES DE GASTO Y CIERRE --}}
         <div id="modal-expense" class="fixed inset-0 bg-stone-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
             <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
                 <div class="p-5 border-b border-stone-100 flex justify-between items-center bg-stone-50">
@@ -128,7 +173,7 @@
                 <form action="{{ route('cash_registers.expense') }}" method="POST" class="p-5">
                     @csrf
                     <div class="mb-4">
-                        <label class="block text-sm font-bold text-stone-700 mb-1">Descripción (Ej: Compra de hielo)</label>
+                        <label class="block text-sm font-bold text-stone-700 mb-1">Descripción</label>
                         <input type="text" name="description" required class="w-full border-stone-300 rounded-lg focus:ring-amber-500">
                     </div>
                     <div class="mb-4">
@@ -139,8 +184,7 @@
                         <label class="block text-sm font-bold text-stone-700 mb-1">Categoría</label>
                         <select name="category" class="w-full border-stone-300 rounded-lg focus:ring-amber-500">
                             <option value="Insumos">Insumos urgentes</option>
-                            <option value="Servicios">Pago de Servicios (Agua, Gas)</option>
-                            <option value="Limpieza">Artículos de Limpieza</option>
+                            <option value="Servicios">Pago de Servicios</option>
                             <option value="Otros">Otros</option>
                         </select>
                     </div>
@@ -149,7 +193,6 @@
             </div>
         </div>
 
-        {{-- MODAL CERRAR CAJA --}}
         <div id="modal-close" class="fixed inset-0 bg-stone-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
             <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
                 <div class="p-5 border-b border-stone-100 flex justify-between items-center bg-amber-50">
@@ -159,31 +202,78 @@
                 <form action="{{ route('cash_registers.close') }}" method="POST" class="p-5">
                     @csrf
                     <input type="hidden" name="expected_amount" value="{{ $stats['expected_cash'] }}">
-                    
                     <div class="bg-stone-100 p-4 rounded-lg text-center mb-6">
                         <p class="text-sm text-stone-500 mb-1">El sistema indica que debe haber:</p>
                         <p class="text-3xl font-black text-stone-800">${{ number_format($stats['expected_cash'], 2) }}</p>
                     </div>
-
                     <div class="mb-4">
                         <label class="block text-sm font-bold text-stone-700 mb-1">¿Cuánto dinero contaste FÍSICAMENTE en el cajón?</label>
                         <div class="relative">
                             <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-stone-500 font-bold">$</span>
-                            <input type="number" name="actual_amount" step="0.01" min="0" required 
-                                   class="w-full pl-8 border-stone-300 rounded-lg focus:ring-amber-500 text-xl font-bold">
+                            <input type="number" name="actual_amount" step="0.01" min="0" required class="w-full pl-8 border-stone-300 rounded-lg focus:ring-amber-500 text-xl font-bold">
                         </div>
                     </div>
-                    
                     <div class="mb-6">
                         <label class="block text-sm text-stone-700 mb-1">Notas (Opcional - ¿Sobra o falta dinero?)</label>
                         <textarea name="notes" rows="2" class="w-full border-stone-300 rounded-lg focus:ring-amber-500"></textarea>
                     </div>
-                    <button type="submit" onclick="return confirm('¿Estás seguro de cerrar la caja? Esta acción no se puede deshacer.')" class="w-full bg-amber-800 hover:bg-amber-900 text-white font-bold py-3 rounded-xl">Confirmar y Cerrar Caja</button>
+                    <button type="submit" onclick="return confirm('¿Seguro de cerrar la caja?')" class="w-full bg-amber-800 hover:bg-amber-900 text-white font-bold py-3 rounded-xl">Confirmar y Cerrar Caja</button>
                 </form>
             </div>
         </div>
-
     @endif
+
+    {{-- HISTORIAL DE CORTES PASADOS (Siempre visible para el Gerente) --}}
+    <div class="bg-white rounded-2xl shadow-sm border border-stone-200 overflow-hidden mt-8">
+        <div class="bg-stone-800 px-6 py-4 flex justify-between items-center">
+            <h3 class="font-bold text-white text-lg flex items-center gap-2"><span>📂</span> Historial de Cortes de Caja (Últimos 10)</h3>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm text-stone-600">
+                <thead class="bg-stone-100 text-stone-600 uppercase text-xs">
+                    <tr>
+                        <th class="px-6 py-4">Fecha / Responsable</th>
+                        <th class="px-6 py-4">Fondo Inicial</th>
+                        <th class="px-6 py-4">Esperado (Sistema)</th>
+                        <th class="px-6 py-4">Físico (Cajón)</th>
+                        <th class="px-6 py-4">Diferencia</th>
+                        <th class="px-6 py-4">Notas</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-stone-200">
+                    @forelse($history as $reg)
+                        @php
+                            $diferencia = $reg->actual_amount - $reg->expected_amount;
+                        @endphp
+                        <tr class="hover:bg-stone-50">
+                            <td class="px-6 py-4">
+                                <span class="block font-bold text-stone-800">{{ $reg->opened_at->format('d M, Y') }}</span>
+                                <span class="block text-xs text-stone-500">👤 {{ $reg->user->name ?? 'Admin' }}</span>
+                                <span class="block text-xs text-stone-400">{{ $reg->opened_at->format('h:i A') }} - {{ $reg->closed_at->format('h:i A') }}</span>
+                            </td>
+                            <td class="px-6 py-4 text-stone-500">${{ number_format($reg->opening_amount, 2) }}</td>
+                            <td class="px-6 py-4 font-bold text-stone-800">${{ number_format($reg->expected_amount, 2) }}</td>
+                            <td class="px-6 py-4 font-bold text-blue-700">${{ number_format($reg->actual_amount, 2) }}</td>
+                            <td class="px-6 py-4">
+                                @if($diferencia == 0)
+                                    <span class="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-bold">Cuadró Exacto</span>
+                                @elseif($diferencia > 0)
+                                    <span class="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs font-bold">Sobró +${{ number_format($diferencia, 2) }}</span>
+                                @else
+                                    <span class="bg-red-100 text-red-700 px-2 py-1 rounded text-xs font-bold">Faltó -${{ number_format(abs($diferencia), 2) }}</span>
+                                @endif
+                            </td>
+                            <td class="px-6 py-4 text-xs italic text-stone-500 max-w-xs truncate">{{ $reg->notes ?? 'Sin novedades' }}</td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="6" class="px-6 py-8 text-center text-stone-400 italic">No hay historial de cajas cerradas todavía.</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+    </div>
 
 </div>
 @endsection

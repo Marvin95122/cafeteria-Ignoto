@@ -81,7 +81,6 @@ class ProductController extends Controller
                         'active' => true
                     ]);
 
-                    // NUEVO: Asociar al Ingrediente (Si se seleccionó uno)
                     if (!empty($extraData['ingredient_id']) && !empty($extraData['ingredient_qty'])) {
                         $extra->ingredients()->attach($extraData['ingredient_id'], [
                             'quantity' => $extraData['ingredient_qty']
