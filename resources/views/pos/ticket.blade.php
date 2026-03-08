@@ -65,7 +65,7 @@
 
     <div class="text-center">
         <h2 style="margin: 0; font-size: 16px;">CAFETERÍA IGNOTO</h2>
-        <p style="margin: 2px 0;">Calle Principal #123</p>
+        <p style="margin: 2px 0;">Calle Ignoto aun por saber #9512</p>
         <p style="margin: 2px 0;">Tel: 951-270-7097</p>
     </div>
 
