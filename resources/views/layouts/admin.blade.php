@@ -33,54 +33,71 @@
             
             <div class="p-6 flex items-center gap-3 border-b border-amber-800">
                 <div class="bg-white p-1 rounded-full h-10 w-10 flex items-center justify-center">
-                    <img src="{{ asset('images/logo-cafeteria.png') }}" class="h-8 w-8 object-contain" alt="Logo">
+                    <img src="{{ asset('img/logo-cafeteria.png') }}" class="h-8 w-8 object-contain" alt="Logo" onerror="this.src='{{ asset('images/logo-cafeteria.png') }}'">
                 </div>
                 <span class="font-serif font-bold text-xl tracking-wide text-white">Ignoto Café</span>
             </div>
 
             <nav class="flex-1 p-4 space-y-2 mt-2">
 
-                <a href="{{ route('dashboard') }}"
-                   class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors duration-200
-                   {{ request()->routeIs('dashboard') ? 'bg-amber-800 text-white shadow-md' : 'text-amber-200 hover:bg-amber-800 hover:text-white' }}">
-                    <span class="text-xl">📊</span>
-                    <span class="font-medium">Dashboard</span>
-                </a>
+                {{-- Solo Admin y Gerente --}}
+                @if(in_array(Auth::user()->role, ['admin', 'gerente']))
+                    <a href="{{ route('dashboard') }}"
+                       class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors duration-200
+                       {{ request()->routeIs('dashboard') ? 'bg-amber-800 text-white shadow-md' : 'text-amber-200 hover:bg-amber-800 hover:text-white' }}">
+                        <span class="text-xl">📊</span>
+                        <span class="font-medium">Dashboard</span>
+                    </a>
+                @endif
 
-                <a href="{{ route('employees.index') }}"
-                   class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors duration-200
-                   {{ request()->routeIs('employees.*') ? 'bg-amber-800 text-white shadow-md' : 'text-amber-200 hover:bg-amber-800 hover:text-white' }}">
-                    <span class="text-xl">👥</span>
-                    <span class="font-medium">Empleados</span>
-                </a>
+                {{-- Solo Admin --}}
+                @if(Auth::user()->role === 'admin')
+                    <a href="{{ route('employees.index') }}"
+                       class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors duration-200
+                       {{ request()->routeIs('employees.*') ? 'bg-amber-800 text-white shadow-md' : 'text-amber-200 hover:bg-amber-800 hover:text-white' }}">
+                        <span class="text-xl">👥</span>
+                        <span class="font-medium">Empleados</span>
+                    </a>
+                @endif
 
-                <a href="{{ route('categories.index') }}"
-                   class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors duration-200
-                   {{ request()->routeIs('categories.*') ? 'bg-amber-800 text-white shadow-md' : 'text-amber-200 hover:bg-amber-800 hover:text-white' }}">
-                    <span class="text-xl">🗂️</span>
-                    <span class="font-medium">Categorías</span>
-                </a>
+                {{-- Solo Admin y Gerente --}}
+                @if(in_array(Auth::user()->role, ['admin', 'gerente']))
+                    <a href="{{ route('categories.index') }}"
+                       class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors duration-200
+                       {{ request()->routeIs('categories.*') ? 'bg-amber-800 text-white shadow-md' : 'text-amber-200 hover:bg-amber-800 hover:text-white' }}">
+                        <span class="text-xl">🗂️</span>
+                        <span class="font-medium">Categorías</span>
+                    </a>
 
-                <a href="{{ route('ingredients.index') }}"
-                   class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors duration-200
-                   {{ request()->routeIs('ingredients.*') ? 'bg-amber-800 text-white shadow-md' : 'text-amber-200 hover:bg-amber-800 hover:text-white' }}">
-                    <span class="text-xl">📦</span> <span class="font-medium">Materia Prima</span>
-                </a>
-                
-                <a href="{{ route('products.index') }}"
-                   class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors duration-200
-                   {{ request()->routeIs('products.*') ? 'bg-amber-800 text-white shadow-md' : 'text-amber-200 hover:bg-amber-800 hover:text-white' }}">
-                    <span class="text-xl">☕</span> <span class="font-medium">Productos</span>
-                </a>
+                    <a href="{{ route('ingredients.index') }}"
+                       class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors duration-200
+                       {{ request()->routeIs('ingredients.*') ? 'bg-amber-800 text-white shadow-md' : 'text-amber-200 hover:bg-amber-800 hover:text-white' }}">
+                        <span class="text-xl">📦</span> <span class="font-medium">Materia Prima</span>
+                    </a>
+                    
+                    <a href="{{ route('products.index') }}"
+                       class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors duration-200
+                       {{ request()->routeIs('products.*') ? 'bg-amber-800 text-white shadow-md' : 'text-amber-200 hover:bg-amber-800 hover:text-white' }}">
+                        <span class="text-xl">☕</span> <span class="font-medium">Productos</span>
+                    </a>
+
+                    <a href="{{ route('cash_registers.index') }}"
+                       class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors duration-200
+                       {{ request()->routeIs('cash_registers.*') ? 'bg-amber-800 text-white shadow-md' : 'text-amber-200 hover:bg-amber-800 hover:text-white' }}">
+                        <span class="text-xl">💰</span> <span class="font-medium">Corte de Caja</span>
+                    </a>
+                @endif
+
+                {{-- Accesible para TODO EL MUNDO (Admin, Gerente, Empleado) --}}
                 <a href="{{ route('pos.index') }}"
                    class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors duration-200
                    {{ request()->routeIs('pos.*') ? 'bg-amber-800 text-white shadow-md' : 'text-amber-200 hover:bg-amber-800 hover:text-white' }}">
-                    <span class="text-xl">📠</span> <span class="font-medium">Ventas(Pos)</span>
+                    <span class="text-xl">📠</span> <span class="font-medium">Ventas (POS)</span>
                 </a>
             </nav>
 
             <div class="p-4 border-t border-amber-800 text-xs text-amber-400 text-center">
-                &copy; 2026 Sistema Ignoto Made 9512
+                &copy; {{ date('Y') }} Sistema Ignoto
             </div>
         </aside>
 
@@ -92,9 +109,9 @@
                         @if(request()->routeIs('dashboard')) Panel Principal
                         @elseif(request()->routeIs('products.*')) Gestión de Menú de Productos
                         @elseif(request()->routeIs('employees.*')) Equipo de Trabajo Ignoto
-                        @elseif(request()->routeIs('categories.*')) Gestión de Categorias de Productos
+                        @elseif(request()->routeIs('categories.*')) Gestión de Categorías
                         @elseif(request()->routeIs('ingredients.*')) Gestión de Materia Prima
-                        @elseif(request()->routeIs('pos.*')) No se que poner aqui arriba xd Carlos tengo hambre
+                        @elseif(request()->routeIs('pos.*')) Punto de Venta
                         @else Bienvenido
                         @endif
                     </h2>
@@ -103,8 +120,9 @@
                 <div class="relative group">
                     <button class="flex items-center gap-3 focus:outline-none transition">
                         <div class="text-right hidden sm:block">
+                            {{-- Muestra el nombre y el rol real del usuario conectado --}}
                             <p class="text-sm font-bold text-stone-700">{{ Auth::user()->name }}</p>
-                            <p class="text-xs text-stone-500">Administrador</p>
+                            <p class="text-xs text-stone-500 capitalize">{{ Auth::user()->role }}</p>
                         </div>
                         <div class="h-10 w-10 rounded-full bg-amber-100 flex items-center justify-center text-amber-700 font-bold border border-amber-200">
                             {{ substr(Auth::user()->name, 0, 1) }}
@@ -157,7 +175,6 @@
             userMenu.classList.toggle('hidden');
         });
         
-        // Cerrar al hacer click fuera
         document.addEventListener('click', (e) => {
             if (!userBtn.contains(e.target) && !userMenu.contains(e.target)) {
                 userMenu.classList.add('hidden');

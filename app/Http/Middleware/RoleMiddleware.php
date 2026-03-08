@@ -8,10 +8,11 @@ use Illuminate\Support\Facades\Auth;
 
 class RoleMiddleware
 {
-    public function handle(Request $request, Closure $next, $role)
+    public function handle($request, Closure $next, ...$roles)
     {
-        if (!Auth::check() || Auth::user()->role !== $role) {
-            abort(403, 'No tienes permiso para acceder a esta sección.');
+        // Si el usuario no está logueado o su rol no está en la lista de permitidos, lo bloqueamos
+        if (!auth()->check() || !in_array(auth()->user()->role, $roles)) {
+            abort(403, 'No tienes permiso para acceder a esta pantalla.');
         }
 
         return $next($request);
