@@ -11,18 +11,28 @@ class Order extends Model
         'customer_name', 
         'total', 
         'payment_method', 
-        'status'
+        'status',
+        'cancellation_reason',
+        'cancelled_by',
+        'cancelled_at'
     ];
 
-    // Relación: Una orden pertenece a un usuario (El cajero/empleado que la cobró)
+    protected $casts = [
+        'cancelled_at' => 'datetime',
+    ];
+
     public function user()
     {
         return $this->belongsTo(User::class);
     }
 
-    // Relación: Una orden tiene muchos items/detalles (Los productos que se llevaron)
     public function items()
     {
         return $this->hasMany(OrderItem::class);
+    }
+
+    public function canceller()
+    {
+        return $this->belongsTo(User::class, 'cancelled_by');
     }
 }

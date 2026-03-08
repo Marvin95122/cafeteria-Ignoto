@@ -74,6 +74,12 @@
                        {{ request()->routeIs('ingredients.*') ? 'bg-amber-800 text-white shadow-md' : 'text-amber-200 hover:bg-amber-800 hover:text-white' }}">
                         <span class="text-xl">📦</span> <span class="font-medium">Materia Prima</span>
                     </a>
+
+                    <a href="{{ route('inventory_movements.index') }}"
+                       class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors duration-200
+                       {{ request()->routeIs('inventory_movements.*') ? 'bg-amber-800 text-white shadow-md' : 'text-amber-200 hover:bg-amber-800 hover:text-white' }}">
+                        <span class="text-xl">📋</span> <span class="font-medium">Bitácora Inventario</span>
+                    </a>
                     
                     <a href="{{ route('products.index') }}"
                        class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors duration-200
@@ -112,7 +118,7 @@
                         @elseif(request()->routeIs('categories.*')) Gestión de Categorías
                         @elseif(request()->routeIs('ingredients.*')) Gestión de Materia Prima
                         @elseif(request()->routeIs('pos.*')) Punto de Venta
-                        @else Bienvenido
+                        @else Bienvenido a Ignoto
                         @endif
                     </h2>
                 </div>

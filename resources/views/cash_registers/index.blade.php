@@ -116,10 +116,10 @@
                 </div>
             </div>
 
-            {{-- SECCIÓN: VENTAS DEL TURNO--}}
+            {{-- SECCION: VENTAS DEL TURNO --}}
             <div class="bg-white rounded-2xl shadow-sm border border-stone-200 overflow-hidden">
                 <div class="bg-stone-50 px-6 py-4 border-b border-stone-200">
-                    <h3 class="font-bold text-stone-800">Ventas Registradas</h3>
+                    <h3 class="font-bold text-stone-800">Ventas Registradas (Auditoría)</h3>
                 </div>
                 <div class="overflow-y-auto max-h-96">
                     <table class="w-full text-left text-sm text-stone-600">
@@ -127,32 +127,43 @@
                             <tr>
                                 <th class="px-4 py-3">Hora/Cajero</th>
                                 <th class="px-4 py-3">Productos Vendidos</th>
-                                <th class="px-4 py-3 text-right">Pago</th>
                                 <th class="px-4 py-3 text-right">Total</th>
+                                <th class="px-4 py-3 text-center">Acciones</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-stone-200">
                             @forelse($orders as $order)
-                                <tr class="hover:bg-stone-50">
+                                <tr class="hover:bg-stone-50 {{ $order->status === 'cancelado' ? 'bg-red-50/50 opacity-75' : '' }}">
                                     <td class="px-4 py-3">
-                                        <span class="block font-bold text-stone-800">#{{ $order->id }} - {{ $order->created_at->format('h:i A') }}</span>
-                                        <span class="block text-xs text-stone-400">👤 {{ $order->user->name ?? 'N/A' }}</span>
+                                        <span class="block font-bold {{ $order->status === 'cancelado' ? 'line-through text-red-500' : 'text-stone-800' }}">#{{ $order->id }} - {{ $order->created_at->format('h:i A') }}</span>
+                                        <span class="block text-xs text-stone-400">Cobró: {{ $order->user->name ?? 'N/A' }}</span>
                                     </td>
                                     <td class="px-4 py-3">
-                                        <ul class="list-disc list-inside text-xs space-y-1">
+                                        <ul class="list-disc list-inside text-xs space-y-1 mb-1">
                                             @foreach($order->items as $item)
                                                 <li>{{ $item->quantity }}x {{ $item->product->name ?? 'Producto borrado' }}</li>
                                             @endforeach
                                         </ul>
-                                    </td>
-                                    <td class="px-4 py-3 text-right">
-                                        @if($order->payment_method == 'efectivo')
-                                            <span class="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-bold">💵 Efectivo</span>
-                                        @else
-                                            <span class="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs font-bold">💳 Tarjeta</span>
+                                        @if($order->status === 'cancelado')
+                                            <div class="mt-2 text-xs text-red-700 bg-red-100 p-2 rounded border border-red-200">
+                                                <strong>Motivo:</strong> {{ $order->cancellation_reason }}<br>
+                                                <span class="text-[10px] text-red-500">Canceló: {{ $order->canceller->name ?? 'Admin' }} ({{ $order->cancelled_at->format('h:i A') }})</span>
+                                            </div>
                                         @endif
                                     </td>
-                                    <td class="px-4 py-3 text-right font-bold text-stone-800">${{ number_format($order->total, 2) }}</td>
+                                    <td class="px-4 py-3 text-right">
+                                        <span class="block font-bold text-stone-800">${{ number_format($order->total, 2) }}</span>
+                                        <span class="text-[10px] font-bold uppercase {{ $order->payment_method == 'efectivo' ? 'text-green-600' : 'text-blue-600' }}">{{ $order->payment_method }}</span>
+                                    </td>
+                                    <td class="px-4 py-3 text-center">
+                                        @if($order->status === 'completado')
+                                            <button onclick="openCancelModal({{ $order->id }})" class="text-xs bg-red-50 text-red-600 hover:bg-red-600 hover:text-white font-bold py-1 px-3 rounded transition border border-red-200 hover:border-red-600">
+                                                Cancelar
+                                            </button>
+                                        @else
+                                            <span class="text-xs font-bold text-red-500">CANCELADO ❌</span>
+                                        @endif
+                                    </td>
                                 </tr>
                             @empty
                                 <tr><td colspan="4" class="px-4 py-8 text-center text-stone-400 italic">No hay ventas en este turno.</td></tr>
@@ -275,5 +286,39 @@
         </div>
     </div>
 
+    {{-- MODAL CANCELAR TICKET --}}
+        <div id="modal-cancel-order" class="fixed inset-0 bg-stone-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border-2 border-red-500">
+                <div class="p-5 border-b border-red-100 flex justify-between items-center bg-red-50">
+                    <h3 class="font-bold text-lg text-red-900 flex items-center gap-2"><span>⚠️</span> Cancelar Ticket #<span id="cancel-order-id-display"></span></h3>
+                    <button onclick="document.getElementById('modal-cancel-order').classList.add('hidden')" class="text-stone-400 hover:text-red-500">✖</button>
+                </div>
+                <form id="cancel-order-form" method="POST" class="p-5">
+                    @csrf
+                    <p class="text-sm text-stone-600 mb-4 bg-stone-50 p-3 rounded-lg border border-stone-200">
+                        Al cancelar este ticket, <strong>el dinero se restará de la caja</strong> y todos los insumos (café, leche, extras) <strong>volverán automáticamente al inventario</strong>.
+                    </p>
+
+                    <div class="mb-6">
+                        <label class="block text-sm font-bold text-stone-700 mb-2">Motivo de cancelación (Obligatorio)</label>
+                        <textarea name="cancellation_reason" rows="2" required placeholder="Ej: Se cobró mal / El cliente no traía efectivo / ptros motivos" class="w-full border-stone-300 rounded-lg focus:ring-red-500 focus:border-red-500"></textarea>
+                    </div>
+
+                    <div class="flex gap-3">
+                        <button type="button" onclick="document.getElementById('modal-cancel-order').classList.add('hidden')" class="flex-1 bg-stone-100 hover:bg-stone-200 text-stone-700 font-bold py-3 rounded-xl transition">Volver</button>
+                        <button type="submit" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-xl shadow-md transition">Anular Ticket</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <script>
+            function openCancelModal(orderId) {
+                document.getElementById('cancel-order-id-display').innerText = orderId;
+                // Le indicamos al formulario a qué ruta (con qué ID) debe mandar los datos
+                document.getElementById('cancel-order-form').action = `/caja/venta/${orderId}/cancelar`;
+                document.getElementById('modal-cancel-order').classList.remove('hidden');
+            }
+        </script>
 </div>
 @endsection

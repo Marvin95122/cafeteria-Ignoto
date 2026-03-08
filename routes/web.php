@@ -53,6 +53,11 @@ Route::middleware(['auth', 'role:admin,gerente'])->group(function () {
     Route::post('/caja/abrir', [App\Http\Controllers\CashRegisterController::class, 'open'])->name('cash_registers.open');
     Route::post('/caja/cerrar', [App\Http\Controllers\CashRegisterController::class, 'close'])->name('cash_registers.close');
     Route::post('/caja/gasto', [App\Http\Controllers\CashRegisterController::class, 'storeExpense'])->name('cash_registers.expense');
+    Route::post('/caja/venta/{order}/cancelar', [App\Http\Controllers\CashRegisterController::class, 'cancelOrder'])->name('cash_registers.cancel_order');
+
+    // RUTAS DE INVENTARIO
+    Route::get('/inventario/movimientos', [App\Http\Controllers\InventoryMovementController::class, 'index'])->name('inventory_movements.index');
+    Route::post('/inventario/movimientos', [App\Http\Controllers\InventoryMovementController::class, 'store'])->name('inventory_movements.store');
 });
 
 /*
