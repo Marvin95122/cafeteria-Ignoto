@@ -118,6 +118,7 @@
                         @elseif(request()->routeIs('categories.*')) Gestión de Categorías
                         @elseif(request()->routeIs('ingredients.*')) Gestión de Materia Prima
                         @elseif(request()->routeIs('pos.*')) Punto de Venta
+                        @elseif(request()->routeIs('cash_registers.*')) Corte de huevos
                         @else Bienvenido a Ignoto
                         @endif
                     </h2>
