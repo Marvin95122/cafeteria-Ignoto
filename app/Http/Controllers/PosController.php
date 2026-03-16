@@ -15,28 +15,24 @@ class PosController extends Controller
 {
     public function index(Request $request)
     {
-        // Se revisa que si hay una caja abierta
         $activeRegister = \App\Models\CashRegister::where('status', 'abierta')->exists();
 
-        // Si la caja esta cerrada, podemos saltarnos la busqueda de productos para ahorrar memoria
         if (!$activeRegister) {
-            return view('pos.index', ['activeRegister' => false, 'products' => collect(), 'categories' => collect()]);
+            return view('pos.index', [
+                'activeRegister' => false, 
+                'products' => collect(), 
+                'categories' => collect(), 
+                'ingredients' => collect()
+            ]);
         }
 
-        $query = Product::with(['category', 'extras.ingredients', 'ingredients'])->where('active', true);
-
-        if ($request->filled('category_id')) {
-            $query->where('category_id', $request->category_id);
-        }
-
-        if ($request->filled('search')) {
-            $query->where('name', 'like', '%' . $request->search . '%');
-        }
-
-        $products = $query->get();
         $categories = Category::where('active', true)->get();
+        
+        $products = Product::with(['extras.ingredients', 'ingredients'])->where('active', true)->get();
+ 
+        $ingredients = \App\Models\Ingredient::where('active', true)->get();
 
-        return view('pos.index', compact('products', 'categories', 'activeRegister'));
+        return view('pos.index', compact('categories', 'products', 'ingredients', 'activeRegister'));
     }
 
     public function store(Request $request)

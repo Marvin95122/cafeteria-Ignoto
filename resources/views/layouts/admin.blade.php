@@ -27,107 +27,98 @@
 
 <body class="bg-stone-50 text-stone-800">
 
-    <div class="flex min-h-screen">
+    <div class="flex min-h-screen overflow-hidden">
 
-        <aside class="w-64 bg-amber-900 text-amber-50 shadow-2xl flex flex-col transition-all duration-300">
+        {{-- MENÚ LATERAL (SIDEBAR) --}}
+        <aside id="sidebar" class="w-64 bg-amber-900 text-amber-50 shadow-2xl flex flex-col transition-all duration-300 z-20 shrink-0">
             
-            <div class="p-6 flex items-center gap-3 border-b border-amber-800">
-                <div class="bg-white p-1 rounded-full h-10 w-10 flex items-center justify-center">
+            <div class="p-6 flex items-center gap-3 border-b border-amber-800 cursor-pointer hover:bg-amber-800 transition-colors" onclick="toggleSidebar()" title="Colapsar/Expandir Menú">
+                <div class="bg-white p-1 rounded-full h-10 w-10 flex items-center justify-center shrink-0">
                     <img src="{{ asset('img/logo-cafeteria.png') }}" class="h-8 w-8 object-contain" alt="Logo" onerror="this.src='{{ asset('images/logo-cafeteria.png') }}'">
                 </div>
-                <span class="font-serif font-bold text-xl tracking-wide text-white">Ignoto Café</span>
+                <span class="font-serif font-bold text-xl tracking-wide text-white sidebar-text whitespace-nowrap overflow-hidden transition-opacity duration-200">Ignoto Café</span>
             </div>
 
-            <nav class="flex-1 p-4 space-y-2 mt-2">
+            <nav class="flex-1 py-4 space-y-2 overflow-y-auto overflow-x-hidden">
 
-                {{-- Solo Admin y Gerente --}}
                 @if(in_array(Auth::user()->role, ['admin', 'gerente']))
-                    <a href="{{ route('dashboard') }}"
-                       class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors duration-200
-                       {{ request()->routeIs('dashboard') ? 'bg-amber-800 text-white shadow-md' : 'text-amber-200 hover:bg-amber-800 hover:text-white' }}">
-                        <span class="text-xl">📊</span>
-                        <span class="font-medium">Dashboard</span>
+                    <a href="{{ route('dashboard') }}" class="flex items-center gap-3 px-4 mx-2 py-3 rounded-lg transition-colors duration-200 {{ request()->routeIs('dashboard') ? 'bg-amber-800 text-white shadow-md' : 'text-amber-200 hover:bg-amber-800 hover:text-white' }}">
+                        <span class="text-xl shrink-0 flex justify-center w-8">📊</span>
+                        <span class="font-medium sidebar-text whitespace-nowrap">Dashboard</span>
                     </a>
                 @endif
 
-                {{-- Solo Admin --}}
                 @if(Auth::user()->role === 'admin')
-                    <a href="{{ route('employees.index') }}"
-                       class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors duration-200
-                       {{ request()->routeIs('employees.*') ? 'bg-amber-800 text-white shadow-md' : 'text-amber-200 hover:bg-amber-800 hover:text-white' }}">
-                        <span class="text-xl">👥</span>
-                        <span class="font-medium">Empleados</span>
+                    <a href="{{ route('employees.index') }}" class="flex items-center gap-3 px-4 mx-2 py-3 rounded-lg transition-colors duration-200 {{ request()->routeIs('employees.*') ? 'bg-amber-800 text-white shadow-md' : 'text-amber-200 hover:bg-amber-800 hover:text-white' }}">
+                        <span class="text-xl shrink-0 flex justify-center w-8">👥</span>
+                        <span class="font-medium sidebar-text whitespace-nowrap">Empleados</span>
                     </a>
                 @endif
 
-                {{-- Solo Admin y Gerente --}}
                 @if(in_array(Auth::user()->role, ['admin', 'gerente']))
-                    <a href="{{ route('categories.index') }}"
-                       class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors duration-200
-                       {{ request()->routeIs('categories.*') ? 'bg-amber-800 text-white shadow-md' : 'text-amber-200 hover:bg-amber-800 hover:text-white' }}">
-                        <span class="text-xl">🗂️</span>
-                        <span class="font-medium">Categorías</span>
+                    <a href="{{ route('categories.index') }}" class="flex items-center gap-3 px-4 mx-2 py-3 rounded-lg transition-colors duration-200 {{ request()->routeIs('categories.*') ? 'bg-amber-800 text-white shadow-md' : 'text-amber-200 hover:bg-amber-800 hover:text-white' }}">
+                        <span class="text-xl shrink-0 flex justify-center w-8">🗂️</span>
+                        <span class="font-medium sidebar-text whitespace-nowrap">Categorías</span>
                     </a>
 
-                    <a href="{{ route('ingredients.index') }}"
-                       class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors duration-200
-                       {{ request()->routeIs('ingredients.*') ? 'bg-amber-800 text-white shadow-md' : 'text-amber-200 hover:bg-amber-800 hover:text-white' }}">
-                        <span class="text-xl">📦</span> <span class="font-medium">Materia Prima</span>
+                    <a href="{{ route('ingredients.index') }}" class="flex items-center gap-3 px-4 mx-2 py-3 rounded-lg transition-colors duration-200 {{ request()->routeIs('ingredients.*') ? 'bg-amber-800 text-white shadow-md' : 'text-amber-200 hover:bg-amber-800 hover:text-white' }}">
+                        <span class="text-xl shrink-0 flex justify-center w-8">📦</span> 
+                        <span class="font-medium sidebar-text whitespace-nowrap">Materia Prima</span>
                     </a>
 
-                    <a href="{{ route('inventory_movements.index') }}"
-                       class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors duration-200
-                       {{ request()->routeIs('inventory_movements.*') ? 'bg-amber-800 text-white shadow-md' : 'text-amber-200 hover:bg-amber-800 hover:text-white' }}">
-                        <span class="text-xl">📋</span> <span class="font-medium">Bitácora Inventario</span>
+                    <a href="{{ route('inventory_movements.index') }}" class="flex items-center gap-3 px-4 mx-2 py-3 rounded-lg transition-colors duration-200 {{ request()->routeIs('inventory_movements.*') ? 'bg-amber-800 text-white shadow-md' : 'text-amber-200 hover:bg-amber-800 hover:text-white' }}">
+                        <span class="text-xl shrink-0 flex justify-center w-8">📋</span> 
+                        <span class="font-medium sidebar-text whitespace-nowrap">Bitácora Inventario</span>
                     </a>
                     
-                    <a href="{{ route('products.index') }}"
-                       class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors duration-200
-                       {{ request()->routeIs('products.*') ? 'bg-amber-800 text-white shadow-md' : 'text-amber-200 hover:bg-amber-800 hover:text-white' }}">
-                        <span class="text-xl">☕</span> <span class="font-medium">Productos</span>
+                    <a href="{{ route('products.index') }}" class="flex items-center gap-3 px-4 mx-2 py-3 rounded-lg transition-colors duration-200 {{ request()->routeIs('products.*') ? 'bg-amber-800 text-white shadow-md' : 'text-amber-200 hover:bg-amber-800 hover:text-white' }}">
+                        <span class="text-xl shrink-0 flex justify-center w-8">☕</span> 
+                        <span class="font-medium sidebar-text whitespace-nowrap">Productos</span>
                     </a>
 
-                    <a href="{{ route('cash_registers.index') }}"
-                       class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors duration-200
-                       {{ request()->routeIs('cash_registers.*') ? 'bg-amber-800 text-white shadow-md' : 'text-amber-200 hover:bg-amber-800 hover:text-white' }}">
-                        <span class="text-xl">💰</span> <span class="font-medium">Corte de Caja</span>
+                    <a href="{{ route('cash_registers.index') }}" class="flex items-center gap-3 px-4 mx-2 py-3 rounded-lg transition-colors duration-200 {{ request()->routeIs('cash_registers.*') ? 'bg-amber-800 text-white shadow-md' : 'text-amber-200 hover:bg-amber-800 hover:text-white' }}">
+                        <span class="text-xl shrink-0 flex justify-center w-8">💰</span> 
+                        <span class="font-medium sidebar-text whitespace-nowrap">Corte de Caja</span>
                     </a>
                 @endif
 
-                {{-- Accesible para TODO EL MUNDO (Admin, Gerente, Empleado) --}}
-                <a href="{{ route('pos.index') }}"
-                   class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors duration-200
-                   {{ request()->routeIs('pos.*') ? 'bg-amber-800 text-white shadow-md' : 'text-amber-200 hover:bg-amber-800 hover:text-white' }}">
-                    <span class="text-xl">📠</span> <span class="font-medium">Ventas (POS)</span>
+                <a href="{{ route('pos.index') }}" class="flex items-center gap-3 px-4 mx-2 py-3 rounded-lg transition-colors duration-200 {{ request()->routeIs('pos.*') ? 'bg-amber-800 text-white shadow-md' : 'text-amber-200 hover:bg-amber-800 hover:text-white' }}">
+                    <span class="text-xl shrink-0 flex justify-center w-8">📠</span> 
+                    <span class="font-medium sidebar-text whitespace-nowrap">Ventas (POS)</span>
                 </a>
             </nav>
 
-            <div class="p-4 border-t border-amber-800 text-xs text-amber-400 text-center">
+            <div class="p-4 border-t border-amber-800 text-xs text-amber-400 text-center sidebar-text whitespace-nowrap">
                 &copy; {{ date('Y') }} Sistema Ignoto
             </div>
         </aside>
 
-        <main class="flex-1 p-8 overflow-y-auto h-screen">
+        {{-- CONTENIDO PRINCIPAL --}}
+        <main class="flex-1 flex flex-col h-screen overflow-hidden bg-stone-100">
             
-            <div class="flex justify-between items-center mb-8 bg-white p-4 rounded-xl shadow-sm border border-stone-200">
+            {{-- HEADER SUPERIOR --}}
+            <header class="flex justify-between items-center bg-white p-4 m-4 mb-0 rounded-xl shadow-sm border border-stone-200 shrink-0">
                 <div class="flex items-center gap-4">
-                    <h2 class="font-serif font-bold text-2xl text-amber-900">
+                    <button onclick="toggleSidebar()" class="text-stone-500 hover:text-amber-900 hover:bg-amber-50 focus:outline-none p-2 rounded-lg transition-colors">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                    </button>
+                    <h2 class="font-serif font-bold text-2xl text-amber-900 hidden sm:block">
                         @if(request()->routeIs('dashboard')) Panel Principal
                         @elseif(request()->routeIs('products.*')) Gestión de Menú de Productos
                         @elseif(request()->routeIs('employees.*')) Equipo de Trabajo Ignoto
                         @elseif(request()->routeIs('categories.*')) Gestión de Categorías
                         @elseif(request()->routeIs('ingredients.*')) Gestión de Materia Prima
                         @elseif(request()->routeIs('pos.*')) Punto de Venta
-                        @elseif(request()->routeIs('cash_registers.*')) Corte de huevos
+                        @elseif(request()->routeIs('cash_registers.*')) Corte de Caja
+                        @elseif(request()->routeIs('inventory_movements.*')) Bitácora de Inventario
                         @else Bienvenido a Ignoto
                         @endif
                     </h2>
                 </div>
 
-                <div class="relative group">
+                <div class="relative group z-50">
                     <button class="flex items-center gap-3 focus:outline-none transition">
                         <div class="text-right hidden sm:block">
-                            {{-- Muestra el nombre y el rol real del usuario conectado --}}
                             <p class="text-sm font-bold text-stone-700">{{ Auth::user()->name }}</p>
                             <p class="text-xs text-stone-500 capitalize">{{ Auth::user()->role }}</p>
                         </div>
@@ -148,77 +139,135 @@
                         </form>
                     </div>
                 </div>
-            </div>
+            </header>
 
-            @if(session('success'))
-                <div class="mb-6 p-4 bg-green-50 border-l-4 border-green-500 text-green-800 rounded-r shadow-sm flex items-center justify-between">
-                    <div class="flex items-center">
-                        <span class="text-xl mr-2">✅</span>
-                        {{ session('success') }}
-                    </div>
+            {{-- ÁREA DE CONTENIDO SCROLLABLE --}}
+            <div class="flex-1 p-4 overflow-y-auto relative z-0">
+                <div class="bg-white rounded-2xl shadow-sm border border-stone-200 p-6 min-h-[500px]">
+                    @yield('content')
                 </div>
-            @endif
-
-            @if(session('error'))
-                <div class="mb-6 p-4 bg-red-50 border-l-4 border-red-500 text-red-800 rounded-r shadow-sm flex items-center">
-                    <span class="text-xl mr-2">⚠️</span>
-                    {{ session('error') }}
-                </div>
-            @endif
-
-            <div class="bg-white rounded-2xl shadow-sm border border-stone-200 p-6 min-h-[500px]">
-                @yield('content')
             </div>
 
         </main>
-
     </div>
 
-    <script>
-        const userBtn = document.querySelector('button.flex.items-center.gap-3');
-        const userMenu = userBtn.nextElementSibling;
-
-        userBtn.addEventListener('click', () => {
-            userMenu.classList.toggle('hidden');
-        });
-        
-        document.addEventListener('click', (e) => {
-            if (!userBtn.contains(e.target) && !userMenu.contains(e.target)) {
-                userMenu.classList.add('hidden');
-            }
-        });
-    </script>
-
-    {{-- LIBRERIA DE ALERTAS --}}
+    {{-- LIBRERÍA DE ALERTAS PROFESIONALES--}}
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-    {{-- SCRIPTS GLOBALES DEL SISTEMA --}}
     <script>
+        // 1. Lógica del Menú Lateral
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const texts = document.querySelectorAll('.sidebar-text');
+            
+            if (sidebar.classList.contains('w-64')) {
+                sidebar.classList.remove('w-64');
+                sidebar.classList.add('w-20');
+                texts.forEach(el => el.classList.add('opacity-0', 'hidden'));
+            } else {
+                sidebar.classList.remove('w-20');
+                sidebar.classList.add('w-64');
+                texts.forEach(el => {
+                    el.classList.remove('hidden');
+                    setTimeout(() => el.classList.remove('opacity-0'), 50);
+                });
+            }
+        }
+
+        // 2. Apagar autocompletado del navegador
         document.addEventListener('DOMContentLoaded', function() {
-            //APAGAR AUTOCOMPLETADO EN VARIAS PARTES DEL SISTEMA
             document.querySelectorAll('input, form, textarea').forEach(function(elemento) {
                 elemento.setAttribute('autocomplete', 'off');
-                elemento.setAttribute('data-lpignore', 'true'); // Ignorar LastPass/Gestores de contraseñas
+                elemento.setAttribute('data-lpignore', 'true');
             });
-            
-            window.confirmarAccion = function(event, formId, mensaje) {
-                event.preventDefault();
-                Swal.fire({
-                    title: '¿Estás seguro?',
-                    text: mensaje || "Esta acción no se puede deshacer.",
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: '#dc2626',
-                    cancelButtonColor: '#6b7280',
-                    confirmButtonText: 'Sí, continuar',
-                    cancelButtonText: 'Cancelar',
-                    backdrop: `rgba(0,0,0,0.6)`
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        document.getElementById(formId).submit();
-                    }
+
+            // 3. TOASTS Y MODALES
+            const Toast = Swal.mixin({
+                toast: true,
+                position: "top-end",
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true,
+                didOpen: (toast) => {
+                    toast.onmouseenter = Swal.stopTimer;
+                    toast.onmouseleave = Swal.resumeTimer;
+                }
+            });
+
+            @if(session('success'))
+                Toast.fire({
+                    icon: "success",
+                    title: "{!! session('success') !!}"
                 });
-            };
+            @endif
+
+            @if(session('error'))
+                Swal.fire({
+                    icon: "error",
+                    title: "Atención",
+                    text: "{!! session('error') !!}",
+                    confirmButtonColor: "#b45309" // amber-700
+                });
+            @endif
+
+            // 4. LERTAS
+            
+            // A) Interceptar Formularios con 'onsubmit'
+            document.querySelectorAll('form[onsubmit*="confirm"]').forEach(form => {
+                let mensajeOriginal = "¿Estás seguro de realizar esta acción?";
+                const match = form.getAttribute('onsubmit').match(/confirm\(['"](.*?)['"]\)/);
+                if(match && match[1]) { mensajeOriginal = match[1]; }
+                
+                form.removeAttribute('onsubmit');
+                
+                form.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    Swal.fire({
+                        title: 'Confirmación',
+                        text: mensajeOriginal,
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#dc2626',
+                        cancelButtonColor: '#6b7280',
+                        confirmButtonText: 'Sí, continuar',
+                        cancelButtonText: 'Cancelar'
+                    }).then((result) => {
+                        if (result.isConfirmed) { form.submit(); }
+                    });
+                });
+            });
+
+            // B) Interceptar Botones o Enlaces con 'onclick'
+            document.querySelectorAll('[onclick*="return confirm"]').forEach(elemento => {
+                let mensajeOriginal = "¿Estás seguro de realizar esta acción?";
+                const match = elemento.getAttribute('onclick').match(/confirm\(['"](.*?)['"]\)/);
+                if(match && match[1]) { mensajeOriginal = match[1]; }
+                
+                elemento.removeAttribute('onclick');
+                
+                elemento.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    let targetForm = elemento.closest('form');
+                    let targetHref = elemento.getAttribute('href');
+
+                    Swal.fire({
+                        title: 'Confirmación',
+                        text: mensajeOriginal,
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#dc2626',
+                        cancelButtonColor: '#6b7280',
+                        confirmButtonText: 'Sí, continuar',
+                        cancelButtonText: 'Cancelar'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            if (targetForm) { targetForm.submit(); } 
+                            else if (targetHref) { window.location.href = targetHref; }
+                        }
+                    });
+                });
+            });
+
         });
     </script>
 </body>

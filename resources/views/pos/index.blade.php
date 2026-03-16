@@ -2,8 +2,6 @@
 
 @section('content')
 
-@section('content')
-
 {{-- PANTALLA DE BLOQUEO: CAJA CERRADA --}}
 @if(!isset($activeRegister) || !$activeRegister)
     <div class="fixed inset-0 bg-stone-900/90 backdrop-blur-md z-[100] flex items-center justify-center p-4">
@@ -31,7 +29,6 @@
     </div>
 @endif
 
-{{-- El resto de tu código del POS se queda igual abajo de esto... --}}
 <div class="flex flex-col h-[calc(100vh-theme(spacing.16))] bg-stone-100">
 
 <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -70,10 +67,10 @@
             <div class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4" id="products-grid">
                 @foreach($products as $product)
                     <button onclick="openProductModal({{ $product->id }})" 
+                            data-id="{{ $product->id }}"
                             data-category="{{ $product->category_id }}"
                             class="product-card bg-white p-3 rounded-xl shadow-sm border border-stone-100 hover:border-amber-300 hover:shadow-md transition text-left flex flex-col h-full relative group">
                         
-                        {{-- IMAGEN O EMOJI (Corregido) --}}
                         <div class="w-full h-24 bg-stone-100 rounded-lg mb-3 overflow-hidden flex items-center justify-center">
                             @if($product->image)
                                 <img src="{{ asset('storage/' . $product->image) }}" class="w-full h-full object-cover">
@@ -82,11 +79,11 @@
                             @endif
                         </div>
                         
-                        <div class="flex-1 flex flex-col justify-between">
+                        <div class="flex-1 flex flex-col justify-between w-full">
                             <h3 class="product-name font-bold text-stone-800 text-sm leading-tight mb-1">{{ $product->name }}</h3>
                             <div class="flex justify-between items-end mt-2">
                                 <span class="text-amber-700 font-bold">${{ number_format($product->price, 2) }}</span>
-                                <span class="text-xs font-bold {{ $product->calculated_stock > 0 ? 'text-stone-500 bg-stone-100' : 'text-red-500 bg-red-50' }} px-1.5 py-0.5 rounded">
+                                <span class="stock-badge text-xs font-bold {{ $product->calculated_stock > 0 ? 'text-stone-500 bg-stone-100' : 'text-red-500 bg-red-50' }} px-1.5 py-0.5 rounded">
                                     {{ $product->calculated_stock }} disp.
                                 </span>
                             </div>
@@ -129,8 +126,8 @@
             <div class="mb-4">
                 <label class="text-xs font-bold text-stone-500 mb-2 block">Método de Pago</label>
                 <div class="grid grid-cols-2 gap-2">
-                    <button onclick="setPaymentMethod('efectivo')" id="btn-efectivo" class="payment-btn bg-amber-100 border-amber-500 text-amber-800 border py-2 rounded-lg text-sm font-bold transition">💵 Efectivo</button>
-                    <button onclick="setPaymentMethod('tarjeta')" id="btn-tarjeta" class="payment-btn bg-stone-50 border-stone-200 text-stone-500 border py-2 rounded-lg text-sm font-bold transition">💳 Tarjeta</button>
+                    <button onclick="setPaymentMethod('efectivo')" id="btn-efectivo" class="payment-btn bg-amber-100 border-amber-500 text-amber-800 border py-2 rounded-lg text-sm font-bold transition">💵Efectivo</button>
+                    <button onclick="setPaymentMethod('tarjeta')" id="btn-tarjeta" class="payment-btn bg-stone-50 border-stone-200 text-stone-500 border py-2 rounded-lg text-sm font-bold transition">💳Tarjeta</button>
                 </div>
             </div>
 
@@ -184,7 +181,7 @@
         </div>
         <div class="p-5 border-t border-stone-100 bg-stone-50 flex gap-3">
             <button onclick="closeProductModal()" class="flex-1 py-3 text-stone-600 font-bold rounded-xl hover:bg-stone-200 transition">Cancelar</button>
-            <button onclick="addToCartFromModal()" class="flex-1 py-3 bg-amber-800 text-white font-bold rounded-xl hover:bg-amber-900 transition shadow-md">
+            <button onclick="addToCartFromModal()" id="btn-add-modal" class="flex-1 py-3 bg-amber-800 text-white font-bold rounded-xl hover:bg-amber-900 transition shadow-md">
                 Agregar al Ticket
             </button>
         </div>
@@ -192,18 +189,80 @@
 </div>
 
 <script>
-    // --- MAGIA: Inyectamos el stock calculado al objeto JSON para que JavaScript no se confunda ---
     const productsDB = {!! json_encode($products->map(function($p) {
-        $arr = $p->toArray();
-        $arr['calculated_stock'] = $p->calculated_stock; // Aseguramos que el stock pase a JS
-        return $arr;
+        $arr = $p->toArray(); $arr['calculated_stock'] = $p->calculated_stock; return $arr;
     })) !!};
-
+    const ingredientsDB = {!! isset($ingredients) ? json_encode($ingredients) : '[]' !!};
+    
     let cart = []; 
     let currentSelectedProduct = null; 
+    let editingCartItemId = null; 
     let currentPaymentMethod = 'efectivo'; 
     let globalCartTotal = 0;
 
+    // --- Calculadora de Stock Compartido ---
+    function getAvailableStock(product, ignoreCartItemId = null) {
+        if (!product.use_dynamic_stock) {
+            let inCart = cart.filter(item => item.product.id === product.id && item.cartItemId !== ignoreCartItemId)
+                             .reduce((sum, item) => sum + item.quantity, 0);
+            return Math.max(0, product.stock - inCart);
+        }
+
+        let usedIngredients = {};
+        cart.forEach(item => {
+            if (ignoreCartItemId && item.cartItemId === ignoreCartItemId) return;
+            if (item.product.use_dynamic_stock && item.product.ingredients) {
+                item.product.ingredients.forEach(ing => {
+                    usedIngredients[ing.id] = (usedIngredients[ing.id] || 0) + (parseFloat(ing.pivot.quantity) * item.quantity);
+                });
+            }
+            if (item.extras) {
+                item.extras.forEach(cartExtra => {
+                    let fullExtra = item.product.extras.find(e => e.id == cartExtra.id);
+                    if (fullExtra && fullExtra.ingredients) {
+                        fullExtra.ingredients.forEach(ing => {
+                            usedIngredients[ing.id] = (usedIngredients[ing.id] || 0) + (parseFloat(ing.pivot.quantity) * item.quantity);
+                        });
+                    }
+                });
+            }
+        });
+
+        let maxPossible = Infinity;
+        if (product.ingredients && product.ingredients.length > 0) {
+            product.ingredients.forEach(ing => {
+                let dbIng = ingredientsDB.find(i => i.id === ing.id);
+                if (dbIng) {
+                    let available = parseFloat(dbIng.current_quantity) - (usedIngredients[ing.id] || 0);
+                    let needed = parseFloat(ing.pivot.quantity);
+                    let possible = Math.floor(available / needed);
+                    if (possible < maxPossible) maxPossible = possible;
+                }
+            });
+        } else { maxPossible = 0; }
+        return maxPossible === Infinity ? 0 : Math.max(0, maxPossible);
+    }
+
+    function updateGridStock() {
+        document.querySelectorAll('.product-card').forEach(card => {
+            let productId = parseInt(card.dataset.id);
+            let product = productsDB.find(p => p.id === productId);
+            if (product) {
+                let available = getAvailableStock(product);
+                let badge = card.querySelector('.stock-badge');
+                badge.innerText = `${available} disp.`;
+                if (available > 0) {
+                    badge.className = 'stock-badge text-xs font-bold text-stone-500 bg-stone-100 px-1.5 py-0.5 rounded';
+                    card.classList.remove('opacity-50', 'cursor-not-allowed'); card.disabled = false;
+                } else {
+                    badge.className = 'stock-badge text-xs font-bold text-red-500 bg-red-50 px-1.5 py-0.5 rounded';
+                    card.classList.add('opacity-50', 'cursor-not-allowed'); card.disabled = true;
+                }
+            }
+        });
+    }
+
+    // --- LÓGICA DEL CARRITO Y MODALES ---
     function filterProducts() {
         const search = document.getElementById('posSearch').value.toLowerCase();
         document.querySelectorAll('.product-card').forEach(card => {
@@ -219,82 +278,25 @@
         });
         event.currentTarget.classList.remove('bg-white', 'text-stone-600');
         event.currentTarget.classList.add('bg-amber-800', 'text-white', 'active-cat');
-
         document.querySelectorAll('.product-card').forEach(card => {
             card.style.display = (categoryId === 'all' || card.dataset.category == categoryId) ? 'flex' : 'none';
         });
     }
 
-    function setPaymentMethod(method) {
-        currentPaymentMethod = method;
-        document.querySelectorAll('.payment-btn').forEach(btn => {
-            btn.classList.remove('bg-amber-100', 'border-amber-500', 'text-amber-800');
-            btn.classList.add('bg-stone-50', 'border-stone-200', 'text-stone-500');
-        });
-        
-        const activeBtn = document.getElementById(`btn-${method}`);
-        activeBtn.classList.remove('bg-stone-50', 'border-stone-200', 'text-stone-500');
-        activeBtn.classList.add('bg-amber-100', 'border-amber-500', 'text-amber-800');
-
-        const cashSection = document.getElementById('cash-payment-section');
-        if (method === 'efectivo') {
-            cashSection.style.display = 'block';
-        } else {
-            cashSection.style.display = 'none';
-            document.getElementById('cash-received').value = '';
-        }
-        calculateChange(); // Revalidar el botón de cobrar
-    }
-
-    // --- CÁLCULO DE CAMBIO Y VALIDACIÓN DE BOTÓN ---
-    function calculateChange() {
-        const checkoutBtn = document.getElementById('checkout-btn');
-        const changeLabel = document.getElementById('change-amount');
-        const cashInput = document.getElementById('cash-received');
-
-        // Si el carrito está vacío, siempre bloqueado
-        if (cart.length === 0) {
-            checkoutBtn.disabled = true;
-            changeLabel.innerText = '$0.00';
-            changeLabel.className = 'text-stone-400';
-            return;
-        }
-
-        if (currentPaymentMethod === 'efectivo') {
-            const received = parseFloat(cashInput.value) || 0;
-            const change = received - globalCartTotal;
-
-            if (change >= 0 && received > 0) {
-                changeLabel.innerText = `$${change.toFixed(2)}`;
-                changeLabel.className = 'text-green-600 font-black text-xl'; // Cambio a favor, en verde
-                checkoutBtn.disabled = false;
-            } else {
-                changeLabel.innerText = 'Falta dinero';
-                changeLabel.className = 'text-red-500 text-sm'; // Falta dinero, rojo
-                checkoutBtn.disabled = true;
-            }
-        } else {
-            // Si es tarjeta, solo importa que haya algo en el carrito
-            checkoutBtn.disabled = cart.length === 0;
-        }
-    }
-
-    function openProductModal(productId) {
+    function openProductModal(productId, editItemId = null) {
         currentSelectedProduct = productsDB.find(p => p.id === productId);
-        
-        let inCart = cart.filter(item => item.product.id === currentSelectedProduct.id)
-                         .reduce((sum, item) => sum + item.quantity, 0);
-                         
-        let available = parseInt(currentSelectedProduct.calculated_stock) - inCart;
+        editingCartItemId = editItemId;
 
-        if (available <= 0) {
-            alert('Stock agotado. No puedes agregar más de este producto al ticket.');
+        let available = getAvailableStock(currentSelectedProduct, editingCartItemId);
+        if (available <= 0 && !editItemId) {
+            Swal.fire('Agotado', 'No hay suficientes ingredientes para preparar esto.', 'error');
             return; 
         }
 
-        document.getElementById('modal-product-name').innerText = currentSelectedProduct.name;
+        document.getElementById('modal-product-name').innerText = currentSelectedProduct.name + (editItemId ? ' (Editando)' : '');
         document.getElementById('modal-product-price').innerText = `$${parseFloat(currentSelectedProduct.price).toFixed(2)}`;
         document.getElementById('modal-quantity').innerText = '1';
+        document.getElementById('btn-add-modal').innerText = editItemId ? 'Guardar Cambios' : 'Agregar al Ticket';
 
         const extrasContainer = document.getElementById('modal-extras-container');
         const extrasList = document.getElementById('modal-extras-list');
@@ -306,19 +308,26 @@
             activeExtras.forEach(extra => {
                 const price = parseFloat(extra.pivot.price);
                 const html = `
-                    <label class="flex items-center justify-between p-3 border border-stone-200 rounded-lg cursor-pointer hover:bg-amber-50 transition">
+                    <label class="flex items-center justify-between p-3 border border-stone-200 rounded-lg cursor-pointer hover:bg-amber-50">
                         <div class="flex items-center gap-3">
-                            <input type="checkbox" class="extra-checkbox w-5 h-5 text-amber-600 rounded border-stone-300 focus:ring-amber-500" 
-                                   value="${extra.id}" data-name="${extra.name}" data-price="${price}">
+                            <input type="checkbox" class="extra-checkbox w-5 h-5 text-amber-600 rounded border-stone-300" value="${extra.id}" data-name="${extra.name}" data-price="${price}">
                             <span class="font-medium text-stone-700">${extra.name}</span>
                         </div>
                         <span class="font-bold text-stone-500">+$${price.toFixed(2)}</span>
-                    </label>
-                `;
+                    </label>`;
                 extrasList.insertAdjacentHTML('beforeend', html);
             });
-        } else {
-            extrasContainer.classList.add('hidden');
+        } else { extrasContainer.classList.add('hidden'); }
+
+        if (editItemId) {
+            let itemToEdit = cart.find(i => i.cartItemId === editItemId);
+            if(itemToEdit) {
+                document.getElementById('modal-quantity').innerText = itemToEdit.quantity;
+                itemToEdit.extras.forEach(ext => {
+                    let cb = document.querySelector(`.extra-checkbox[value="${ext.id}"]`);
+                    if(cb) cb.checked = true;
+                });
+            }
         }
 
         const modal = document.getElementById('product-modal');
@@ -330,21 +339,17 @@
     function closeProductModal() {
         const modal = document.getElementById('product-modal');
         const content = document.getElementById('product-modal-content');
-        modal.classList.add('opacity-0');
-        content.classList.add('scale-95');
-        setTimeout(() => { modal.classList.add('hidden'); currentSelectedProduct = null; }, 300);
+        modal.classList.add('opacity-0'); content.classList.add('scale-95');
+        setTimeout(() => { modal.classList.add('hidden'); currentSelectedProduct = null; editingCartItemId = null; }, 300);
     }
 
     function changeModalQuantity(amount) {
-        const span = document.getElementById('modal-quantity');
+        let span = document.getElementById('modal-quantity');
         let current = parseInt(span.innerText);
-        
-        let inCart = cart.filter(item => item.product.id === currentSelectedProduct.id)
-                         .reduce((sum, item) => sum + item.quantity, 0);
-        let available = parseInt(currentSelectedProduct.calculated_stock) - inCart;
+        let available = getAvailableStock(currentSelectedProduct, editingCartItemId);
 
         if (amount > 0 && current >= available) {
-            alert(`Solo puedes agregar un máximo de ${available} unidad(es) más.`);
+            Swal.fire('Stock Limitado', `Solo puedes preparar ${available} unidad(es) con tu inventario actual.`, 'warning');
             return;
         }
         if (current + amount > 0) { span.innerText = current + amount; }
@@ -353,23 +358,27 @@
     function addToCartFromModal() {
         const quantity = parseInt(document.getElementById('modal-quantity').innerText);
         const checkboxes = document.querySelectorAll('.extra-checkbox:checked');
-        const selectedExtras = Array.from(checkboxes).map(cb => ({
-            id: cb.value, name: cb.dataset.name, price: parseFloat(cb.dataset.price)
-        }));
+        const selectedExtras = Array.from(checkboxes).map(cb => ({ id: cb.value, name: cb.dataset.name, price: parseFloat(cb.dataset.price) }));
 
         const basePrice = parseFloat(currentSelectedProduct.price);
         const extrasTotal = selectedExtras.reduce((sum, extra) => sum + extra.price, 0);
-        const unitPriceWithExtras = basePrice + extrasTotal;
-        const subtotal = unitPriceWithExtras * quantity;
+        const subtotal = (basePrice + extrasTotal) * quantity;
 
-        cart.push({
-            cartItemId: Date.now().toString(),
+        const newItem = {
+            cartItemId: editingCartItemId ? editingCartItemId : Date.now().toString(),
             product: currentSelectedProduct,
             quantity: quantity,
             extras: selectedExtras,
             unitPrice: basePrice,
             subtotal: subtotal
-        });
+        };
+
+        if (editingCartItemId) {
+            let index = cart.findIndex(i => i.cartItemId === editingCartItemId);
+            if(index > -1) cart[index] = newItem;
+        } else {
+            cart.push(newItem);
+        }
 
         closeProductModal();
         renderCart();
@@ -378,118 +387,105 @@
     function renderCart() {
         const container = document.getElementById('cart-items-container');
         const emptyMsg = document.getElementById('empty-cart-msg');
-        globalCartTotal = 0;
-        container.innerHTML = '';
+        globalCartTotal = 0; container.innerHTML = '';
 
         if (cart.length === 0) {
             emptyMsg.style.display = 'flex';
             document.getElementById('cart-total').innerText = '$0.00';
-            calculateChange();
-            return;
-        }
-
-        emptyMsg.style.display = 'none';
-
-        cart.forEach(item => {
-            globalCartTotal += item.subtotal;
-            let extrasHtml = item.extras.length > 0 ? `<p class="text-xs text-stone-400 mt-0.5">+ ${item.extras.map(e => e.name).join(', ')}</p>` : '';
-            
-            const html = `
-                <div class="bg-white p-3 rounded-xl shadow-sm border border-stone-100 flex gap-3 relative animate-fade-in-down z-10">
-                    <div class="flex-1">
-                        <h4 class="font-bold text-sm text-stone-800">${item.product.name}</h4>
-                        ${extrasHtml}
-                        <div class="font-bold text-amber-700 text-sm mt-1">$${item.subtotal.toFixed(2)}</div>
-                    </div>
-                    <div class="flex flex-col items-end justify-between">
-                        <button onclick="removeFromCart('${item.cartItemId}')" class="text-stone-300 hover:text-red-500 transition">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                        </button>
-                        <div class="bg-stone-100 rounded-lg px-2 py-1 flex items-center gap-2 mt-2">
-                            <span class="text-xs font-bold text-stone-600">x${item.quantity}</span>
+        } else {
+            emptyMsg.style.display = 'none';
+            cart.forEach(item => {
+                globalCartTotal += item.subtotal;
+                let extrasHtml = item.extras.length > 0 ? `<p class="text-xs text-stone-400 mt-0.5">+ ${item.extras.map(e => e.name).join(', ')}</p>` : '';
+                const html = `
+                    <div class="bg-white p-3 rounded-xl shadow-sm border border-stone-100 flex gap-3 animate-fade-in-down z-10">
+                        <div class="flex-1">
+                            <h4 class="font-bold text-sm text-stone-800">${item.product.name}</h4>
+                            ${extrasHtml}
+                            <div class="font-bold text-amber-700 text-sm mt-1">$${item.subtotal.toFixed(2)}</div>
                         </div>
-                    </div>
-                </div>
-            `;
-            container.insertAdjacentHTML('beforeend', html);
-        });
-
-        document.getElementById('cart-total').innerText = `$${globalCartTotal.toFixed(2)}`;
-        calculateChange(); // Recalcula el cambio cada que agregas o quitas algo
+                        <div class="flex flex-col items-end justify-between">
+                            <div class="flex gap-2">
+                                <button onclick="openProductModal(${item.product.id}, '${item.cartItemId}')" class="text-amber-500 hover:text-amber-700" title="Editar Extras"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg></button>
+                                <button onclick="removeFromCart('${item.cartItemId}')" class="text-stone-300 hover:text-red-500" title="Eliminar"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+                            </div>
+                            <div class="bg-stone-100 rounded-lg px-2 py-1 flex items-center gap-2 mt-2"><span class="text-xs font-bold text-stone-600">x${item.quantity}</span></div>
+                        </div>
+                    </div>`;
+                container.insertAdjacentHTML('beforeend', html);
+            });
+            document.getElementById('cart-total').innerText = `$${globalCartTotal.toFixed(2)}`;
+        }
+        calculateChange();
+        updateGridStock(); 
     }
 
     function removeFromCart(cartItemId) { cart = cart.filter(item => item.cartItemId !== cartItemId); renderCart(); }
-    function clearCart() { if(cart.length > 0 && confirm('¿Vaciar el ticket?')) { cart = []; renderCart(); document.getElementById('cash-received').value = '';} }
+    
+    function clearCart() { 
+        if(cart.length > 0) { 
+            Swal.fire({title: '¿Vaciar ticket?', showCancelButton: true, confirmButtonText: 'Sí, vaciar', confirmButtonColor: '#dc2626'})
+            .then((r) => { 
+                if(r.isConfirmed) { cart = []; renderCart(); document.getElementById('cash-received').value = ''; }
+            }); 
+        } 
+    }
+
+    function setPaymentMethod(method) {
+        currentPaymentMethod = method;
+        document.querySelectorAll('.payment-btn').forEach(btn => { btn.classList.remove('bg-amber-100', 'border-amber-500', 'text-amber-800'); btn.classList.add('bg-stone-50', 'border-stone-200', 'text-stone-500'); });
+        const activeBtn = document.getElementById(`btn-${method}`);
+        activeBtn.classList.remove('bg-stone-50', 'border-stone-200', 'text-stone-500'); activeBtn.classList.add('bg-amber-100', 'border-amber-500', 'text-amber-800');
+        const cashSection = document.getElementById('cash-payment-section');
+        if (method === 'efectivo') { cashSection.style.display = 'block'; } else { cashSection.style.display = 'none'; document.getElementById('cash-received').value = ''; }
+        calculateChange();
+    }
+
+    function calculateChange() {
+        const checkoutBtn = document.getElementById('checkout-btn');
+        const changeLabel = document.getElementById('change-amount');
+        const cashInput = document.getElementById('cash-received');
+
+        if (cart.length === 0) { checkoutBtn.disabled = true; changeLabel.innerText = '$0.00'; changeLabel.className = 'text-stone-400'; return; }
+        if (currentPaymentMethod === 'efectivo') {
+            const received = parseFloat(cashInput.value) || 0;
+            const change = received - globalCartTotal;
+            if (change >= 0 && received > 0) { changeLabel.innerText = `$${change.toFixed(2)}`; changeLabel.className = 'text-green-600 font-black text-xl'; checkoutBtn.disabled = false; } 
+            else { changeLabel.innerText = 'Falta dinero'; changeLabel.className = 'text-red-500 text-sm'; checkoutBtn.disabled = true; }
+        } else { checkoutBtn.disabled = false; }
+    }
 
     async function processCheckout() {
         if (cart.length === 0) return;
-
+        
         const btn = document.getElementById('checkout-btn');
         btn.disabled = true;
         btn.innerHTML = '<svg class="animate-spin h-5 w-5 mr-3" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Cobrando...';
 
-        // 1. CAPTURAR EL EFECTIVO EXACTO ESTRICTAMENTE
-        let exactReceived = globalCartTotal;
-        let exactChange = 0;
-
+        let exactReceived = globalCartTotal, exactChange = 0;
         if (currentPaymentMethod === 'efectivo') {
             const cashInput = parseFloat(document.getElementById('cash-received').value);
-            if (!isNaN(cashInput) && cashInput >= globalCartTotal) {
-                exactReceived = cashInput;
-                exactChange = cashInput - globalCartTotal;
-            }
+            if (!isNaN(cashInput) && cashInput >= globalCartTotal) { exactReceived = cashInput; exactChange = cashInput - globalCartTotal; }
         }
 
         const payload = {
-            payment_method: currentPaymentMethod,
-            total: globalCartTotal,
-            items: cart.map(item => ({
-                product_id: item.product.id,
-                quantity: item.quantity,
-                unit_price: item.unitPrice,
-                extras: item.extras 
-            }))
+            payment_method: currentPaymentMethod, total: globalCartTotal,
+            items: cart.map(item => ({ product_id: item.product.id, quantity: item.quantity, unit_price: item.unitPrice, extras: item.extras }))
         };
 
         try {
-            const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-
             const response = await fetch('{{ route("pos.store") }}', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': token,
-                    'Accept': 'application/json'
-                },
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'), 'Accept': 'application/json' },
                 body: JSON.stringify(payload)
             });
-
             const data = await response.json();
 
             if (data.success) {
-                // 2. ENVIAR LAS VARIABLES EXACTAS A LA URL DEL TICKET
-                const ticketUrl = `/pos/ticket/${data.order_id}?received=${exactReceived}&change=${exactChange}`;
-                
-                window.open(ticketUrl, 'Ticket', 'width=400,height=600');
-                
-                setTimeout(() => {
-                    cart = [];
-                    document.getElementById('cash-received').value = '';
-                    window.location.reload(); 
-                }, 1000);
-
-            } else {
-                alert('Error: ' + data.message);
-                btn.innerHTML = 'COBRAR TICKET';
-                btn.disabled = false;
-            }
-
-        } catch (error) {
-            console.error('Error:', error);
-            alert('Ocurrió un error al procesar el pago.');
-            btn.innerHTML = 'COBRAR TICKET';
-            btn.disabled = false;
-        }
+                window.open(`/pos/ticket/${data.order_id}?received=${exactReceived}&change=${exactChange}`, 'Ticket', 'width=400,height=600');
+                setTimeout(() => { cart = []; document.getElementById('cash-received').value = ''; window.location.reload(); }, 1000);
+            } else { Swal.fire('Error', data.message, 'error'); btn.innerHTML = 'COBRAR TICKET'; btn.disabled = false; }
+        } catch (error) { Swal.fire('Error', 'Ocurrió un error en el cobro.', 'error'); btn.innerHTML = 'COBRAR TICKET'; btn.disabled = false; }
     }
 </script>
 
@@ -503,4 +499,5 @@
     @keyframes fadeInDown { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
     .animate-fade-in-down { animation: fadeInDown 0.2s ease-out; }
 </style>
+</div>
 @endsection
