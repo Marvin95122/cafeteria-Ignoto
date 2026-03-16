@@ -1,6 +1,39 @@
 @extends('layouts.admin')
 
 @section('content')
+
+@section('content')
+
+{{-- PANTALLA DE BLOQUEO: CAJA CERRADA --}}
+@if(!isset($activeRegister) || !$activeRegister)
+    <div class="fixed inset-0 bg-stone-900/90 backdrop-blur-md z-[100] flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl p-10 max-w-lg w-full text-center shadow-2xl border-4 border-red-100 transform transition-all">
+            <div class="w-24 h-24 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
+                <span class="text-5xl">🔒</span>
+            </div>
+            <h2 class="text-3xl font-black text-red-600 mb-3 font-serif">Caja Cerrada</h2>
+            <p class="text-stone-600 mb-8 text-lg">
+                No se pueden realizar ventas en este momento. <br> 
+                <strong>Pide al Gerente o Administrador que abra el turno del día</strong> en la sección de Corte de Caja.
+            </p>
+            <div class="flex gap-4 justify-center">
+                <a href="{{ route('dashboard') }}" class="bg-stone-200 hover:bg-stone-300 text-stone-800 font-bold py-3 px-8 rounded-xl transition">
+                    Volver al Inicio
+                </a>
+                {{-- Si es gerente o admin, le damos un atajo directo para ir a abrir la caja --}}
+                @if(auth()->user()->role === 'admin' || auth()->user()->role === 'gerente')
+                    <a href="{{ route('cash_registers.index') }}" class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-xl shadow-lg shadow-red-600/30 transition">
+                        Abrir Caja Ahora
+                    </a>
+                @endif
+            </div>
+        </div>
+    </div>
+@endif
+
+{{-- El resto de tu código del POS se queda igual abajo de esto... --}}
+<div class="flex flex-col h-[calc(100vh-theme(spacing.16))] bg-stone-100">
+
 <meta name="csrf-token" content="{{ csrf_token() }}">
 
 <div class="h-[calc(100vh-8rem)] flex flex-col md:flex-row gap-6 -mt-4 relative">

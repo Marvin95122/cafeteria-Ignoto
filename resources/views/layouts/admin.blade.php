@@ -188,5 +188,38 @@
             }
         });
     </script>
+
+    {{-- LIBRERIA DE ALERTAS --}}
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    {{-- SCRIPTS GLOBALES DEL SISTEMA --}}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            //APAGAR AUTOCOMPLETADO EN VARIAS PARTES DEL SISTEMA
+            document.querySelectorAll('input, form, textarea').forEach(function(elemento) {
+                elemento.setAttribute('autocomplete', 'off');
+                elemento.setAttribute('data-lpignore', 'true'); // Ignorar LastPass/Gestores de contraseñas
+            });
+            
+            window.confirmarAccion = function(event, formId, mensaje) {
+                event.preventDefault();
+                Swal.fire({
+                    title: '¿Estás seguro?',
+                    text: mensaje || "Esta acción no se puede deshacer.",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#dc2626',
+                    cancelButtonColor: '#6b7280',
+                    confirmButtonText: 'Sí, continuar',
+                    cancelButtonText: 'Cancelar',
+                    backdrop: `rgba(0,0,0,0.6)`
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        document.getElementById(formId).submit();
+                    }
+                });
+            };
+        });
+    </script>
 </body>
 </html>

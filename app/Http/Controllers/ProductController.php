@@ -54,7 +54,6 @@ class ProductController extends Controller
             $imagePath = $request->file('image')->store('products', 'public');
         }
 
-        // 1. Crear Producto
         $product = Product::create([
             'name' => $request->name,
             'category_id' => $request->category_id,
@@ -65,7 +64,6 @@ class ProductController extends Controller
             'use_dynamic_stock' => $request->has('use_dynamic_stock'),
         ]);
 
-        // 2. Guardar Extras
         if ($request->has('extras')) {
             foreach ($request->extras as $extraData) {
                 if (!empty($extraData['name']) && isset($extraData['price'])) {
@@ -75,7 +73,6 @@ class ProductController extends Controller
                         'active' => true,
                     ]);
                     
-                    // Asociar al producto
                     $product->extras()->attach($extra->id, [
                         'price' => $extraData['price'],
                         'active' => true
@@ -90,7 +87,6 @@ class ProductController extends Controller
             }
         }
 
-        // 3. Ingredientes
         if ($request->has('ingredients')) {
             foreach ($request->ingredients as $ingData) {
                 if (!empty($ingData['id']) && !empty($ingData['quantity'])) {
@@ -101,13 +97,9 @@ class ProductController extends Controller
             }
         }
 
-        // Si es dinámico, calculamos el stock real y lo guardamos en la BD para que coincida
         if ($product->use_dynamic_stock) {
-            // Recargamos los ingredientes recién guardados
             $product->refresh(); 
-            // Usamos el accesor del modelo para obtener el cálculo
             $realStock = $product->calculated_stock; 
-            // Actualizamos la columna 'stock' en la base de datos
             $product->update(['stock' => $realStock]);
         }
 
@@ -144,7 +136,6 @@ class ProductController extends Controller
             $product->image = $request->file('image')->store('products', 'public');
         }
 
-        // 1. Actualizar Datos Básicos
         $product->update([
             'name' => $request->name,
             'category_id' => $request->category_id,
@@ -154,14 +145,13 @@ class ProductController extends Controller
             'use_dynamic_stock' => $request->input('use_dynamic_stock') == '1',
         ]);
 
-        // 2. Extras
-        // Crear Extras Nuevos
         $idsToKeep = [];
+
+        // A) ACTUALIZAR EXTRAS EXISTENTES
         if ($request->has('extras')) {
             foreach ($request->extras as $id => $data) {
                 $extra = Extra::find($id);
                 if ($extra) {
-                    //Actualizar datos básicos
                     $extra->update([
                         'name' => $data['name'], 
                         'price' => $data['price'], 
@@ -186,7 +176,39 @@ class ProductController extends Controller
             }
         }
 
-        // 3. Ingredientes
+        // B) NUEVO: GUARDAR EXTRAS NUEVOS AL EDITAR (El bug que detectaste)
+        if ($request->has('new_extras')) {
+            foreach ($request->new_extras as $newExtra) {
+                if (!empty($newExtra['name']) && isset($newExtra['price'])) {
+                    $extra = Extra::create([
+                        'name' => $newExtra['name'],
+                        'price' => $newExtra['price'],
+                        'active' => true,
+                    ]);
+                    
+                    $product->extras()->attach($extra->id, [
+                        'price' => $newExtra['price'],
+                        'active' => true
+                    ]);
+
+                    if (!empty($newExtra['ingredient_id']) && !empty($newExtra['ingredient_qty'])) {
+                        $extra->ingredients()->attach($newExtra['ingredient_id'], [
+                            'quantity' => $newExtra['ingredient_qty']
+                        ]);
+                    }
+                    
+                    $idsToKeep[] = $extra->id;
+                }
+            }
+        }
+
+        $currentExtraIds = $product->extras()->pluck('extras.id')->toArray();
+        $idsToDelete = array_diff($currentExtraIds, $idsToKeep);
+        
+        if (!empty($idsToDelete)) {
+            Extra::whereIn('id', $idsToDelete)->delete();
+        }
+
         $ingredientsToSync = [];
         if ($request->has('ingredients')) {
             foreach ($request->ingredients as $ingData) {
@@ -197,8 +219,6 @@ class ProductController extends Controller
         }
         $product->ingredients()->sync($ingredientsToSync);
 
-        //SINCRONIZACIÓN 
-        // Volvemos a sincronizar el stock de la BD con el cálculo real
         if ($product->use_dynamic_stock) {
             $product->refresh();
             $realStock = $product->calculated_stock;
@@ -206,7 +226,7 @@ class ProductController extends Controller
         }
 
         return redirect()->route('products.index')
-            ->with('success', 'Producto actualizado correctamente.');
+            ->with('success', 'Producto y extras actualizados correctamente.');
     }
 
     public function destroy(Product $product)
@@ -214,11 +234,14 @@ class ProductController extends Controller
         if ($product->image) {
             Storage::disk('public')->delete($product->image);
         }
-        $product->extras()->detach();
+        
+        $extraIds = $product->extras()->pluck('extras.id');
+        Extra::whereIn('id', $extraIds)->delete();
+
         $product->ingredients()->detach();
         $product->delete();
         
         return redirect()->route('products.index')
-            ->with('success', 'Producto eliminado correctamente');
+            ->with('success', 'Producto y su historial de extras eliminados correctamente');
     }
 }

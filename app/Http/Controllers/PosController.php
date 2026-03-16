@@ -13,12 +13,30 @@ use Illuminate\Support\Facades\Auth;
 
 class PosController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $categories = Category::where('active', true)->get();
-        $products = Product::with('extras')->where('active', true)->get();
+        // Se revisa que si hay una caja abierta
+        $activeRegister = \App\Models\CashRegister::where('status', 'abierta')->exists();
 
-        return view('pos.index', compact('categories', 'products'));
+        // Si la caja esta cerrada, podemos saltarnos la busqueda de productos para ahorrar memoria
+        if (!$activeRegister) {
+            return view('pos.index', ['activeRegister' => false, 'products' => collect(), 'categories' => collect()]);
+        }
+
+        $query = Product::with(['category', 'extras.ingredients', 'ingredients'])->where('active', true);
+
+        if ($request->filled('category_id')) {
+            $query->where('category_id', $request->category_id);
+        }
+
+        if ($request->filled('search')) {
+            $query->where('name', 'like', '%' . $request->search . '%');
+        }
+
+        $products = $query->get();
+        $categories = Category::where('active', true)->get();
+
+        return view('pos.index', compact('products', 'categories', 'activeRegister'));
     }
 
     public function store(Request $request)
