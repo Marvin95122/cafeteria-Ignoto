@@ -56,6 +56,8 @@ Route::middleware(['auth', 'role:admin,gerente'])->group(function () {
     Route::post('/caja/venta/{order}/cancelar', [App\Http\Controllers\CashRegisterController::class, 'cancelOrder'])->name('cash_registers.cancel_order');
 
     // RUTAS DE INVENTARIO
+    Route::get('/inventario/movimientos/carga-masiva', [App\Http\Controllers\InventoryMovementController::class, 'createBulk'])->name('inventory_movements.create_bulk');
+    Route::post('/inventario/movimientos/carga-masiva', [App\Http\Controllers\InventoryMovementController::class, 'storeBulk'])->name('inventory_movements.store_bulk');
     Route::get('/inventario/movimientos', [App\Http\Controllers\InventoryMovementController::class, 'index'])->name('inventory_movements.index');
     Route::post('/inventario/movimientos', [App\Http\Controllers\InventoryMovementController::class, 'store'])->name('inventory_movements.store');
 });
