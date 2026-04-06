@@ -12,7 +12,10 @@ class Expense extends Model
         'description',
         'category',
         'amount',
-        'receipt_image'
+        'receipt_image',
+        'status',
+        'cancelled_by',
+        'cancellation_reason'
     ];
 
     // Relación: El gasto lo registró un usuario
@@ -25,5 +28,10 @@ class Expense extends Model
     public function cashRegister()
     {
         return $this->belongsTo(CashRegister::class);
+    }
+    // Relación para saber qué Administrador o gerente anuló el gasto
+    public function canceller()
+    {
+        return $this->belongsTo(User::class, 'cancelled_by');
     }
 }

@@ -17,6 +17,7 @@
     <form action="{{ route('inventory_movements.store_bulk') }}" method="POST" id="bulk-form" class="space-y-6">
         @csrf
 
+        {{-- TARJETA DE PRODUCTOS --}}
         <div class="bg-white rounded-2xl shadow-sm border border-stone-200 overflow-hidden">
             <div class="bg-amber-50/50 p-4 border-b border-stone-100 flex justify-between items-center">
                 <h2 class="font-bold text-stone-800 flex items-center gap-2">
@@ -42,19 +43,16 @@
                             {{-- Fila Inicial --}}
                             <tr class="item-row border-b border-stone-100 last:border-0" data-index="0">
                                 <td class="py-3 pr-2">
-                                    {{-- Agregamos onchange="updateUnitOptions(this)" para detectar cuando elijas el producto --}}
-                                    <select name="items[0][ingredient_id]" required onchange="updateUnitOptions(this)" class="w-full rounded-lg border-stone-300 text-sm focus:border-amber-500 focus:ring-amber-200">
-                                        <option value="">Selecciona insumo...</option>
-                                        @foreach($ingredients as $ingredient)
-                                            <option value="{{ $ingredient->id }}">{{ $ingredient->name }} ({{ $ingredient->unit_measure }})</option>
-                                        @endforeach
-                                    </select>
+                                    <input type="hidden" name="items[0][ingredient_id]" class="ingredient-id-input">
+                                    <button type="button" onclick="openIngredientModal(this)" class="w-full text-left bg-stone-50 border border-stone-300 rounded-lg px-4 py-2.5 text-sm text-stone-500 hover:bg-amber-50 hover:border-amber-400 transition flex justify-between items-center ingredient-selector-btn group">
+                                        <span class="flex items-center gap-2">🔍 Buscar insumo...</span>
+                                        <svg class="w-4 h-4 text-stone-400 group-hover:text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                    </button>
                                 </td>
                                 <td class="py-3 pr-2">
                                     <div class="flex gap-1">
-                                        <input type="number" name="items[0][quantity]" required step="0.01" min="0.01" placeholder="Ej: 2.5" class="w-1/2 rounded-lg border-stone-300 text-sm focus:border-amber-500 focus:ring-amber-200">
-                                        {{-- Agregamos la clase 'unit-select' para que JS la encuentre y la modifique --}}
-                                        <select name="items[0][input_unit]" class="unit-select w-1/2 rounded-lg border-stone-300 text-sm bg-stone-50 text-stone-600 focus:border-amber-500 cursor-pointer">
+                                        <input type="number" name="items[0][quantity]" required step="0.01" min="0.01" placeholder="Ej: 2.5" class="w-1/2 rounded-lg border-stone-300 text-sm focus:border-amber-500 focus:ring-amber-200 disabled:bg-stone-100 disabled:cursor-not-allowed">
+                                        <select name="items[0][input_unit]" class="unit-select w-1/2 rounded-lg border-stone-300 text-sm bg-stone-50 text-stone-600 focus:border-amber-500 cursor-pointer disabled:bg-stone-100 disabled:cursor-not-allowed">
                                             <option value="base">Normal</option>
                                         </select>
                                     </div>
@@ -74,9 +72,9 @@
             </div>
         </div>
 
+        {{-- TARJETA DE GASTO DE CAJA --}}
         <div class="bg-white rounded-2xl shadow-sm border border-stone-200 p-6">
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                
                 <div class="flex-1">
                     @if($activeRegister)
                         <label class="flex items-start gap-3 cursor-pointer group p-3 border border-stone-200 rounded-xl hover:bg-stone-50 transition">
@@ -88,9 +86,8 @@
                                 <span class="block text-xs text-stone-500 mt-0.5">El total de esta compra se restará del dinero de la caja actual.</span>
                             </div>
                         </label>
-
                         <div id="expense-desc-container" class="mt-3 hidden">
-                            <input type="text" name="expense_description" placeholder="Ej: Compra Chedrahui Factura #1023" class="w-full text-sm rounded-lg border-stone-300 focus:border-amber-500 focus:ring-amber-200">
+                            <input type="text" name="expense_description" placeholder="Ej: Compra en algun Lugar" class="w-full text-sm rounded-lg border-stone-300 focus:border-amber-500 focus:ring-amber-200">
                         </div>
                     @else
                         <div class="p-3 bg-red-50 border border-red-100 rounded-xl">
@@ -118,19 +115,112 @@
     </form>
 </div>
 
+{{-- MODAL BUSCADOR DE MATERIA PRIMA --}}
+<div id="ingredient-modal" class="fixed inset-0 bg-stone-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 opacity-0 transition-opacity duration-300 ease-out">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-3xl overflow-hidden flex flex-col h-[75vh] transform scale-95 opacity-0 transition-all duration-300 ease-out" id="ingredient-modal-content">
+        
+        <div class="p-5 border-b border-stone-100 flex gap-4 items-center bg-amber-50/50">
+            <div class="relative flex-1">
+                <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-stone-400 text-xl">🔍</span>
+                <input type="text" id="ingredient-search" onkeyup="filterIngredients()" placeholder="Buscar materia prima..." class="w-full pl-12 border-stone-200 rounded-xl text-lg focus:border-amber-500 py-3 shadow-sm bg-white">
+            </div>
+            <button type="button" onclick="closeIngredientModal()" class="text-stone-400 hover:text-red-500 transition text-4xl leading-none" title="Cerrar">&times;</button>
+        </div>
+        
+        <div class="flex-1 overflow-y-auto p-5 custom-scrollbar bg-stone-50/50">
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3" id="ingredients-grid">
+                </div>
+        </div>
+    </div>
+</div>
+
 <script>
-    const ingredients = {!! json_encode($ingredients->map(function($i) { return ['id' => $i->id, 'name' => $i->name, 'unit' => $i->unit_measure]; })) !!};
+    const ingredients = {!! json_encode($ingredients->map(function($i) { return ['id' => $i->id, 'name' => $i->name, 'unit' => $i->unit]; })) !!};
     let rowCount = 1;
+    let activeRowButton = null;
 
-    function updateUnitOptions(selectElement) {
-        const row = selectElement.closest('tr');
-        const unitSelect = row.querySelector('.unit-select');
-        const ingredientId = selectElement.value;
+    function openIngredientModal(btn) {
+        activeRowButton = btn;
+        document.getElementById('ingredient-search').value = '';
+        renderIngredientsGrid('');
+        
+        const modal = document.getElementById('ingredient-modal');
+        const content = document.getElementById('ingredient-modal-content');
+        modal.classList.remove('hidden');
+        void modal.offsetWidth; 
+        modal.classList.remove('opacity-0');
+        content.classList.remove('scale-95', 'opacity-0');
+        content.classList.add('scale-100', 'opacity-100');
+        
+        document.getElementById('ingredient-search').focus();
+    }
 
-        if (!ingredientId) {
-            unitSelect.innerHTML = '<option value="base">Normal</option>';
+    function closeIngredientModal() {
+        const modal = document.getElementById('ingredient-modal');
+        const content = document.getElementById('ingredient-modal-content');
+        modal.classList.add('opacity-0'); 
+        content.classList.remove('scale-100', 'opacity-100');
+        content.classList.add('scale-95', 'opacity-0');
+
+        setTimeout(() => { 
+            modal.classList.add('hidden'); 
+            activeRowButton = null; 
+        }, 300);
+    }
+
+    function renderIngredientsGrid(search) {
+        const grid = document.getElementById('ingredients-grid');
+        grid.innerHTML = '';
+        
+        const term = search.toLowerCase().trim();
+        const filtered = ingredients.filter(i => i.name.toLowerCase().includes(term));
+
+        if(filtered.length === 0) {
+            grid.innerHTML = '<div class="col-span-full text-center py-10"><span class="text-4xl block mb-2">🤷‍♂️</span><span class="text-stone-500 font-medium">No se encontró ninguna materia prima con ese nombre.</span></div>';
             return;
         }
+
+        filtered.forEach(ing => {
+            const html = `
+                <button type="button" onclick="selectIngredient(${ing.id}, '${ing.name.replace(/'/g, "\\'")}')" class="bg-white border border-stone-200 p-4 rounded-xl shadow-sm hover:border-amber-400 hover:shadow-md hover:bg-amber-50 transition text-left flex items-center gap-3 group focus:outline-none focus:ring-2 focus:ring-amber-500">
+                    <div class="w-10 h-10 rounded-full bg-stone-100 flex items-center justify-center text-xl group-hover:bg-amber-100 transition shadow-inner">📦</div>
+                    <div>
+                        <div class="font-bold text-stone-800 text-sm leading-tight">${ing.name}</div>
+                        <div class="text-xs text-stone-400 mt-1 font-bold tracking-wider uppercase">${ing.unit || 'Pz'}</div>
+                    </div>
+                </button>
+            `;
+            grid.insertAdjacentHTML('beforeend', html);
+        });
+    }
+
+    function filterIngredients() {
+        renderIngredientsGrid(document.getElementById('ingredient-search').value);
+    }
+
+    function selectIngredient(id, name) {
+        if(!activeRowButton) return;
+        
+        activeRowButton.innerHTML = `
+            <div class="flex items-center gap-2">
+                <span class="text-amber-700 text-lg">📦</span> 
+                <span class="font-bold text-stone-800">${name}</span>
+            </div>
+            <svg class="w-4 h-4 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+        `;
+        activeRowButton.classList.replace('text-stone-500', 'text-stone-800');
+        activeRowButton.classList.replace('bg-stone-50', 'bg-white');
+        activeRowButton.classList.remove('border-red-500', 'ring-2', 'ring-red-200');
+
+        const row = activeRowButton.closest('tr');
+        row.querySelector('.ingredient-id-input').value = id;
+        updateUnitOptionsManual(row, id);
+        closeIngredientModal();
+    }
+
+    function updateUnitOptionsManual(row, ingredientId) {
+        const unitSelect = row.querySelector('.unit-select');
+        if (!ingredientId) return;
 
         const ingredient = ingredients.find(i => i.id == ingredientId);
         if (!ingredient) return;
@@ -139,7 +229,6 @@
         baseUnit = baseUnit.replace(/[^a-z]/g, ''); 
 
         let optionsHtml = '';
-
         const isWeight = ['g', 'gr', 'gramos', 'gramo', 'kg', 'kilo', 'kilos'].includes(baseUnit);
         const isVolume = ['ml', 'mililitro', 'mililitros', 'l', 'litro', 'litros'].includes(baseUnit);
 
@@ -163,21 +252,17 @@
 
     function addRow() {
         const tbody = document.getElementById('items-body');
-        
-        let optionsHtml = '<option value="">Selecciona insumo...</option>';
-        ingredients.forEach(i => {
-            optionsHtml += `<option value="${i.id}">${i.name} (${i.unit || 'Pz'})</option>`;
-        });
-
         const newRow = document.createElement('tr');
         newRow.className = 'item-row border-b border-stone-100 last:border-0';
         newRow.dataset.index = rowCount;
         
         newRow.innerHTML = `
             <td class="py-3 pr-2">
-                <select name="items[${rowCount}][ingredient_id]" required onchange="updateUnitOptions(this)" class="w-full rounded-lg border-stone-300 text-sm focus:border-amber-500 focus:ring-amber-200">
-                    ${optionsHtml}
-                </select>
+                <input type="hidden" name="items[${rowCount}][ingredient_id]" class="ingredient-id-input">
+                <button type="button" onclick="openIngredientModal(this)" class="w-full text-left bg-stone-50 border border-stone-300 rounded-lg px-4 py-2.5 text-sm text-stone-500 hover:bg-amber-50 hover:border-amber-400 transition flex justify-between items-center ingredient-selector-btn group">
+                    <span class="flex items-center gap-2">🔍 Buscar insumo...</span>
+                    <svg class="w-4 h-4 text-stone-400 group-hover:text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                </button>
             </td>
             <td class="py-3 pr-2">
                 <div class="flex gap-1">
@@ -223,23 +308,73 @@
     function toggleExpenseDesc() {
         const checkbox = document.getElementById('register_expense');
         const container = document.getElementById('expense-desc-container');
-        if (checkbox.checked) {
-            container.classList.remove('hidden');
-        } else {
-            container.classList.add('hidden');
-        }
+        if (checkbox.checked) { container.classList.remove('hidden'); } 
+        else { container.classList.add('hidden'); }
     }
 
     document.getElementById('bulk-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        let isValid = true;
+        
+        document.querySelectorAll('.ingredient-id-input').forEach(input => {
+            const btnSelector = input.closest('td').querySelector('.ingredient-selector-btn');
+            if(!input.value) {
+                isValid = false;
+                btnSelector.classList.add('border-red-500', 'ring-2', 'ring-red-200');
+            } else {
+                btnSelector.classList.remove('border-red-500', 'ring-2', 'ring-red-200');
+            }
+        });
+
+        if(!isValid) {
+            Swal.fire('Faltan Insumos', 'Por favor, usa el buscador para seleccionar la materia prima en todas las filas.', 'error');
+            return;
+        }
+
         const checkbox = document.getElementById('register_expense');
-        let title = '¿Guardar Inventario?';
-        let text = 'Se agregarán las cantidades indicadas a tu stock.';
+        let titulo = '¿Guardar Compra?';
+        let texto = 'Se agregarán las cantidades indicadas a tu stock.';
         
         if(checkbox && checkbox.checked) {
-            title = '¿Guardar Inventario y Gasto?';
-            text = 'Se actualizará el stock y se descontará el dinero de la caja automáticamente.';
+            titulo = '¿Guardar Compra y Gasto?';
+            texto = 'Se actualizará el stock y se descontará el total del dinero de la caja automáticamente.';
         }
-        confirmarAccion(e, 'bulk-form', text);
+        
+        Swal.fire({
+            title: titulo,
+            text: texto,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc2626',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: 'Sí, guardar',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                document.getElementById('bulk-form').submit();
+            }
+        });
+    });
+
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') {
+            const ingredientModal = document.getElementById('ingredient-modal');
+            const adjustmentModal = document.getElementById('adjustment-modal');
+
+            if (ingredientModal && !ingredientModal.classList.contains('hidden')) {
+                closeIngredientModal();
+            }
+            else if (adjustmentModal && !adjustmentModal.classList.contains('hidden')) {
+                closeAdjustmentModal();
+            }
+        }
     });
 </script>
+
+<style>
+    .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #d6d3d1; border-radius: 10px; }
+</style>
 @endsection

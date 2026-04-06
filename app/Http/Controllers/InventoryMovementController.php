@@ -97,14 +97,15 @@ class InventoryMovementController extends Controller
             foreach ($request->items as $item) {
                 $ingredient = Ingredient::find($item['ingredient_id']);
                 
-                $baseUnit = strtolower(trim($ingredient->unit_measure));
+                // Limpiamos las unidades para evitar errores
+                $baseUnit = strtolower(trim($ingredient->unit));
                 $inputUnit = strtolower(trim($item['input_unit']));
                 $finalQuantity = floatval($item['quantity']);
 
                 $weightUnits = ['g', 'gr', 'gramos', 'kg', 'kilo', 'kilos'];
                 $volumeUnits = ['ml', 'mililitros', 'l', 'litro', 'litros'];
 
-                //conversión Bidireccional
+                // Conversión Bidireccional
                 if (in_array($baseUnit, $weightUnits) && in_array($inputUnit, $weightUnits)) {
                     $isBaseKg = in_array($baseUnit, ['kg', 'kilo', 'kilos']);
                     $isInputKg = in_array($inputUnit, ['kg', 'kilo', 'kilos']);
@@ -142,15 +143,18 @@ class InventoryMovementController extends Controller
                 $totalCost += floatval($item['cost'] ?? 0);
             }
 
-            // Gasto de caja
+            //Gasto de caja
             if ($request->register_expense && $totalCost > 0) {
                 $activeRegister = CashRegister::where('status', 'abierta')->first();
                 if ($activeRegister) {
                     Expense::create([
+                        'user_id' => Auth::id(),
                         'cash_register_id' => $activeRegister->id,
                         'description' => $request->expense_description ?: 'Compra de insumos en Carga Masiva',
+                        'category' => 'Insumos',
                         'amount' => $totalCost,
                     ]);
+                    
                     $activeRegister->actual_amount -= $totalCost;
                     $activeRegister->save();
                 }

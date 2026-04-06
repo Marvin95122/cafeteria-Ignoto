@@ -23,8 +23,8 @@ class DashboardController extends Controller
         $salesWeek = Order::where('status', 'completado')->where('created_at', '>=', $startOfWeek)->sum('total');
         $salesMonth = Order::where('status', 'completado')->where('created_at', '>=', $startOfMonth)->sum('total');
 
-        $expensesToday = Expense::whereDate('created_at', $today)->sum('amount');
-        $expensesMonth = Expense::where('created_at', '>=', $startOfMonth)->sum('amount');
+        $expensesToday = Expense::whereDate('created_at', today())->where('status', 'activo')->sum('amount');
+        $expensesMonth = Expense::whereMonth('created_at', now()->month)->where('status', 'activo')->sum('amount');
 
         $netProfitMonth = $salesMonth - $expensesMonth;
 

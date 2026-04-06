@@ -93,23 +93,60 @@
                     <h3 class="font-bold text-stone-800">Gastos Registrados</h3>
                 </div>
                 <div class="overflow-y-auto max-h-96">
-                    <table class="w-full text-left text-sm text-stone-600">
-                        <thead class="bg-stone-50 text-stone-500 uppercase text-xs sticky top-0">
-                            <tr>
-                                <th class="px-4 py-3">Hora</th>
-                                <th class="px-4 py-3">Descripción</th>
-                                <th class="px-4 py-3 text-right">Monto</th>
+                   <table class="w-full text-left border-collapse">
+                        <thead class="bg-stone-50 border-b border-stone-200">
+                            <tr class="text-xs text-stone-500 uppercase tracking-wider">
+                                <th class="px-4 py-3 font-bold">Hora</th>
+                                <th class="px-4 py-3 font-bold">Descripción</th>
+                                <th class="px-4 py-3 font-bold">Categoría</th>
+                                <th class="px-4 py-3 font-bold text-right">Monto</th>
+                                <th class="px-4 py-3 font-bold text-center">Acción</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-stone-200">
+                        <tbody class="divide-y divide-stone-100">
                             @forelse($expenses as $expense)
-                                <tr class="hover:bg-stone-50">
-                                    <td class="px-4 py-3">{{ $expense->created_at->format('h:i A') }}</td>
-                                    <td class="px-4 py-3 font-medium text-stone-800">{{ $expense->description }}</td>
-                                    <td class="px-4 py-3 text-right text-red-600 font-bold">-${{ number_format($expense->amount, 2) }}</td>
+                                <tr class="hover:bg-stone-50 transition {{ $expense->status === 'cancelado' ? 'bg-red-50/30' : '' }}">
+                                    <td class="px-4 py-3 text-sm text-stone-500">{{ $expense->created_at->format('h:i A') }}</td>
+                                    <td class="px-4 py-3">
+                                        <div class="text-sm font-bold {{ $expense->status === 'cancelado' ? 'text-red-700 line-through' : 'text-stone-800' }}">
+                                            {{ $expense->description }}
+                                        </div>
+                                        
+                                        {{-- NUEVO: Quién registró el gasto originalmente --}}
+                                        <div class="text-xs text-stone-500 mt-1 flex items-center gap-1">
+                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                                            Registrado por: <span class="font-bold">{{ $expense->user->name ?? 'Usuario' }}</span>
+                                        </div>
+                                        
+                                        {{-- NUEVO: Motivo de cancelación visible y elegante abajo --}}
+                                        @if($expense->status === 'cancelado')
+                                            <div class="mt-2 bg-red-100/50 p-2 rounded-lg border border-red-100 inline-block w-full">
+                                                <div class="text-xs text-red-800 font-bold mb-0.5">⚠️ Anulado por {{ $expense->canceller->name ?? 'Admin' }}</div>
+                                                <div class="text-xs text-red-600 italic">"{{ $expense->cancellation_reason }}"</div>
+                                            </div>
+                                        @endif
+                                    </td>
+                                    <td class="px-4 py-3">
+                                        <span class="px-2 py-1 rounded-full text-xs font-bold bg-stone-100 text-stone-600">{{ $expense->category ?? 'Sin categoría' }}</span>
+                                    </td>
+                                    <td class="px-4 py-3 text-sm font-bold text-right {{ $expense->status === 'cancelado' ? 'text-stone-400 line-through' : 'text-red-600' }}">
+                                        -${{ number_format($expense->amount, 2) }}
+                                    </td>
+                                    <td class="px-4 py-3 text-center">
+                                        @if($expense->status === 'cancelado')
+                                            <span class="px-3 py-1.5 rounded-full text-xs font-bold bg-red-100 text-red-700 border border-red-200">Cancelado</span>
+                                        @else
+                                            {{-- NUEVO: Botón "Cancelar" idéntico al de la tabla de ventas --}}
+                                            <button onclick="deleteExpenseSecure({{ $expense->id }})" class="px-3 py-1.5 bg-red-50 text-red-600 rounded-lg text-xs font-bold hover:bg-red-100 border border-red-200 transition shadow-sm">
+                                                Cancelar
+                                            </button>
+                                        @endif
+                                    </td>
                                 </tr>
                             @empty
-                                <tr><td colspan="3" class="px-4 py-8 text-center text-stone-400 italic">No hay gastos.</td></tr>
+                                <tr>
+                                    <td colspan="5" class="px-4 py-8 text-center text-stone-400 text-sm">No hay gastos registrados en este turno.</td>
+                                </tr>
                             @endforelse
                         </tbody>
                     </table>
@@ -296,17 +333,40 @@
                 <form id="cancel-order-form" method="POST" class="p-5">
                     @csrf
                     <p class="text-sm text-stone-600 mb-4 bg-stone-50 p-3 rounded-lg border border-stone-200">
-                        Al cancelar este ticket, <strong>el dinero se restará de la caja</strong> y todos los insumos (café, leche, extras) <strong>volverán automáticamente al inventario</strong>.
+                        Al cancelar este ticket, <strong>el dinero se restará de la caja</strong>. Selecciona qué pasará con los insumos:
                     </p>
+
+                    {{-- Opciones de Decisión (Devolver o Mermar) --}}
+                    <div class="mb-5 space-y-3">
+                        <label class="flex items-start gap-3 cursor-pointer p-3 border border-stone-200 rounded-xl hover:bg-stone-50 transition">
+                            <div class="flex items-center h-5 mt-0.5">
+                                <input type="radio" name="action_type" value="devolver" required class="w-5 h-5 text-amber-600 focus:ring-amber-500 cursor-pointer">
+                            </div>
+                            <div>
+                                <span class="block font-bold text-stone-800 text-sm">Error de Cobro (Devolver)</span>
+                                <span class="block text-xs text-stone-500 mt-0.5">La bebida no se preparó. Los insumos regresarán al inventario.</span>
+                            </div>
+                        </label>
+
+                        <label class="flex items-start gap-3 cursor-pointer p-3 border border-stone-200 rounded-xl hover:bg-red-50 transition">
+                            <div class="flex items-center h-5 mt-0.5">
+                                <input type="radio" name="action_type" value="merma" required class="w-5 h-5 text-red-600 focus:ring-red-500 cursor-pointer">
+                            </div>
+                            <div>
+                                <span class="block font-bold text-red-800 text-sm">Bebida Desperdiciada (Merma)</span>
+                                <span class="block text-xs text-red-600 mt-0.5">El café se preparó. No regresa al stock y se anota como merma en la bitácora.</span>
+                            </div>
+                        </label>
+                    </div>
 
                     <div class="mb-6">
                         <label class="block text-sm font-bold text-stone-700 mb-2">Motivo de cancelación (Obligatorio)</label>
-                        <textarea name="cancellation_reason" rows="2" required placeholder="Ej: Se cobró mal / El cliente no traía efectivo / ptros motivos" class="w-full border-stone-300 rounded-lg focus:ring-red-500 focus:border-red-500"></textarea>
+                        <textarea name="cancellation_reason" rows="2" required placeholder="Ej: Se cobró mal / El cliente no quiso esperar" class="w-full border-stone-300 rounded-lg focus:ring-red-500 focus:border-red-500"></textarea>
                     </div>
 
                     <div class="flex gap-3">
                         <button type="button" onclick="document.getElementById('modal-cancel-order').classList.add('hidden')" class="flex-1 bg-stone-100 hover:bg-stone-200 text-stone-700 font-bold py-3 rounded-xl transition">Volver</button>
-                        <button type="submit" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-xl shadow-md transition">Anular Ticket</button>
+                        <button type="submit" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-xl shadow-md transition">Confirmar Anulación</button>
                     </div>
                 </form>
             </div>
@@ -318,6 +378,51 @@
                 // Le indicamos al formulario a qué ruta (con qué ID) debe mandar los datos
                 document.getElementById('cancel-order-form').action = `/caja/venta/${orderId}/cancelar`;
                 document.getElementById('modal-cancel-order').classList.remove('hidden');
+            }
+        </script>
+        
+        <script>
+            function deleteExpenseSecure(expenseId) {
+                Swal.fire({
+                    title: '🔐 Anular Gasto',
+                    html: `
+                        <p class="text-sm text-stone-500 mb-4">Ingresa tu contraseña de Administrador y el motivo para anular este gasto de la caja.</p>
+                        <input type="password" id="swal-password" class="w-full border-stone-300 rounded-lg mb-3 focus:border-red-500 focus:ring-red-200" placeholder="Contraseña de autorización...">
+                        <textarea id="swal-reason" rows="2" class="w-full border-stone-300 rounded-lg focus:border-red-500 focus:ring-red-200" placeholder="Motivo de la anulación..."></textarea>
+                    `,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#dc2626',
+                    cancelButtonColor: '#6b7280',
+                    confirmButtonText: 'Confirmar y Anular',
+                    cancelButtonText: 'Cancelar',
+                    preConfirm: () => {
+                        const password = document.getElementById('swal-password').value;
+                        const reason = document.getElementById('swal-reason').value;
+                        if (!password || !reason) {
+                            Swal.showValidationMessage('La contraseña y el motivo son obligatorios');
+                        }
+                        return { password: password, reason: reason };
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        const form = document.createElement('form');
+                        form.method = 'POST';
+                        form.action = `/caja/gasto/${expenseId}`;
+
+                        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+                        
+                        form.innerHTML = `
+                            <input type="hidden" name="_token" value="${csrfToken}">
+                            <input type="hidden" name="_method" value="DELETE">
+                            <input type="hidden" name="admin_password" value="${result.value.password}">
+                            <input type="hidden" name="cancellation_reason" value="${result.value.reason}">
+                        `;
+
+                        document.body.appendChild(form);
+                        form.submit();
+                    }
+                });
             }
         </script>
 </div>

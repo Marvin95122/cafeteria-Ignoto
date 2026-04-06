@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Hash;
 
 class CashRegisterController extends Controller
 {
@@ -23,8 +24,9 @@ class CashRegisterController extends Controller
         $orders = collect(); 
 
         if ($activeRegister) {
-            $expenses = Expense::where('cash_register_id', $activeRegister->id)->latest()->get();
-            $totalExpenses = $expenses->sum('amount');
+            $expenses = Expense::with(['user', 'canceller'])->where('cash_register_id', $activeRegister->id)->latest()->get();
+            // Solo sumamos los gastos que siguen activos
+            $totalExpenses = $expenses->where('status', 'activo')->sum('amount');
 
             // Cargamos ventas y a quién las canceló (si están canceladas)
             $orders = Order::with(['user', 'canceller', 'items.product'])
@@ -77,11 +79,12 @@ class CashRegisterController extends Controller
         return back()->with('success', '¡Corte de caja realizado con éxito!');
     }
 
-    // --- CANCELACIÓN ---
+    // --- CANCELACIÓN INTELIGENTE ---
     public function cancelOrder(Request $request, Order $order)
     {
         $request->validate([
             'cancellation_reason' => 'required|string|max:255',
+            'action_type' => 'required|in:devolver,merma'
         ]);
 
         if ($order->status === 'cancelado') {
@@ -99,64 +102,128 @@ class CashRegisterController extends Controller
                 'cancelled_at' => now(),
             ]);
 
-            // 2. Devolvemos el inventario producto por producto
+            // 2. Procesamos el inventario según la decisión del usuario
             foreach ($order->items as $item) {
                 $product = $item->product;
                 $quantity = $item->quantity;
 
-                // Devolver materia prima base
+                // A. Materia Prima Base
                 if ($product->use_dynamic_stock) {
                     foreach ($product->ingredients as $ingredient) {
                         $needed = $ingredient->pivot->quantity * $quantity;
-                        $ingredient->increment('current_quantity', $needed);
                         
-                        // Registramos en la bitácora
-                        InventoryMovement::create([
-                            'ingredient_id' => $ingredient->id,
-                            'user_id' => Auth::id(),
-                            'type' => 'entrada',
-                            'quantity' => $needed,
-                            'reason' => "Devolución por Ticket Cancelado #{$order->id}",
-                        ]);
+                        if ($request->action_type === 'devolver') {
+                            $ingredient->increment('current_quantity', $needed);
+                            InventoryMovement::create([
+                                'ingredient_id' => $ingredient->id,
+                                'user_id' => Auth::id(),
+                                'type' => 'entrada',
+                                'quantity' => $needed,
+                                'reason' => "Devolución por Ticket Cancelado #{$order->id}",
+                            ]);
+                        } else {
+                            InventoryMovement::create([
+                                'ingredient_id' => $ingredient->id,
+                                'user_id' => Auth::id(),
+                                'type' => 'merma',
+                                'quantity' => $needed,
+                                'reason' => "Merma por Ticket Cancelado #{$order->id} ({$request->cancellation_reason})",
+                            ]);
+                        }
                     }
                 } else {
-                    $product->increment('stock', $quantity);
+                    if ($request->action_type === 'devolver') {
+                        $product->increment('stock', $quantity);
+                    }
                 }
 
-                // Devolver materia prima de los Extras
+                // B. Materia Prima de los Extras
                 if (!empty($item->extras)) {
                     foreach ($item->extras as $extraData) {
                         $extraModel = Extra::with('ingredients')->find($extraData['id']);
                         if ($extraModel) {
                             foreach ($extraModel->ingredients as $extraIng) {
                                 $needed = $extraIng->pivot->quantity * $quantity;
-                                $extraIng->increment('current_quantity', $needed);
                                 
-                                InventoryMovement::create([
-                                    'ingredient_id' => $extraIng->id,
-                                    'user_id' => Auth::id(),
-                                    'type' => 'entrada',
-                                    'quantity' => $needed,
-                                    'reason' => "Devolución de Extra por Ticket Cancelado #{$order->id}",
-                                ]);
+                                if ($request->action_type === 'devolver') {
+                                    $extraIng->increment('current_quantity', $needed);
+                                    InventoryMovement::create([
+                                        'ingredient_id' => $extraIng->id,
+                                        'user_id' => Auth::id(),
+                                        'type' => 'entrada',
+                                        'quantity' => $needed,
+                                        'reason' => "Devolución Extra por Ticket Cancelado #{$order->id}",
+                                    ]);
+                                } else {
+                                    InventoryMovement::create([
+                                        'ingredient_id' => $extraIng->id,
+                                        'user_id' => Auth::id(),
+                                        'type' => 'merma',
+                                        'quantity' => $needed,
+                                        'reason' => "Merma Extra por Ticket Cancelado #{$order->id}",
+                                    ]);
+                                }
                             }
                         }
                     }
                 }
 
-                // Actualizar stock visual del producto
-                if ($product->use_dynamic_stock) {
+                // C. Actualizar stock visual del producto (Solo si devolvimos)
+                if ($product->use_dynamic_stock && $request->action_type === 'devolver') {
                     $product->refresh();
                     $product->update(['stock' => $product->calculated_stock]);
                 }
             }
 
             DB::commit();
-            return back()->with('success', 'Ticket cancelado. El dinero se restó de la caja y los ingredientes regresaron al inventario.');
+            
+            $mensaje = $request->action_type === 'devolver' 
+                ? 'Ticket cancelado. El dinero se restó y los insumos regresaron al stock.' 
+                : 'Ticket cancelado. El dinero se restó y los insumos se registraron como MERMA.';
+            
+            return back()->with('success', $mensaje);
 
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->with('error', 'Error al cancelar: ' . $e->getMessage());
         }
     }
+
+    // SEGURIDAD: CANCELAR GASTOS CON CONTRASEÑA Y MOTIVO
+    public function destroyExpense(Request $request, Expense $expense)
+    {
+        $request->validate([
+            'admin_password' => 'required|string',
+            'cancellation_reason' => 'required|string|max:255' // AHORA EXIGIMOS MOTIVO
+        ]);
+
+        $user = Auth::user();
+
+        // Verificamos que sea Admin/Gerente y contraseña correcta
+        if (!in_array($user->role, ['admin', 'gerente']) || !Hash::check($request->admin_password, $user->password)) {
+            return back()->with('error', '⛔ Contraseña incorrecta o no tienes permisos suficientes.');
+        }
+
+        if ($expense->status === 'cancelado') {
+            return back()->with('error', 'Este gasto ya estaba cancelado.');
+        }
+
+        DB::beginTransaction();
+
+        try {
+            $expense->update([
+                'status' => 'cancelado',
+                'cancelled_by' => $user->id,
+                'cancellation_reason' => $request->cancellation_reason
+            ]);
+
+            DB::commit();
+            return back()->with('success', 'Gasto anulado. El dinero vuelve a estar disponible en caja.');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Hubo un error al anular el gasto: ' . $e->getMessage());
+        }
+    }
+
 }
