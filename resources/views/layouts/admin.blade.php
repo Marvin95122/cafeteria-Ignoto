@@ -157,26 +157,56 @@
 
     <script>
         // 1. Lógica del Menú Lateral
+
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
             const texts = document.querySelectorAll('.sidebar-text');
             
             if (sidebar.classList.contains('w-64')) {
+                // Lo estamos cerrando
                 sidebar.classList.remove('w-64');
                 sidebar.classList.add('w-20');
                 texts.forEach(el => el.classList.add('opacity-0', 'hidden'));
+                
+                // Guardamos en la memoria del navegador que está cerrado
+                localStorage.setItem('sidebarState', 'collapsed'); 
             } else {
+                // Lo estamos abriendo
                 sidebar.classList.remove('w-20');
                 sidebar.classList.add('w-64');
                 texts.forEach(el => {
                     el.classList.remove('hidden');
                     setTimeout(() => el.classList.remove('opacity-0'), 50);
                 });
+                
+                // Guardamos en la memoria del navegador que está abierto
+                localStorage.setItem('sidebarState', 'expanded'); 
             }
         }
-
+        
         // 2. Apagar autocompletado del navegador
         document.addEventListener('DOMContentLoaded', function() {
+            
+            // --- MAGIA: RESTAURAR EL MENÚ ANTES DE QUE EL USUARIO LO VEA ---
+            const savedState = localStorage.getItem('sidebarState');
+            if (savedState === 'collapsed') {
+                const sidebar = document.getElementById('sidebar');
+                const texts = document.querySelectorAll('.sidebar-text');
+                
+                // Le quitamos la animación temporalmente para que no se vea cómo se encoge ("brinquito")
+                sidebar.classList.remove('transition-all', 'duration-300');
+                
+                // Lo hacemos pequeño al instante
+                sidebar.classList.remove('w-64');
+                sidebar.classList.add('w-20');
+                texts.forEach(el => el.classList.add('opacity-0', 'hidden'));
+                
+                // Le regresamos la animación a los 50 milisegundos por si el usuario lo vuelve a abrir
+                setTimeout(() => { sidebar.classList.add('transition-all', 'duration-300'); }, 50);
+            }
+            // -----------------------------------------------------------------
+
+            // Apagar autocompletado del navegador
             document.querySelectorAll('input, form, textarea').forEach(function(elemento) {
                 elemento.setAttribute('autocomplete', 'off');
                 elemento.setAttribute('data-lpignore', 'true');
