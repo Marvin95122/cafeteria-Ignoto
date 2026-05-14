@@ -27,9 +27,7 @@ class PosController extends Controller
         }
 
         $categories = Category::where('active', true)->get();
-        
         $products = Product::with(['extras.ingredients', 'ingredients'])->where('active', true)->get();
- 
         $ingredients = \App\Models\Ingredient::where('active', true)->get();
 
         return view('pos.index', compact('categories', 'products', 'ingredients', 'activeRegister'));
@@ -37,7 +35,6 @@ class PosController extends Controller
 
     public function store(Request $request)
     {
-        // Validamos que nos envíen la información correcta
         $request->validate([
             'payment_method' => 'required|string',
             'total' => 'required|numeric',
@@ -45,9 +42,8 @@ class PosController extends Controller
         ]);
 
         try {
-            DB::beginTransaction(); // Iniciamos una transacción segura
+            DB::beginTransaction();
 
-            // 1. Crear el Ticket General (Order)
             $order = Order::create([
                 'user_id' => Auth::id() ?? 1, 
                 'total' => $request->total,
@@ -55,16 +51,13 @@ class PosController extends Controller
                 'status' => 'completado',
             ]);
 
-            // 2. Procesar cada producto del carrito
             foreach ($request->items as $item) {
                 $product = Product::with('ingredients')->find($item['product_id']);
                 $quantity = $item['quantity'];
 
-                // Calcular subtotal por seguridad desde el backend (Precio base + suma de extras) * cantidad
                 $extrasTotal = collect($item['extras'])->sum('price');
                 $subtotal = ($product->price + $extrasTotal) * $quantity;
 
-                // Guardar el detalle de la venta
                 OrderItem::create([
                     'order_id' => $order->id,
                     'product_id' => $product->id,
@@ -74,17 +67,26 @@ class PosController extends Controller
                     'extras' => $item['extras'],
                 ]);
 
-                // Descontar Inventario del Producto Principal
+                // --- INSUMOS PRINCIPALES ---
                 if ($product->use_dynamic_stock) {
                     foreach ($product->ingredients as $ingredient) {
                         $needed = $ingredient->pivot->quantity * $quantity;
                         $ingredient->decrement('current_quantity', $needed);
+
+                        // Registro exitoso en bitácora
+                        \App\Models\InventoryMovement::create([
+                            'ingredient_id' => $ingredient->id,
+                            'user_id' => Auth::id() ?? 1,
+                            'type' => 'venta',
+                            'quantity' => $needed,
+                            'reason' => "Venta POS | Ticket #{$order->id} ({$product->name})",
+                        ]);
                     }
                 } else {
                     $product->decrement('stock', $quantity);
                 }
 
-                // Descontar Inventario de los EXTRAS
+                // --- INSUMOS DE LOS EXTRAS ---
                 if (!empty($item['extras'])) {
                     foreach ($item['extras'] as $extraData) {
                         $extraModel = Extra::with('ingredients')->find($extraData['id']);
@@ -92,19 +94,27 @@ class PosController extends Controller
                             foreach ($extraModel->ingredients as $extraIng) {
                                 $needed = $extraIng->pivot->quantity * $quantity;
                                 $extraIng->decrement('current_quantity', $needed);
+
+                                // Registro exitoso en bitácora para el extra
+                                \App\Models\InventoryMovement::create([
+                                    'ingredient_id' => $extraIng->id,
+                                    'user_id' => Auth::id() ?? 1,
+                                    'type' => 'venta',
+                                    'quantity' => $needed,
+                                    'reason' => "Venta POS (Extra) | Ticket #{$order->id} ({$extraModel->name})",
+                                ]);
                             }
                         }
                     }
                 }
 
-                // Recalcular el stock del producto si era dinámico (para actualizar la tabla products)
                 if ($product->use_dynamic_stock) {
                     $product->refresh();
                     $product->update(['stock' => $product->calculated_stock]);
                 }
             }
 
-            DB::commit(); // Todo salió bien, guardamos definitivamente en la BD.
+            DB::commit();
 
             return response()->json([
                 'success' => true, 
@@ -113,7 +123,7 @@ class PosController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            DB::rollBack(); // Hubo un error, deshacemos todo para que no descuadre nada.
+            DB::rollBack();
             return response()->json([
                 'success' => false, 
                 'message' => 'Error al procesar la venta: ' . $e->getMessage()
@@ -123,9 +133,7 @@ class PosController extends Controller
 
     public function ticket(Request $request, Order $order)
     {
-        // Cargamos la orden con sus detalles y el usuario
         $order->load(['items.product', 'user']);
-
         $received = (float) $request->query('received', $order->total);
         $change = (float) $request->query('change', 0);
 

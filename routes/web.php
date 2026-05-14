@@ -36,6 +36,14 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/pos', [PosController::class, 'index'])->name('pos.index');
     Route::post('/pos/checkout', [PosController::class, 'store'])->name('pos.store');
     Route::get('/pos/ticket/{order}', [PosController::class, 'ticket'])->name('pos.ticket');
+
+    // RUTAS DEL POS
+    Route::get('/pos', [App\Http\Controllers\PosController::class, 'index'])->name('pos.index');
+    Route::post('/pos', [App\Http\Controllers\PosController::class, 'store'])->name('pos.store');
+    Route::get('/pos/ticket/{order}', [App\Http\Controllers\PosController::class, 'ticket'])->name('pos.ticket');
+
+    // NUEVA RUTA PARA REGISTRO RÁPIDO DE CLIENTES VIP DESDE CAJA:
+    Route::post('/pos/customer', [App\Http\Controllers\PosController::class, 'storeCustomer'])->name('pos.customer.store');
 });
 
 /*
