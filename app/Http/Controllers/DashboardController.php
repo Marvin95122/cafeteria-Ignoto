@@ -34,9 +34,8 @@ class DashboardController extends Controller
                                    ->where('stock', '<=', 10)
                                    ->get();
 
-        // Filtro Inteligente para Materia Prima
-        $lowStockIngredients = Ingredient::all()->filter(function ($ingredient) {
-            // Convertimos la unidad a minúsculas para que no importe cómo la escribiste
+        // Filtro Inteligente para Materia Prima Crítica (Conservamos la versión flexible)
+        $lowStockIngredients = Ingredient::where('active', true)->get()->filter(function ($ingredient) {
             $unit = strtolower(trim($ingredient->unit_measure));
             $qty = $ingredient->current_quantity;
             
@@ -48,21 +47,11 @@ class DashboardController extends Controller
             elseif (in_array($unit, ['kg', 'kilo', 'kilos', 'l', 'litro', 'litros'])) {
                 return $qty <= 1.5;
             }
-            // Para piezas, rebanadas, o cualquier otra cosa, avisar si hay 15 o menos
+            // Para piezas, rebanadas u otras medidas, avisar si hay 15 o menos
             else {
                 return $qty <= 15;
             }
         });
-
-        // Ingredientes con menos de 1000 gramos/ml (1 kilo/litro) o 10 piezas
-        $lowStockIngredients = Ingredient::where('active', true)
-                                         ->where(function($query) {
-                                             $query->where('current_quantity', '<=', 1000)
-                                                   ->whereIn('unit_measure', ['g', 'ml']);
-                                         })->orWhere(function($query) {
-                                             $query->where('current_quantity', '<=', 15)
-                                                   ->where('unit_measure', 'pz');
-                                         })->get();
 
         // 3. PRODUCTOS MÁS VENDIDOS DEL MES
         $topProducts = DB::table('order_items')
@@ -76,17 +65,18 @@ class DashboardController extends Controller
             ->limit(5)
             ->get();
 
-        // 4. DATOS PARA LA GRÁFICA (Últimos 7 días)
+        // 4. DATOS PARA LA GRÁFICA (Últimos 7 días blindados)
         $chartDates = [];
         $chartSales = [];
         $chartExpenses = [];
 
         for ($i = 6; $i >= 0; $i--) {
             $date = Carbon::today()->subDays($i);
-            $chartDates[] = $date->format('d M'); // Ej: "08 Mar"
+            $chartDates[] = $date->format('d M'); 
             
             $chartSales[] = Order::where('status', 'completado')->whereDate('created_at', $date)->sum('total');
-            $chartExpenses[] = Expense::whereDate('created_at', $date)->sum('amount');
+            // Corregido: Excluimos de la gráfica los gastos cancelados
+            $chartExpenses[] = Expense::whereDate('created_at', $date)->where('status', 'activo')->sum('amount');
         }
 
         return view('dashboard', compact(
