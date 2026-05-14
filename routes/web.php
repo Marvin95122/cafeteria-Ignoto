@@ -69,6 +69,13 @@ Route::middleware(['auth', 'role:admin,gerente'])->group(function () {
     Route::post('/inventario/movimientos/carga-masiva', [App\Http\Controllers\InventoryMovementController::class, 'storeBulk'])->name('inventory_movements.store_bulk');
     Route::get('/inventario/movimientos', [App\Http\Controllers\InventoryMovementController::class, 'index'])->name('inventory_movements.index');
     Route::post('/inventario/movimientos', [App\Http\Controllers\InventoryMovementController::class, 'store'])->name('inventory_movements.store');
+
+    // RUTAS DEL PANEL VIP
+    Route::get('/vip-management', [App\Http\Controllers\VipManagementController::class, 'index'])->name('vip.index');
+    Route::post('/vip-management/settings', [App\Http\Controllers\VipManagementController::class, 'updateSettings'])->name('vip.settings.update');
+    Route::post('/vip-management/customer', [App\Http\Controllers\VipManagementController::class, 'storeCustomer'])->name('vip.customer.store');
+    Route::put('/vip-management/customer/{customer}', [App\Http\Controllers\VipManagementController::class, 'updateCustomer'])->name('vip.customer.update');
+    Route::delete('/vip-management/customer/{customer}', [App\Http\Controllers\VipManagementController::class, 'destroyCustomer'])->name('vip.customer.destroy');
 });
 
 /*

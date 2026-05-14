@@ -115,19 +115,60 @@
             <div id="cart-items-container" class="flex-1 overflow-y-auto p-4 custom-scrollbar space-y-3 relative z-10"></div>
         </div>
 
-        {{-- Resumen y Cobro --}}
+       {{-- SECCIÓN DERECHA: Resumen, VIP y Cobro --}}
         <div class="p-4 bg-white border-t border-stone-200 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] relative z-20">
             
-            <div class="flex justify-between font-bold text-2xl text-stone-800 mb-4 pb-4 border-b border-stone-100 border-dashed">
+            {{-- BUSCADOR DE CLIENTES VIP --}}
+            <div class="mb-4 pt-2 border-t border-stone-100">
+                <div class="flex justify-between items-center mb-1.5">
+                    <label class="text-xs font-bold text-amber-900 flex items-center gap-1">
+                        <span>👑</span> Cliente VIP / Lealtad
+                    </label>
+                    @if(Auth::user()->role !== 'empleado')
+                        <button onclick="createNewCustomer()" class="text-xs text-amber-700 hover:text-amber-800 font-bold">
+                            + Nuevo VIP
+                        </button>
+                    @endif
+                </div>
+
+                {{-- Input de búsqueda --}}
+                <div id="vip-search-box" class="relative">
+                    <input type="text" id="vipSearchInput" oninput="searchVipCustomer()" placeholder="Buscar por Teléfono o Nombre..." autocomplete="off"
+                           class="w-full border-stone-300 rounded-lg text-xs pl-3 pr-8 py-2 focus:border-amber-500 focus:ring-amber-200">
+                    <span class="absolute inset-y-0 right-0 pr-2.5 flex items-center text-stone-400 pointer-events-none">
+                        🔍
+                    </span>
+                    {{-- Lista desplegable de resultados --}}
+                    <div id="vip-results" class="absolute left-0 right-0 mt-1 bg-white border border-stone-200 rounded-lg shadow-xl max-h-36 overflow-y-auto hidden z-50 divide-y divide-stone-100 text-xs"></div>
+                </div>
+
+                {{-- Tarjeta de Cliente Seleccionado (Oculta por defecto) --}}
+                <div id="selected-vip-card" class="hidden bg-amber-50/60 border border-amber-200/80 rounded-lg p-2.5 flex justify-between items-center mt-2">
+                    <div>
+                        <div class="font-bold text-stone-800 text-xs flex items-center gap-1">
+                            <span id="vip-display-name"></span>
+                        </div>
+                        <div class="text-[11px] text-amber-800 mt-0.5">
+                            Saldo: <strong id="vip-display-points">0</strong> Puntos Ignoto
+                        </div>
+                    </div>
+                    <button onclick="removeVipCustomer()" class="text-stone-400 hover:text-red-500 font-bold px-1.5 py-0.5 text-xs">✖</button>
+                </div>
+            </div>
+
+            {{-- TOTAL --}}
+            <div class="flex justify-between font-bold text-2xl text-stone-800 mb-3 pb-3 border-b border-stone-100 border-dashed">
                 <span>TOTAL A PAGAR</span>
                 <span class="text-amber-700" id="cart-total">$0.00</span>
             </div>
 
+            {{-- MÉTODOS DE PAGO --}}
             <div class="mb-4">
                 <label class="text-xs font-bold text-stone-500 mb-2 block">Método de Pago</label>
-                <div class="grid grid-cols-2 gap-2">
-                    <button onclick="setPaymentMethod('efectivo')" id="btn-efectivo" class="payment-btn bg-amber-100 border-amber-500 text-amber-800 border py-2 rounded-lg text-sm font-bold transition">💵Efectivo</button>
-                    <button onclick="setPaymentMethod('tarjeta')" id="btn-tarjeta" class="payment-btn bg-stone-50 border-stone-200 text-stone-500 border py-2 rounded-lg text-sm font-bold transition">💳Tarjeta</button>
+                <div class="grid grid-cols-3 gap-2">
+                    <button onclick="setPaymentMethod('efectivo')" id="btn-efectivo" class="payment-btn bg-amber-100 border-amber-500 text-amber-800 border py-2 rounded-lg text-xs font-bold transition">💵 Efectivo</button>
+                    <button onclick="setPaymentMethod('tarjeta')" id="btn-tarjeta" class="payment-btn bg-stone-50 border-stone-200 text-stone-500 border py-2 rounded-lg text-xs font-bold transition">💳 Tarjeta</button>
+                    <button onclick="setPaymentMethod('puntos')" id="btn-puntos" class="payment-btn bg-stone-50 border-stone-200 text-stone-300 border py-2 rounded-lg text-xs font-bold transition cursor-not-allowed" disabled title="Selecciona un cliente con saldo suficiente">🎁 Puntos</button>
                 </div>
             </div>
 
@@ -193,6 +234,9 @@
         $arr = $p->toArray(); $arr['calculated_stock'] = $p->calculated_stock; return $arr;
     })) !!};
     const ingredientsDB = {!! isset($ingredients) ? json_encode($ingredients) : '[]' !!};
+
+    let customersDB = {!! isset($customers) ? json_encode($customers) : '[]' !!};
+    let currentSelectedCustomer = null;
     
     let cart = []; 
     let currentSelectedProduct = null; 
@@ -469,7 +513,9 @@
         }
 
         const payload = {
-            payment_method: currentPaymentMethod, total: globalCartTotal,
+            payment_method: currentPaymentMethod, 
+            total: globalCartTotal,
+            customer_id: currentSelectedCustomer ? currentSelectedCustomer.id : null,
             items: cart.map(item => ({ product_id: item.product.id, quantity: item.quantity, unit_price: item.unitPrice, extras: item.extras }))
         };
 
@@ -486,6 +532,120 @@
                 setTimeout(() => { cart = []; document.getElementById('cash-received').value = ''; window.location.reload(); }, 1000);
             } else { Swal.fire('Error', data.message, 'error'); btn.innerHTML = 'COBRAR TICKET'; btn.disabled = false; }
         } catch (error) { Swal.fire('Error', 'Ocurrió un error en el cobro.', 'error'); btn.innerHTML = 'COBRAR TICKET'; btn.disabled = false; }
+    }
+
+    // --- LÓGICA DE CLIENTES VIP ---
+    function searchVipCustomer() {
+        const query = document.getElementById('vipSearchInput').value.toLowerCase().trim();
+        const resultsContainer = document.getElementById('vip-results');
+        resultsContainer.innerHTML = '';
+
+        if (query.length < 2) {
+            resultsContainer.classList.add('hidden');
+            return;
+        }
+
+        const filtered = customersDB.filter(c => c.phone.includes(query) || c.name.toLowerCase().includes(query)).slice(0, 5);
+
+        if (filtered.length > 0) {
+            resultsContainer.classList.remove('hidden');
+            filtered.forEach(c => {
+                const item = document.createElement('div');
+                item.className = 'p-2.5 hover:bg-amber-50 cursor-pointer flex justify-between items-center';
+                item.innerHTML = `
+                    <span class="font-bold text-stone-800">${c.name}</span>
+                    <span class="text-stone-500 font-mono">${c.phone}</span>
+                `;
+                item.onclick = () => selectVipCustomer(c);
+                resultsContainer.appendChild(item);
+            });
+        } else {
+            resultsContainer.classList.add('hidden');
+        }
+    }
+
+    function selectVipCustomer(customer) {
+        currentSelectedCustomer = customer;
+        document.getElementById('vip-search-box').classList.add('hidden');
+        document.getElementById('vip-results').classList.add('hidden');
+        document.getElementById('vipSearchInput').value = '';
+
+        document.getElementById('vip-display-name').innerText = customer.name;
+        document.getElementById('vip-display-points').innerText = customer.points;
+        document.getElementById('selected-vip-card').classList.remove('hidden');
+
+        evaluatePointsPayment();
+    }
+
+    function removeVipCustomer() {
+        currentSelectedCustomer = null;
+        document.getElementById('selected-vip-card').classList.add('hidden');
+        document.getElementById('vip-search-box').classList.remove('hidden');
+        if (currentPaymentMethod === 'puntos') setPaymentMethod('efectivo');
+        evaluatePointsPayment();
+    }
+
+    function evaluatePointsPayment() {
+        const btnPuntos = document.getElementById('btn-puntos');
+        if (currentSelectedCustomer && parseFloat(currentSelectedCustomer.points) >= globalCartTotal && globalCartTotal > 0) {
+            btnPuntos.disabled = false;
+            btnPuntos.classList.remove('text-stone-300', 'cursor-not-allowed');
+            btnPuntos.classList.add('text-amber-700', 'hover:border-amber-400');
+            btnPuntos.title = "Pagar orden completa con Puntos Ignoto";
+        } else {
+            btnPuntos.disabled = true;
+            btnPuntos.classList.add('text-stone-300', 'cursor-not-allowed');
+            btnPuntos.classList.remove('text-amber-700', 'hover:border-amber-400');
+            btnPuntos.title = "Saldo insuficiente para cubrir el total";
+            if (currentPaymentMethod === 'puntos') setPaymentMethod('efectivo');
+        }
+    }
+
+    function createNewCustomer() {
+        Swal.fire({
+            title: '✨ Nuevo Cliente VIP',
+            html: `
+                <input id="swal-cust-name" class="w-full border-stone-300 rounded-lg mb-3 px-3 py-2 text-sm focus:border-amber-500" placeholder="Nombre completo..." required>
+                <input id="swal-cust-phone" type="tel" class="w-full border-stone-300 rounded-lg px-3 py-2 text-sm focus:border-amber-500" placeholder="Teléfono (10 dígitos)..." required>
+            `,
+            focusConfirm: false,
+            showCancelButton: true,
+            confirmButtonText: 'Registrar VIP',
+            confirmButtonColor: '#9a3412',
+            cancelButtonText: 'Cancelar',
+            preConfirm: () => {
+                const name = document.getElementById('swal-cust-name').value.trim();
+                const phone = document.getElementById('swal-cust-phone').value.trim();
+                if (!name || !phone) {
+                    Swal.showValidationMessage('Por favor completa ambos campos');
+                }
+                return { name, phone };
+            }
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                try {
+                    const res = await fetch('{{ route("pos.customer.store") }}', {
+                        method: 'POST',
+                        headers: { 
+                            'Content-Type': 'application/json', 
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                            'Accept': 'application/json' 
+                        },
+                        body: JSON.stringify(result.value)
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                        customersDB.push(data.customer);
+                        selectVipCustomer(data.customer);
+                        Swal.fire({ icon: 'success', title: '¡Registrado!', text: 'Cliente vinculado a la orden actual', timer: 1500, showConfirmButton: false });
+                    } else {
+                        Swal.fire('Error', data.message || 'El teléfono ya está registrado', 'error');
+                    }
+                } catch (e) {
+                    Swal.fire('Error', 'No se pudo conectar con el servidor', 'error');
+                }
+            }
+        });
     }
 </script>
 
