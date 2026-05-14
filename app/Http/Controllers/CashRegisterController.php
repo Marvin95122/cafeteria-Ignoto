@@ -22,6 +22,7 @@ class CashRegisterController extends Controller
         $stats = [];
         $expenses = collect();
         $orders = collect(); 
+        $salesPoints = 0; // <-- AÑADIDO: Variable para Puntos VIP
 
         if ($activeRegister) {
             $expenses = Expense::with(['user', 'canceller'])->where('cash_register_id', $activeRegister->id)->latest()->get();
@@ -34,10 +35,14 @@ class CashRegisterController extends Controller
                            ->latest()
                            ->get();
 
-            // Solo sumamos el dinero de los tickets "completados", ignoramos los cancelados
+            // Desglose de ventas por método de pago
             $salesCash = $orders->where('status', 'completado')->where('payment_method', 'efectivo')->sum('total');
             $salesCard = $orders->where('status', 'completado')->where('payment_method', 'tarjeta')->sum('total');
-            $totalSales = $salesCash + $salesCard;
+            
+            // <-- AÑADIDO: Sumamos lo pagado con Puntos VIP en este turno -->
+            $salesPoints = $orders->where('status', 'completado')->where('payment_method', 'puntos')->sum('total');
+            
+            $totalSales = $salesCash + $salesCard; // El total monetario real
 
             $expectedCash = $activeRegister->opening_amount + $salesCash - $totalExpenses;
 
@@ -45,6 +50,7 @@ class CashRegisterController extends Controller
                 'total_sales' => $totalSales,
                 'sales_cash' => $salesCash,
                 'sales_card' => $salesCard,
+                'sales_points' => $salesPoints, // <-- AÑADIDO al arreglo de estadísticas
                 'total_expenses' => $totalExpenses,
                 'expected_cash' => $expectedCash,
                 'orders_count' => $orders->where('status', 'completado')->count(),
@@ -53,29 +59,76 @@ class CashRegisterController extends Controller
 
         $history = CashRegister::with('user')->where('status', 'cerrada')->latest()->take(10)->get();
 
-        return view('cash_registers.index', compact('activeRegister', 'stats', 'expenses', 'history', 'orders'));
+        return view('cash_registers.index', compact('activeRegister', 'stats', 'expenses', 'history', 'orders', 'salesPoints'));
     }
 
-    public function open(Request $request) { /* Mismo código que ya tienes */
-        $request->validate(['opening_amount' => 'required|numeric|min:0']);
-        if (CashRegister::where('status', 'abierta')->exists()) return back()->with('error', 'Ya existe una caja abierta.');
-        CashRegister::create(['user_id' => Auth::id(),'opening_amount' => $request->opening_amount,'status' => 'abierta','opened_at' => Carbon::now()]);
+    public function open(Request $request)
+    {
+        $request->validate([
+            'opening_amount' => 'required|numeric|min:0'
+        ]);
+
+        if (CashRegister::where('status', 'abierta')->exists()) {
+            return back()->with('error', 'Ya existe una caja abierta.');
+        }
+
+        CashRegister::create([
+            'user_id' => Auth::id(),
+            'opening_amount' => $request->opening_amount,
+            'status' => 'abierta',
+            'opened_at' => Carbon::now()
+        ]);
+
         return back()->with('success', 'Caja abierta correctamente.');
     }
 
-    public function storeExpense(Request $request) { /* Mismo código que ya tienes */
-        $request->validate(['description' => 'required|string|max:255','amount' => 'required|numeric|min:1','category' => 'required|string']);
+    public function storeExpense(Request $request)
+    {
+        $request->validate([
+            'description' => 'required|string|max:255',
+            'amount' => 'required|numeric|min:1',
+            'category' => 'required|string'
+        ]);
+
         $activeRegister = CashRegister::where('status', 'abierta')->first();
-        if (!$activeRegister) return back()->with('error', 'Caja cerrada.');
-        Expense::create(['user_id' => Auth::id(),'cash_register_id' => $activeRegister->id,'description' => $request->description,'amount' => $request->amount,'category' => $request->category]);
+
+        if (!$activeRegister) {
+            return back()->with('error', 'Caja cerrada.');
+        }
+
+        Expense::create([
+            'user_id' => Auth::id(),
+            'cash_register_id' => $activeRegister->id,
+            'description' => $request->description,
+            'amount' => $request->amount,
+            'category' => $request->category
+        ]);
+
         return back()->with('success', 'Gasto registrado.');
     }
 
-    public function close(Request $request) { /* Mismo código que ya tienes */
-        $request->validate(['actual_amount' => 'required|numeric|min:0','expected_amount' => 'required|numeric','notes' => 'nullable|string']);
+    public function close(Request $request)
+    {
+        $request->validate([
+            'actual_amount' => 'required|numeric|min:0',
+            'expected_amount' => 'required|numeric',
+            'notes' => 'nullable|string'
+        ]);
+
         $activeRegister = CashRegister::where('status', 'abierta')->first();
-        if (!$activeRegister) return back()->with('error', 'No hay caja abierta.');
-        $activeRegister->update(['expected_amount' => $request->expected_amount,'actual_amount' => $request->actual_amount,'notes' => $request->notes,'status' => 'cerrada','closed_at' => Carbon::now()]);
+
+        if (!$activeRegister) {
+            return back()->with('error', 'No hay caja abierta.');
+        }
+
+        $activeRegister->update([
+            'expected_amount' => $request->expected_amount,
+            'actual_amount' => $request->actual_amount,
+            'notes' => $request->notes,
+            'status' => 'cerrada',
+            'closed_at' => Carbon::now()
+        ]);
+
         return back()->with('success', '¡Corte de caja realizado con éxito!');
     }
 
@@ -225,5 +278,4 @@ class CashRegisterController extends Controller
             return back()->with('error', 'Hubo un error al anular el gasto: ' . $e->getMessage());
         }
     }
-
 }
