@@ -81,6 +81,14 @@
             <td><span class="bold">Cajero:</span> {{ $order->user->name ?? 'Caja 1' }}</td>
             <td class="text-right"><span class="bold">Pago:</span> {{ strtoupper($order->payment_method) }}</td>
         </tr>
+        {{-- Si la orden tiene un cliente VIP asociado, lo mostramos --}}
+        @if($order->customer)
+        <tr>
+            <td colspan="2" style="padding-top: 4px;">
+                <span class="bold">Cliente VIP:</span> {{ $order->customer->name }}
+            </td>
+        </tr>
+        @endif
     </table>
 
     <div class="divider"></div>
