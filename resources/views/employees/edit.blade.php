@@ -91,6 +91,7 @@
                             @else
                                 <select name="role" class="w-full border-stone-300 rounded-lg shadow-sm focus:border-amber-500 focus:ring focus:ring-amber-200 transition py-3 px-4 bg-white">
                                     <option value="empleado" {{ $user->role === 'empleado' ? 'selected' : '' }}>☕ Empleado (Estándar)</option>
+                                    <option value="gerente" {{ $user->role === 'gerente' ? 'selected' : '' }}>📋 Gerente (Operación e Inventario)</option>
                                     <option value="admin" {{ $user->role === 'admin' ? 'selected' : '' }}>🛡️ Administrador (Acceso Total)</option>
                                 </select>
                             @endif

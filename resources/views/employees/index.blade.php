@@ -34,7 +34,7 @@
         <div class="bg-white rounded-2xl shadow-sm border border-stone-100 p-6 flex items-start gap-4 hover:shadow-md transition relative group">
             
             <div class="h-16 w-16 rounded-full flex items-center justify-center text-2xl font-bold shadow-inner
-                {{ $employee->role === 'admin' ? 'bg-purple-100 text-purple-600' : 'bg-blue-100 text-blue-600' }}">
+                {{ $employee->role === 'admin' ? 'bg-purple-100 text-purple-600' : ($employee->role === 'gerente' ? 'bg-sky-100 text-sky-600' : 'bg-blue-100 text-blue-600') }}">
                 {{ substr($employee->name, 0, 1) }}
             </div>
 
@@ -43,8 +43,8 @@
                 <p class="text-sm text-stone-500 mb-2">{{ $employee->email }}</p>
                 
                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                    {{ $employee->role === 'admin' ? 'bg-purple-50 text-purple-700 border border-purple-100' : 'bg-blue-50 text-blue-700 border border-blue-100' }}">
-                    {{ $employee->role === 'admin' ? '🛡️ Administrador' : '☕ Empleado' }}
+                    {{ $employee->role === 'admin' ? 'bg-purple-50 text-purple-700 border border-purple-100' : ($employee->role === 'gerente' ? 'bg-sky-50 text-sky-700 border border-sky-100' : 'bg-blue-50 text-blue-700 border border-blue-100') }}">
+                    {{ $employee->role === 'admin' ? '🛡️ Administrador' : ($employee->role === 'gerente' ? '📋 Gerente' : '☕ Empleado') }}
                 </span>
             </div>
 
