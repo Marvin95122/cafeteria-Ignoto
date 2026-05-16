@@ -36,7 +36,7 @@ class DashboardController extends Controller
 
         // Filtro Inteligente para Materia Prima Crítica (Conservamos la versión flexible)
         $lowStockIngredients = Ingredient::where('active', true)->get()->filter(function ($ingredient) {
-            $unit = strtolower(trim($ingredient->unit_measure));
+            $unit = strtolower(trim($ingredient->unit));
             $qty = $ingredient->current_quantity;
             
             // Si la unidad es gramos o mililitros, avisar si hay 1000 o menos (1 Kilo/Litro)

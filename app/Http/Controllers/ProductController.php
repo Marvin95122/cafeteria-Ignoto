@@ -239,9 +239,12 @@ class ProductController extends Controller
         Extra::whereIn('id', $extraIds)->delete();
 
         $product->ingredients()->detach();
-        $product->delete();
-        
-        return redirect()->route('products.index')
-            ->with('success', 'Producto y su historial de extras eliminados correctamente');
+        $product->update([
+            'active' => false,
+        ]);
+
+        return redirect()
+            ->route('products.index')
+            ->with('success', 'Producto desactivado correctamente.');
     }
 }

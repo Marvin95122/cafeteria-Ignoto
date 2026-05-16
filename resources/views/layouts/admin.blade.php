@@ -62,7 +62,7 @@
                         <span class="font-medium sidebar-text whitespace-nowrap">Categorías</span>
                     </a>
                     
-                    <a href="{{ route('vip.index') }}" class="flex items-center gap-3 px-4 mx-2 py-3 rounded-lg transition-colors duration-200 {{ request()->routeIs('categories.*') ? 'bg-amber-800 text-white shadow-md' : 'text-amber-200 hover:bg-amber-800 hover:text-white' }}">
+                    <a href="{{ route('vip.index') }}" class="flex items-center gap-3 px-4 mx-2 py-3 rounded-lg transition-colors duration-200 {{ request()->routeIs('vip.*') ? 'bg-amber-800 text-white shadow-md' : 'text-amber-200 hover:bg-amber-800 hover:text-white' }}">
                         <span class="text-xl shrink-0 flex justify-center w-8">👑</span>
                         <span class="font-medium sidebar-text whitespace-nowrap">Clientes VIP</span>
                     </a>

@@ -89,7 +89,7 @@
                                 @foreach($lowStockIngredients as $ing)
                                     <li class="flex justify-between items-center bg-red-50 p-2 rounded border border-red-100">
                                         <span class="font-bold text-stone-800">{{ $ing->name }}</span>
-                                        <span class="text-red-600 font-bold text-sm">{{ floatval($ing->current_quantity) }} {{ $ing->unit_measure }}</span>
+                                        <span class="text-red-600 font-bold text-sm">{{ floatval($ing->current_quantity) }} {{ $ing->unit }}</span>
                                     </li>
                                 @endforeach
                             </ul>
