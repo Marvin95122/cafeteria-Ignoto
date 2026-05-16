@@ -70,7 +70,7 @@ class EmployeeController extends Controller
                 Rule::unique('users')->ignore($user->id),
             ],
             'password' => 'nullable|min:6|confirmed',
-            'role' => 'required|in:admin,empleado',
+            'role' => 'required|in:admin,empleado,gerente',
         ]);
 
         $user->name = $request->name;
