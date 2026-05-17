@@ -252,13 +252,15 @@ class ProductController extends Controller
             Storage::disk('public')->delete($product->image);
         }
 
-        $extraIds = $product->extras()->pluck('extras.id')->toArray();
+        $extras = $product->extras()->get();
 
         $product->ingredients()->detach();
         $product->extras()->detach();
 
-        if (!empty($extraIds)) {
-            Extra::whereIn('id', $extraIds)->delete();
+        foreach ($extras as $extra) {
+            if (! $extra->products()->exists()) {
+                $extra->delete();
+            }
         }
 
         $product->delete();
@@ -267,19 +269,4 @@ class ProductController extends Controller
             ->route('products.index')
             ->with('success', 'Producto eliminado definitivamente porque no tenía historial de ventas.');
     }
-    /*public function destroy(Product $product)
-    {
-        if ($product->image) {
-            Storage::disk('public')->delete($product->image);
-        }
-        
-        $extraIds = $product->extras()->pluck('extras.id');
-        Extra::whereIn('id', $extraIds)->delete();
-
-        $product->ingredients()->detach();
-        $product->delete();
-        
-        return redirect()->route('products.index')
-            ->with('success', 'Producto y su historial de extras eliminados correctamente');
-    }*/
 }

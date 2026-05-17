@@ -40,58 +40,104 @@
                 <span class="font-serif font-bold text-xl tracking-wide text-white sidebar-text whitespace-nowrap overflow-hidden transition-opacity duration-200">Ignoto Café</span>
             </div>
 
-            <nav class="flex-1 py-4 space-y-2 overflow-y-auto overflow-x-hidden">
+            <nav class="flex-1 py-4 space-y-5 overflow-y-auto overflow-x-hidden">
+
+                {{-- OPERACIÓN --}}
+                <div class="px-3">
+                    <p class="sidebar-text px-3 mb-2 text-[11px] uppercase tracking-widest text-amber-400 font-bold">
+                        Operación
+                    </p>
+
+                    <a href="{{ route('pos.index') }}"
+                    class="flex items-center gap-3 px-4 py-3 rounded-xl transition-colors duration-200
+                    {{ request()->routeIs('pos.*') ? 'bg-amber-800 text-white shadow-md' : 'text-amber-200 hover:bg-amber-800 hover:text-white' }}">
+                        <span class="text-xl shrink-0 flex justify-center w-8">📠</span>
+                        <span class="font-medium sidebar-text whitespace-nowrap">Ventas POS</span>
+                    </a>
+
+                    @if(in_array(Auth::user()->role, ['admin', 'gerente']))
+                        <a href="{{ route('cash_registers.index') }}"
+                        class="mt-2 flex items-center gap-3 px-4 py-3 rounded-xl transition-colors duration-200
+                        {{ request()->routeIs('cash_registers.*') ? 'bg-amber-800 text-white shadow-md' : 'text-amber-200 hover:bg-amber-800 hover:text-white' }}">
+                            <span class="text-xl shrink-0 flex justify-center w-8">💰</span>
+                            <span class="font-medium sidebar-text whitespace-nowrap">Corte de Caja</span>
+                        </a>
+                    @endif
+                </div>
 
                 @if(in_array(Auth::user()->role, ['admin', 'gerente']))
-                    <a href="{{ route('dashboard') }}" class="flex items-center gap-3 px-4 mx-2 py-3 rounded-lg transition-colors duration-200 {{ request()->routeIs('dashboard') ? 'bg-amber-800 text-white shadow-md' : 'text-amber-200 hover:bg-amber-800 hover:text-white' }}">
-                        <span class="text-xl shrink-0 flex justify-center w-8">📊</span>
-                        <span class="font-medium sidebar-text whitespace-nowrap">Dashboard</span>
-                    </a>
+                    {{-- ADMINISTRACIÓN --}}
+                    <div class="px-3">
+                        <p class="sidebar-text px-3 mb-2 text-[11px] uppercase tracking-widest text-amber-400 font-bold">
+                            Administración
+                        </p>
+
+                        <a href="{{ route('dashboard') }}"
+                        class="flex items-center gap-3 px-4 py-3 rounded-xl transition-colors duration-200
+                        {{ request()->routeIs('dashboard') ? 'bg-amber-800 text-white shadow-md' : 'text-amber-200 hover:bg-amber-800 hover:text-white' }}">
+                            <span class="text-xl shrink-0 flex justify-center w-8">📊</span>
+                            <span class="font-medium sidebar-text whitespace-nowrap">Dashboard</span>
+                        </a>
+
+                        @if(Auth::user()->role === 'admin')
+                            <a href="{{ route('employees.index') }}"
+                            class="mt-2 flex items-center gap-3 px-4 py-3 rounded-xl transition-colors duration-200
+                            {{ request()->routeIs('employees.*') ? 'bg-amber-800 text-white shadow-md' : 'text-amber-200 hover:bg-amber-800 hover:text-white' }}">
+                                <span class="text-xl shrink-0 flex justify-center w-8">👥</span>
+                                <span class="font-medium sidebar-text whitespace-nowrap">Empleados</span>
+                            </a>
+                        @endif
+
+                        <a href="{{ route('products.index') }}"
+                        class="mt-2 flex items-center gap-3 px-4 py-3 rounded-xl transition-colors duration-200
+                        {{ request()->routeIs('products.*') ? 'bg-amber-800 text-white shadow-md' : 'text-amber-200 hover:bg-amber-800 hover:text-white' }}">
+                            <span class="text-xl shrink-0 flex justify-center w-8">☕</span>
+                            <span class="font-medium sidebar-text whitespace-nowrap">Productos</span>
+                        </a>
+
+                        <a href="{{ route('categories.index') }}"
+                        class="mt-2 flex items-center gap-3 px-4 py-3 rounded-xl transition-colors duration-200
+                        {{ request()->routeIs('categories.*') ? 'bg-amber-800 text-white shadow-md' : 'text-amber-200 hover:bg-amber-800 hover:text-white' }}">
+                            <span class="text-xl shrink-0 flex justify-center w-8">🗂️</span>
+                            <span class="font-medium sidebar-text whitespace-nowrap">Categorías</span>
+                        </a>
+                    </div>
+
+                    {{-- INVENTARIO --}}
+                    <div class="px-3">
+                        <p class="sidebar-text px-3 mb-2 text-[11px] uppercase tracking-widest text-amber-400 font-bold">
+                            Inventario
+                        </p>
+
+                        <a href="{{ route('ingredients.index') }}"
+                        class="flex items-center gap-3 px-4 py-3 rounded-xl transition-colors duration-200
+                        {{ request()->routeIs('ingredients.*') ? 'bg-amber-800 text-white shadow-md' : 'text-amber-200 hover:bg-amber-800 hover:text-white' }}">
+                            <span class="text-xl shrink-0 flex justify-center w-8">📦</span>
+                            <span class="font-medium sidebar-text whitespace-nowrap">Materia Prima</span>
+                        </a>
+
+                        <a href="{{ route('inventory_movements.index') }}"
+                        class="mt-2 flex items-center gap-3 px-4 py-3 rounded-xl transition-colors duration-200
+                        {{ request()->routeIs('inventory_movements.*') ? 'bg-amber-800 text-white shadow-md' : 'text-amber-200 hover:bg-amber-800 hover:text-white' }}">
+                            <span class="text-xl shrink-0 flex justify-center w-8">📋</span>
+                            <span class="font-medium sidebar-text whitespace-nowrap">Bitácora Inventario</span>
+                        </a>
+                    </div>
+
+                    {{-- CLIENTES --}}
+                    <div class="px-3">
+                        <p class="sidebar-text px-3 mb-2 text-[11px] uppercase tracking-widest text-amber-400 font-bold">
+                            Clientes
+                        </p>
+
+                        <a href="{{ route('vip.index') }}"
+                        class="flex items-center gap-3 px-4 py-3 rounded-xl transition-colors duration-200
+                        {{ request()->routeIs('vip.*') ? 'bg-amber-800 text-white shadow-md' : 'text-amber-200 hover:bg-amber-800 hover:text-white' }}">
+                            <span class="text-xl shrink-0 flex justify-center w-8">👑</span>
+                            <span class="font-medium sidebar-text whitespace-nowrap">Clientes VIP</span>
+                        </a>
+                    </div>
                 @endif
-
-                @if(Auth::user()->role === 'admin')
-                    <a href="{{ route('employees.index') }}" class="flex items-center gap-3 px-4 mx-2 py-3 rounded-lg transition-colors duration-200 {{ request()->routeIs('employees.*') ? 'bg-amber-800 text-white shadow-md' : 'text-amber-200 hover:bg-amber-800 hover:text-white' }}">
-                        <span class="text-xl shrink-0 flex justify-center w-8">👥</span>
-                        <span class="font-medium sidebar-text whitespace-nowrap">Empleados</span>
-                    </a>
-                @endif
-
-                @if(in_array(Auth::user()->role, ['admin', 'gerente']))
-                    <a href="{{ route('categories.index') }}" class="flex items-center gap-3 px-4 mx-2 py-3 rounded-lg transition-colors duration-200 {{ request()->routeIs('categories.*') ? 'bg-amber-800 text-white shadow-md' : 'text-amber-200 hover:bg-amber-800 hover:text-white' }}">
-                        <span class="text-xl shrink-0 flex justify-center w-8">🗂️</span>
-                        <span class="font-medium sidebar-text whitespace-nowrap">Categorías</span>
-                    </a>
-                    
-                    <a href="{{ route('vip.index') }}" class="flex items-center gap-3 px-4 mx-2 py-3 rounded-lg transition-colors duration-200 {{ request()->routeIs('vip.*') ? 'bg-amber-800 text-white shadow-md' : 'text-amber-200 hover:bg-amber-800 hover:text-white' }}">
-                        <span class="text-xl shrink-0 flex justify-center w-8">👑</span>
-                        <span class="font-medium sidebar-text whitespace-nowrap">Clientes VIP</span>
-                    </a>
-
-                    <a href="{{ route('ingredients.index') }}" class="flex items-center gap-3 px-4 mx-2 py-3 rounded-lg transition-colors duration-200 {{ request()->routeIs('ingredients.*') ? 'bg-amber-800 text-white shadow-md' : 'text-amber-200 hover:bg-amber-800 hover:text-white' }}">
-                        <span class="text-xl shrink-0 flex justify-center w-8">📦</span> 
-                        <span class="font-medium sidebar-text whitespace-nowrap">Materia Prima</span>
-                    </a>
-
-                    <a href="{{ route('inventory_movements.index') }}" class="flex items-center gap-3 px-4 mx-2 py-3 rounded-lg transition-colors duration-200 {{ request()->routeIs('inventory_movements.*') ? 'bg-amber-800 text-white shadow-md' : 'text-amber-200 hover:bg-amber-800 hover:text-white' }}">
-                        <span class="text-xl shrink-0 flex justify-center w-8">📋</span> 
-                        <span class="font-medium sidebar-text whitespace-nowrap">Bitácora Inventario</span>
-                    </a>
-                    
-                    <a href="{{ route('products.index') }}" class="flex items-center gap-3 px-4 mx-2 py-3 rounded-lg transition-colors duration-200 {{ request()->routeIs('products.*') ? 'bg-amber-800 text-white shadow-md' : 'text-amber-200 hover:bg-amber-800 hover:text-white' }}">
-                        <span class="text-xl shrink-0 flex justify-center w-8">☕</span> 
-                        <span class="font-medium sidebar-text whitespace-nowrap">Productos</span>
-                    </a>
-
-                    <a href="{{ route('cash_registers.index') }}" class="flex items-center gap-3 px-4 mx-2 py-3 rounded-lg transition-colors duration-200 {{ request()->routeIs('cash_registers.*') ? 'bg-amber-800 text-white shadow-md' : 'text-amber-200 hover:bg-amber-800 hover:text-white' }}">
-                        <span class="text-xl shrink-0 flex justify-center w-8">💰</span> 
-                        <span class="font-medium sidebar-text whitespace-nowrap">Corte de Caja</span>
-                    </a>
-                @endif
-
-                <a href="{{ route('pos.index') }}" class="flex items-center gap-3 px-4 mx-2 py-3 rounded-lg transition-colors duration-200 {{ request()->routeIs('pos.*') ? 'bg-amber-800 text-white shadow-md' : 'text-amber-200 hover:bg-amber-800 hover:text-white' }}">
-                    <span class="text-xl shrink-0 flex justify-center w-8">📠</span> 
-                    <span class="font-medium sidebar-text whitespace-nowrap">Ventas (POS)</span>
-                </a>
             </nav>
 
             <div class="p-4 border-t border-amber-800 text-xs text-amber-400 text-center sidebar-text whitespace-nowrap">
@@ -109,15 +155,28 @@
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
                     </button>
                     <h2 class="font-serif font-bold text-2xl text-amber-900 hidden sm:block">
-                        @if(request()->routeIs('dashboard')) Panel Principal
-                        @elseif(request()->routeIs('products.*')) Gestión de Menú de Productos
-                        @elseif(request()->routeIs('employees.*')) Equipo de Trabajo Ignoto
-                        @elseif(request()->routeIs('categories.*')) Gestión de Categorías
-                        @elseif(request()->routeIs('ingredients.*')) Gestión de Materia Prima
-                        @elseif(request()->routeIs('pos.*')) Punto de Venta
-                        @elseif(request()->routeIs('cash_registers.*')) Corte de Caja
-                        @elseif(request()->routeIs('inventory_movements.*')) Bitácora de Inventario
-                        @else Bienvenido a Ignoto
+                        @if(request()->routeIs('dashboard'))
+                            Panel Principal
+                        @elseif(request()->routeIs('pos.*'))
+                            Punto de Venta
+                        @elseif(request()->routeIs('cash_registers.*'))
+                            Corte de Caja
+                        @elseif(request()->routeIs('products.*'))
+                            Gestión de Productos
+                        @elseif(request()->routeIs('categories.*'))
+                            Gestión de Categorías
+                        @elseif(request()->routeIs('employees.*'))
+                            Equipo de Trabajo
+                        @elseif(request()->routeIs('ingredients.*'))
+                            Materia Prima
+                        @elseif(request()->routeIs('inventory_movements.*'))
+                            Bitácora de Inventario
+                        @elseif(request()->routeIs('vip.*'))
+                            Clientes VIP
+                        @elseif(request()->routeIs('profile.*'))
+                            Mi Perfil
+                        @else
+                            Sistema Ignoto
                         @endif
                     </h2>
                 </div>
@@ -126,7 +185,15 @@
                     <button class="flex items-center gap-3 focus:outline-none transition">
                         <div class="text-right hidden sm:block">
                             <p class="text-sm font-bold text-stone-700">{{ Auth::user()->name }}</p>
-                            <p class="text-xs text-stone-500 capitalize">{{ Auth::user()->role }}</p>
+                            <p class="text-xs text-stone-500">
+                                @if(Auth::user()->role === 'admin')
+                                    Administrador
+                                @elseif(Auth::user()->role === 'gerente')
+                                    Gerente
+                                @else
+                                    Empleado
+                                @endif
+                            </p>
                         </div>
                         <div class="h-10 w-10 rounded-full bg-amber-100 flex items-center justify-center text-amber-700 font-bold border border-amber-200">
                             {{ substr(Auth::user()->name, 0, 1) }}
@@ -149,7 +216,7 @@
 
             {{-- ÁREA DE CONTENIDO SCROLLABLE --}}
             <div class="flex-1 p-4 overflow-y-auto relative z-0">
-                <div class="bg-white rounded-2xl shadow-sm border border-stone-200 p-6 min-h-[500px]">
+                <div class="max-w-[1600px] mx-auto">
                     @yield('content')
                 </div>
             </div>
