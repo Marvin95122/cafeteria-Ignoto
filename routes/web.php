@@ -86,6 +86,7 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::post('/empleados', [EmployeeController::class, 'store'])->name('employees.store');
     Route::get('/empleados/{user}/editar', [EmployeeController::class, 'edit'])->name('employees.edit');
     Route::put('/empleados/{user}', [EmployeeController::class, 'update'])->name('employees.update');
+    Route::delete('/empleados/{user}/force-delete', [EmployeeController::class, 'forceDelete'])->name('employees.force-delete');
     Route::delete('/empleados/{user}', [EmployeeController::class, 'destroy'])->name('employees.destroy');
 });
 

@@ -96,6 +96,40 @@
                                 </select>
                             @endif
                         </div>
+
+                        <div>
+                            <label class="block font-medium text-stone-600 mb-2">Estado del Usuario</label>
+
+                            @if($user->id == 1)
+                                <div class="w-full border-stone-200 bg-stone-100 text-stone-500 rounded-lg px-4 py-3 border cursor-not-allowed flex items-center gap-2">
+                                    <span>🟢 Super Administrador activo</span>
+                                    <input type="hidden" name="active" value="1">
+                                </div>
+                                <p class="text-xs text-stone-400 mt-1">El Super Administrador no puede darse de baja.</p>
+                            @elseif(auth()->id() == $user->id)
+                                <div class="w-full border-stone-200 bg-stone-100 text-stone-500 rounded-lg px-4 py-3 border cursor-not-allowed flex items-center gap-2">
+                                    <span>🟢 Tu cuenta está activa</span>
+                                    <input type="hidden" name="active" value="1">
+                                </div>
+                                <p class="text-xs text-stone-400 mt-1">No puedes desactivar tu propia cuenta mientras estás conectado.</p>
+                            @else
+                                <label class="flex items-center gap-3 bg-stone-50 border border-stone-100 rounded-lg px-4 py-3 cursor-pointer">
+                                    <input type="checkbox"
+                                        name="active"
+                                        value="1"
+                                        {{ old('active', $user->active) ? 'checked' : '' }}
+                                        class="rounded border-stone-300 text-amber-700 focus:ring-amber-600">
+
+                                    <span class="text-sm font-bold text-stone-700">
+                                        Usuario activo
+                                    </span>
+                                </label>
+
+                                <p class="text-xs text-stone-400 mt-1">
+                                    Si se desactiva, este usuario no podrá iniciar sesión en el sistema.
+                                </p>
+                            @endif
+                        </div>
                     </div>
 
                     <div class="space-y-6 bg-stone-50 p-6 rounded-xl border border-stone-100">
