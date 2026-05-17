@@ -46,7 +46,9 @@ Route::middleware(['auth'])->group(function () {
 */
 Route::middleware(['auth', 'role:admin,gerente'])->group(function () {
     Route::resource('categories', CategoryController::class)->except(['show']);
+    Route::delete('/products/{product}/force-delete', [ProductController::class, 'forceDelete'])->name('products.force-delete');
     Route::resource('products', ProductController::class)->except(['show']);
+    Route::delete('/ingredients/{ingredient}/force-delete', [IngredientController::class, 'forceDelete'])->name('ingredients.force-delete');
     Route::resource('ingredients', IngredientController::class);
     
     // RUTAS DEL CORTE DE CAJA

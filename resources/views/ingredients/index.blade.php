@@ -37,6 +37,14 @@
             @endif
         </div>
 
+        <select name="status"
+                onchange="this.form.submit()"
+                class="w-56 rounded-lg border-stone-200 focus:border-amber-500 focus:ring-amber-200 transition">
+            <option value="">Todos los estados</option>
+            <option value="active" {{ request('status') === 'active' ? 'selected' : '' }}>Activos</option>
+            <option value="inactive" {{ request('status') === 'inactive' ? 'selected' : '' }}>Inactivos</option>
+        </select>
+        
         <div id="loadingSpinner" class="hidden text-amber-600">
             <svg class="animate-spin h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -52,6 +60,7 @@
             <tr>
                 <th class="px-6 py-4">Ingrediente</th>
                 <th class="px-6 py-4">Stock Actual</th>
+                <th class="px-6 py-4">Estado</th>
                 <th class="px-6 py-4 text-right">Acciones</th>
             </tr>
         </thead>
@@ -61,17 +70,29 @@
                     <td class="px-6 py-4 font-medium text-stone-800">{{ $ingredient->name }}</td>
                     <td class="px-6 py-4">
                         <span class="px-3 py-1 rounded-full text-sm font-bold {{ $ingredient->current_quantity < 500 ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700' }}">
-                            {{-- Usamos la función inteligente del modelo --}}
                             {{ $ingredient->full_quantity }}
                         </span>
                     </td>
+
+                    <td class="px-6 py-4">
+                        @if($ingredient->active)
+                            <span class="px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-700">
+                                Activo
+                            </span>
+                        @else
+                            <span class="px-3 py-1 rounded-full text-xs font-bold bg-stone-200 text-stone-600">
+                                Inactivo
+                            </span>
+                        @endif
+                    </td>
+
                     <td class="px-6 py-4 text-right space-x-2">
                         <a href="{{ route('ingredients.edit', $ingredient) }}" class="text-amber-600 hover:text-amber-800 font-medium">Editar</a>
                     </td>
                 </tr>
             @empty
                 <tr>
-                    <td colspan="3" class="px-6 py-10 text-center text-stone-500">
+                    <td colspan="4" class="px-6 py-10 text-center text-stone-500">
                         @if(request('search'))
                             No se encontraron ingredientes con "{{ request('search') }}".
                         @else

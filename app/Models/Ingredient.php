@@ -19,6 +19,18 @@ class Ingredient extends Model
                     ->withTimestamps();
     }
 
+    public function extras()
+    {
+        return $this->belongsToMany(Extra::class, 'extra_ingredient')
+            ->withPivot('quantity')
+            ->withTimestamps();
+    }
+
+    public function inventoryMovements()
+    {
+        return $this->hasMany(InventoryMovement::class);
+    }
+
     public function getFullQuantityAttribute()
     {
         $qty = $this->current_quantity;

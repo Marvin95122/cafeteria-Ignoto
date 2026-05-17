@@ -15,7 +15,18 @@ class IngredientController extends Controller
             $query->where('name', 'like', '%' . $request->search . '%');
         }
 
-        $ingredients = $query->paginate(10);
+        if ($request->filled('status')) {
+            if ($request->status === 'active') {
+                $query->where('active', true);
+            }
+
+            if ($request->status === 'inactive') {
+                $query->where('active', false);
+            }
+        }
+
+        $ingredients = $query->paginate(10)->withQueryString();
+
         return view('ingredients.index', compact('ingredients'));
     }
 
@@ -63,9 +74,8 @@ class IngredientController extends Controller
             'current_quantity' => 'required|numeric|min:0',
         ]);
 
-        $data = $request->all();
+        $data = $request->only(['name', 'unit', 'current_quantity']);
 
-        // --- CONVERSIÓN DE UNIDADES (Kg -> g, L -> ml) ---
         if ($data['unit'] == 'kg') {
             $data['current_quantity'] = $data['current_quantity'] * 1000;
             $data['unit'] = 'g';
@@ -76,14 +86,14 @@ class IngredientController extends Controller
             $data['unit'] = 'ml';
         }
 
+        $data['active'] = $request->has('active');
+
         $ingredient->update($data);
 
         foreach ($ingredient->products as $product) {
-            
             if ($product->use_dynamic_stock) {
-                
                 $nuevoStock = $product->calculated_stock;
-                
+
                 $product->update([
                     'stock' => $nuevoStock
                 ]);
@@ -96,8 +106,40 @@ class IngredientController extends Controller
 
     public function destroy(Ingredient $ingredient)
     {
-        $ingredient->delete();
-        return redirect()->route('ingredients.index')
-            ->with('success', 'Ingrediente eliminado del almacén.');
+        $ingredient->update([
+            'active' => false,
+        ]);
+
+        return redirect()
+            ->route('ingredients.index')
+            ->with('success', 'Ingrediente desactivado correctamente. Su historial y relaciones se conservaron.');
     }
+
+    public function forceDelete(Ingredient $ingredient)
+    {
+        if ($ingredient->products()->exists()) {
+            return redirect()
+                ->route('ingredients.index')
+                ->with('error', 'No puedes eliminar definitivamente este ingrediente porque está asociado a uno o más productos.');
+        }
+
+        if ($ingredient->extras()->exists()) {
+            return redirect()
+                ->route('ingredients.index')
+                ->with('error', 'No puedes eliminar definitivamente este ingrediente porque está asociado a uno o más extras.');
+        }
+
+        if ($ingredient->inventoryMovements()->exists()) {
+            return redirect()
+                ->route('ingredients.index')
+                ->with('error', 'No puedes eliminar definitivamente este ingrediente porque tiene movimientos de inventario registrados.');
+        }
+
+        $ingredient->delete();
+
+        return redirect()
+            ->route('ingredients.index')
+            ->with('success', 'Ingrediente eliminado definitivamente porque no tenía productos, extras ni movimientos asociados.');
+    }
+    
 }

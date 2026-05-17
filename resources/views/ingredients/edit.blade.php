@@ -36,6 +36,23 @@
                 </div>
             </div>
 
+            <div class="mb-6 flex items-center gap-2 bg-stone-50 border border-stone-100 rounded-lg px-4 py-3">
+                <input type="checkbox"
+                    name="active"
+                    value="1"
+                    id="active"
+                    {{ old('active', $ingredient->active) ? 'checked' : '' }}
+                    class="rounded border-stone-300 text-amber-700 focus:ring-amber-600">
+
+                <label for="active" class="text-sm font-bold text-stone-700">
+                    Ingrediente activo
+                </label>
+
+                <span class="text-xs text-stone-400">
+                    Si está inactivo, no se usará para nuevas configuraciones.
+                </span>
+            </div>
+
             <div class="flex gap-4">
                 <button type="submit" class="flex-1 bg-amber-600 text-white font-bold py-3 rounded-lg hover:bg-amber-700 transition shadow-md">
                     Actualizar Inventario
@@ -44,13 +61,45 @@
         </form>
 
         <div class="mt-8 pt-6 border-t border-stone-100">
-            <form action="{{ route('ingredients.destroy', $ingredient) }}" method="POST" onsubmit="return confirm('¿Eliminar este ingrediente? Si algún producto lo usa en su receta, podría causar errores.')">
-                @csrf
-                @method('DELETE')
-                <button type="submit" class="text-red-500 text-sm font-bold hover:underline">
-                    Eliminar este insumo permanentemente
-                </button>
-            </form>
+            <h3 class="text-sm font-bold text-stone-700 mb-3">
+                Acciones de estado
+            </h3>
+
+            <div class="flex flex-col sm:flex-row gap-3">
+                @if($ingredient->active)
+                    <form action="{{ route('ingredients.destroy', $ingredient) }}"
+                        method="POST"
+                        onsubmit="return confirm('¿Desactivar este ingrediente? No se eliminará su historial ni sus relaciones.')">
+                        @csrf
+                        @method('DELETE')
+
+                        <button type="submit"
+                                class="px-4 py-2 rounded-lg bg-orange-100 text-orange-700 text-sm font-bold hover:bg-orange-200 transition">
+                            Desactivar insumo
+                        </button>
+                    </form>
+                @else
+                    <div class="px-4 py-2 rounded-lg bg-stone-100 text-stone-500 text-sm font-bold">
+                        Este insumo ya está desactivado
+                    </div>
+                @endif
+
+                <form action="{{ route('ingredients.force-delete', $ingredient) }}"
+                    method="POST"
+                    onsubmit="return confirm('¿Eliminar definitivamente este ingrediente? Solo se permitirá si no tiene productos, extras ni movimientos asociados.')">
+                    @csrf
+                    @method('DELETE')
+
+                    <button type="submit"
+                            class="px-4 py-2 rounded-lg bg-red-100 text-red-700 text-sm font-bold hover:bg-red-200 transition">
+                        Eliminar definitivamente
+                    </button>
+                </form>
+            </div>
+
+            <p class="text-xs text-stone-400 mt-3">
+                Recomendación: usa “Desactivar” cuando el insumo ya fue usado en productos, extras, inventario o ventas. La eliminación definitiva solo es segura cuando no existe historial.
+            </p>
         </div>
     </div>
 </div>

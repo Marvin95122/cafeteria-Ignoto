@@ -231,14 +231,6 @@ class ProductController extends Controller
 
     public function destroy(Product $product)
     {
-        if ($product->image) {
-            Storage::disk('public')->delete($product->image);
-        }
-        
-        $extraIds = $product->extras()->pluck('extras.id');
-        Extra::whereIn('id', $extraIds)->delete();
-
-        $product->ingredients()->detach();
         $product->update([
             'active' => false,
         ]);
@@ -247,4 +239,47 @@ class ProductController extends Controller
             ->route('products.index')
             ->with('success', 'Producto desactivado correctamente.');
     }
+
+    public function forceDelete(Product $product)
+    {
+        if ($product->orderItems()->exists()) {
+            return redirect()
+                ->route('products.index')
+                ->with('error', 'No puedes eliminar definitivamente este producto porque ya fue usado en ventas o tickets. Puedes mantenerlo desactivado.');
+        }
+
+        if ($product->image) {
+            Storage::disk('public')->delete($product->image);
+        }
+
+        $extraIds = $product->extras()->pluck('extras.id')->toArray();
+
+        $product->ingredients()->detach();
+        $product->extras()->detach();
+
+        if (!empty($extraIds)) {
+            Extra::whereIn('id', $extraIds)->delete();
+        }
+
+        $product->delete();
+
+        return redirect()
+            ->route('products.index')
+            ->with('success', 'Producto eliminado definitivamente porque no tenía historial de ventas.');
+    }
+    /*public function destroy(Product $product)
+    {
+        if ($product->image) {
+            Storage::disk('public')->delete($product->image);
+        }
+        
+        $extraIds = $product->extras()->pluck('extras.id');
+        Extra::whereIn('id', $extraIds)->delete();
+
+        $product->ingredients()->detach();
+        $product->delete();
+        
+        return redirect()->route('products.index')
+            ->with('success', 'Producto y su historial de extras eliminados correctamente');
+    }*/
 }

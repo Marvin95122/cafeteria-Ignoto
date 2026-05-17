@@ -66,4 +66,9 @@ class Product extends Model
 
         return $possibleQuantities->min();
     }
+    
+    public function orderItems()
+    {
+        return $this->hasMany(OrderItem::class);
+    }
 }
