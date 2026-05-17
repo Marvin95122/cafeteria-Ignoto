@@ -57,7 +57,7 @@ class CashRegisterController extends Controller
             ];
         }
 
-        $history = CashRegister::with('user')->where('status', 'cerrada')->latest()->take(10)->get();
+        $history = CashRegister::with(['user', 'closedBy'])->where('status', 'cerrada')->latest()->take(10)->get();
 
         return view('cash_registers.index', compact('activeRegister', 'stats', 'expenses', 'history', 'orders', 'salesPoints'));
     }
@@ -121,15 +121,19 @@ class CashRegisterController extends Controller
             return back()->with('error', 'No hay caja abierta.');
         }
 
+        $difference = $request->actual_amount - $request->expected_amount;
+
         $activeRegister->update([
             'expected_amount' => $request->expected_amount,
             'actual_amount' => $request->actual_amount,
+            'difference_amount' => $difference,
+            'closed_by' => Auth::id(),
             'notes' => $request->notes,
             'status' => 'cerrada',
             'closed_at' => Carbon::now()
         ]);
 
-        return back()->with('success', '¡Corte de caja realizado con éxito!');
+        return back()->with('success', '¡Corte de caja realizado con éxito! La auditoría del cierre fue registrada.');
     }
 
     // --- CANCELACIÓN INTELIGENTE ---
@@ -151,6 +155,7 @@ class CashRegisterController extends Controller
             $order->update([
                 'status' => 'cancelado',
                 'cancellation_reason' => $request->cancellation_reason,
+                'cancellation_action' => $request->action_type,
                 'cancelled_by' => Auth::id(),
                 'cancelled_at' => now(),
             ]);
@@ -231,8 +236,8 @@ class CashRegisterController extends Controller
             DB::commit();
             
             $mensaje = $request->action_type === 'devolver' 
-                ? 'Ticket cancelado. El dinero se restó y los insumos regresaron al stock.' 
-                : 'Ticket cancelado. El dinero se restó y los insumos se registraron como MERMA.';
+                ? 'Ticket cancelado correctamente. La venta dejó de contar en caja y los insumos regresaron al inventario.' 
+                : 'Ticket cancelado correctamente. La venta dejó de contar en caja y los insumos fueron registrados como merma.';
             
             return back()->with('success', $mensaje);
 
@@ -267,7 +272,8 @@ class CashRegisterController extends Controller
             $expense->update([
                 'status' => 'cancelado',
                 'cancelled_by' => $user->id,
-                'cancellation_reason' => $request->cancellation_reason
+                'cancellation_reason' => $request->cancellation_reason,
+                'cancelled_at' => now(),
             ]);
 
             DB::commit();

@@ -14,6 +14,7 @@ class Order extends Model
         'payment_method', 
         'status',
         'cancellation_reason',
+        'cancellation_action',
         'cancelled_by',
         'cancelled_at'
     ];

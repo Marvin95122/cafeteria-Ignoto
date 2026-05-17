@@ -121,8 +121,19 @@
                                         {{-- NUEVO: Motivo de cancelación visible y elegante abajo --}}
                                         @if($expense->status === 'cancelado')
                                             <div class="mt-2 bg-red-100/50 p-2 rounded-lg border border-red-100 inline-block w-full">
-                                                <div class="text-xs text-red-800 font-bold mb-0.5">⚠️ Anulado por {{ $expense->canceller->name ?? 'Admin' }}</div>
-                                                <div class="text-xs text-red-600 italic">"{{ $expense->cancellation_reason }}"</div>
+                                                <div class="text-xs text-red-800 font-bold mb-0.5">
+                                                    ⚠️ Anulado por {{ $expense->canceller->name ?? 'Admin' }}
+                                                </div>
+
+                                                <div class="text-xs text-red-600 italic">
+                                                    "{{ $expense->cancellation_reason }}"
+                                                </div>
+
+                                                @if($expense->cancelled_at)
+                                                    <div class="text-[10px] text-red-500 mt-1">
+                                                        Fecha de anulación: {{ $expense->cancelled_at->format('d/m/Y h:i A') }}
+                                                    </div>
+                                                @endif
                                             </div>
                                         @endif
                                     </td>
@@ -182,9 +193,36 @@
                                             @endforeach
                                         </ul>
                                         @if($order->status === 'cancelado')
-                                            <div class="mt-2 text-xs text-red-700 bg-red-100 p-2 rounded border border-red-200">
-                                                <strong>Motivo:</strong> {{ $order->cancellation_reason }}<br>
-                                                <span class="text-[10px] text-red-500">Canceló: {{ $order->canceller->name ?? 'Admin' }} ({{ $order->cancelled_at->format('h:i A') }})</span>
+                                            <div class="mt-2 text-xs text-red-700 bg-red-100 p-2 rounded border border-red-200 space-y-1">
+                                                <div>
+                                                    <strong>Motivo:</strong> {{ $order->cancellation_reason }}
+                                                </div>
+
+                                                <div>
+                                                    <strong>Canceló:</strong> {{ $order->canceller->name ?? 'Usuario no disponible' }}
+                                                </div>
+
+                                                @if($order->cancelled_at)
+                                                    <div>
+                                                        <strong>Fecha:</strong> {{ $order->cancelled_at->format('d/m/Y h:i A') }}
+                                                    </div>
+                                                @endif
+
+                                                <div class="mt-2">
+                                                    @if($order->cancellation_action === 'devolver')
+                                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-[10px] font-bold bg-green-100 text-green-700 border border-green-200">
+                                                            Insumos devueltos al inventario
+                                                        </span>
+                                                    @elseif($order->cancellation_action === 'merma')
+                                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-[10px] font-bold bg-orange-100 text-orange-700 border border-orange-200">
+                                                            Insumos registrados como merma
+                                                        </span>
+                                                    @else
+                                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-[10px] font-bold bg-stone-100 text-stone-600 border border-stone-200">
+                                                            Acción no registrada
+                                                        </span>
+                                                    @endif
+                                                </div>
                                             </div>
                                         @endif
                                     </td>
@@ -274,48 +312,88 @@
     {{-- HISTORIAL DE CORTES PASADOS (Siempre visible para el Gerente) --}}
     <div class="bg-white rounded-2xl shadow-sm border border-stone-200 overflow-hidden mt-8">
         <div class="bg-stone-800 px-6 py-4 flex justify-between items-center">
-            <h3 class="font-bold text-white text-lg flex items-center gap-2"><span>📂</span> Historial de Cortes de Caja (Últimos 10)</h3>
+            <h3 class="font-bold text-white text-lg flex items-center gap-2">
+                <span>📂</span> Historial de Cortes de Caja (Últimos 10)
+            </h3>
         </div>
+
         <div class="overflow-x-auto">
             <table class="w-full text-left text-sm text-stone-600">
                 <thead class="bg-stone-100 text-stone-600 uppercase text-xs">
                     <tr>
-                        <th class="px-6 py-4">Fecha / Responsable</th>
+                        <th class="px-6 py-4">Fecha / Responsables</th>
                         <th class="px-6 py-4">Fondo Inicial</th>
-                        <th class="px-6 py-4">Esperado (Sistema)</th>
-                        <th class="px-6 py-4">Físico (Cajón)</th>
+                        <th class="px-6 py-4">Esperado</th>
+                        <th class="px-6 py-4">Físico</th>
                         <th class="px-6 py-4">Diferencia</th>
                         <th class="px-6 py-4">Notas</th>
                     </tr>
                 </thead>
+
                 <tbody class="divide-y divide-stone-200">
                     @forelse($history as $reg)
                         @php
-                            $diferencia = $reg->actual_amount - $reg->expected_amount;
+                            $diferencia = $reg->difference_amount ?? ($reg->actual_amount - $reg->expected_amount);
                         @endphp
+
                         <tr class="hover:bg-stone-50">
                             <td class="px-6 py-4">
-                                <span class="block font-bold text-stone-800">{{ $reg->opened_at->format('d M, Y') }}</span>
-                                <span class="block text-xs text-stone-500">👤 {{ $reg->user->name ?? 'Admin' }}</span>
-                                <span class="block text-xs text-stone-400">{{ $reg->opened_at->format('h:i A') }} - {{ $reg->closed_at->format('h:i A') }}</span>
+                                <span class="block font-bold text-stone-800">
+                                    {{ $reg->opened_at->format('d M, Y') }}
+                                </span>
+
+                                <span class="block text-xs text-stone-500">
+                                    🟢 Abrió: {{ $reg->user->name ?? 'Usuario no disponible' }}
+                                </span>
+
+                                <span class="block text-xs text-stone-500">
+                                    🔒 Cerró: {{ $reg->closedBy->name ?? 'No registrado' }}
+                                </span>
+
+                                <span class="block text-xs text-stone-400 mt-1">
+                                    {{ $reg->opened_at->format('h:i A') }}
+                                    -
+                                    {{ $reg->closed_at ? $reg->closed_at->format('h:i A') : 'Sin cierre' }}
+                                </span>
                             </td>
-                            <td class="px-6 py-4 text-stone-500">${{ number_format($reg->opening_amount, 2) }}</td>
-                            <td class="px-6 py-4 font-bold text-stone-800">${{ number_format($reg->expected_amount, 2) }}</td>
-                            <td class="px-6 py-4 font-bold text-blue-700">${{ number_format($reg->actual_amount, 2) }}</td>
+
+                            <td class="px-6 py-4 text-stone-500">
+                                ${{ number_format($reg->opening_amount, 2) }}
+                            </td>
+
+                            <td class="px-6 py-4 font-bold text-stone-800">
+                                ${{ number_format($reg->expected_amount, 2) }}
+                            </td>
+
+                            <td class="px-6 py-4 font-bold text-blue-700">
+                                ${{ number_format($reg->actual_amount, 2) }}
+                            </td>
+
                             <td class="px-6 py-4">
                                 @if($diferencia == 0)
-                                    <span class="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-bold">Cuadró Exacto</span>
+                                    <span class="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-bold">
+                                        Cuadró Exacto
+                                    </span>
                                 @elseif($diferencia > 0)
-                                    <span class="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs font-bold">Sobró +${{ number_format($diferencia, 2) }}</span>
+                                    <span class="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs font-bold">
+                                        Sobró +${{ number_format($diferencia, 2) }}
+                                    </span>
                                 @else
-                                    <span class="bg-red-100 text-red-700 px-2 py-1 rounded text-xs font-bold">Faltó -${{ number_format(abs($diferencia), 2) }}</span>
+                                    <span class="bg-red-100 text-red-700 px-2 py-1 rounded text-xs font-bold">
+                                        Faltó -${{ number_format(abs($diferencia), 2) }}
+                                    </span>
                                 @endif
                             </td>
-                            <td class="px-6 py-4 text-xs italic text-stone-500 max-w-xs truncate">{{ $reg->notes ?? 'Sin novedades' }}</td>
+
+                            <td class="px-6 py-4 text-xs italic text-stone-500 max-w-xs">
+                                {{ $reg->notes ?? 'Sin novedades' }}
+                            </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="px-6 py-8 text-center text-stone-400 italic">No hay historial de cajas cerradas todavía.</td>
+                            <td colspan="6" class="px-6 py-8 text-center text-stone-400 italic">
+                                No hay historial de cajas cerradas todavía.
+                            </td>
                         </tr>
                     @endforelse
                 </tbody>
@@ -333,7 +411,7 @@
                 <form id="cancel-order-form" method="POST" class="p-5">
                     @csrf
                     <p class="text-sm text-stone-600 mb-4 bg-stone-50 p-3 rounded-lg border border-stone-200">
-                        Al cancelar este ticket, <strong>el dinero se restará de la caja</strong>. Selecciona qué pasará con los insumos:
+                        Al cancelar este ticket, <strong>la venta dejará de contar en la caja</strong>. Selecciona si los insumos regresarán al inventario o si quedarán registrados como merma:
                     </p>
 
                     {{-- Opciones de Decisión (Devolver o Mermar) --}}

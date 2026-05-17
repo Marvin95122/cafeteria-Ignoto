@@ -15,21 +15,27 @@ class Expense extends Model
         'receipt_image',
         'status',
         'cancelled_by',
-        'cancellation_reason'
+        'cancellation_reason',
+        'cancelled_at',
     ];
 
-    // Relación: El gasto lo registró un usuario
+    protected $casts = [
+        'cancelled_at' => 'datetime',
+    ];
+
+    // Usuario que registró el gasto
     public function user()
     {
         return $this->belongsTo(User::class);
     }
 
-    // Relación: El gasto pertenece a un turno/corte de caja
+    // Caja a la que pertenece el gasto
     public function cashRegister()
     {
         return $this->belongsTo(CashRegister::class);
     }
-    // Relación para saber qué Administrador o gerente anuló el gasto
+
+    // Usuario que canceló/anuló el gasto
     public function canceller()
     {
         return $this->belongsTo(User::class, 'cancelled_by');

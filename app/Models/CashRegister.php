@@ -8,9 +8,11 @@ class CashRegister extends Model
 {
     protected $fillable = [
         'user_id',
+        'closed_by',
         'opening_amount',
         'expected_amount',
         'actual_amount',
+        'difference_amount',
         'notes',
         'status',
         'opened_at',
@@ -22,13 +24,19 @@ class CashRegister extends Model
         'closed_at' => 'datetime',
     ];
 
-    // Relación: Un corte de caja lo hace un usuario
+    // Usuario que abrió la caja
     public function user()
     {
         return $this->belongsTo(User::class);
     }
 
-    // Relación: Un corte de caja puede tener muchos gastos registrados en ese turno
+    // Usuario que cerró la caja
+    public function closedBy()
+    {
+        return $this->belongsTo(User::class, 'closed_by');
+    }
+
+    // Gastos registrados en este turno/corte
     public function expenses()
     {
         return $this->hasMany(Expense::class);
