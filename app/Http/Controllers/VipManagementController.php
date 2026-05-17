@@ -10,18 +10,35 @@ use Illuminate\Support\Facades\Auth;
 class VipManagementController extends Controller
 {
     // Vista principal del panel VIP
-    public function index()
+    public function index(Request $request)
     {
-        // Solo Admin y Gerente entran aquí
         if (!in_array(Auth::user()->role, ['admin', 'gerente'])) {
             abort(403, 'Acceso denegado. Solo administradores y gerentes.');
         }
 
-        $customers = Customer::latest()->get();
-        
-        // Cargamos o creamos los valores por defecto (10% de recompensa, 1 Punto = 1 Peso)
-        $moneyForOnePoint = Setting::firstOrCreate(['key' => 'vip_money_for_point'], ['value' => '10'])->value;
-        $pointValue = Setting::firstOrCreate(['key' => 'vip_point_value'], ['value' => '1'])->value;
+        $query = Customer::latest();
+
+        if ($request->filled('status')) {
+            if ($request->status === 'active') {
+                $query->where('active', true);
+            }
+
+            if ($request->status === 'inactive') {
+                $query->where('active', false);
+            }
+        }
+
+        $customers = $query->get();
+
+        $moneyForOnePoint = Setting::firstOrCreate(
+            ['key' => 'vip_money_for_point'],
+            ['value' => '10']
+        )->value;
+
+        $pointValue = Setting::firstOrCreate(
+            ['key' => 'vip_point_value'],
+            ['value' => '1']
+        )->value;
 
         return view('vip.index', compact('customers', 'moneyForOnePoint', 'pointValue'));
     }
@@ -47,16 +64,22 @@ class VipManagementController extends Controller
     // Crear cliente desde el panel
     public function storeCustomer(Request $request)
     {
-        // Ya protegido por el middleware de rutas para admin/gerente
         $request->validate([
             'name' => 'required|string|max:255',
             'phone' => 'required|string|unique:customers,phone',
             'points' => 'required|integer|min:0'
         ]);
 
-        Customer::create($request->only('name', 'phone', 'points'));
+        Customer::create([
+            'name' => $request->name,
+            'phone' => $request->phone,
+            'points' => $request->points,
+            'active' => true,
+        ]);
 
-        return redirect()->route('vip.index')->with('success', 'Cliente VIP registrado con éxito.');
+        return redirect()
+            ->route('vip.index')
+            ->with('success', 'Cliente VIP registrado con éxito.');
     }
 
     // Actualizar puntos o datos manualmente
@@ -68,15 +91,42 @@ class VipManagementController extends Controller
             'points' => 'required|integer|min:0'
         ]);
 
-        $customer->update($request->only('name', 'phone', 'points'));
+        $customer->update([
+            'name' => $request->name,
+            'phone' => $request->phone,
+            'points' => $request->points,
+            'active' => $request->has('active'),
+        ]);
 
-        return redirect()->route('vip.index')->with('success', 'Datos y puntos del cliente actualizados.');
+        return redirect()
+            ->route('vip.index')
+            ->with('success', 'Datos, puntos y estado del cliente actualizados.');
     }
 
     // Eliminar cliente VIP
     public function destroyCustomer(Customer $customer)
     {
+        $customer->update([
+            'active' => false,
+        ]);
+
+        return redirect()
+            ->route('vip.index')
+            ->with('success', 'Cliente VIP dado de baja correctamente. Su historial de compras se conservará.');
+    }
+
+    public function forceDeleteCustomer(Customer $customer)
+    {
+        if ($customer->orders()->exists()) {
+            return redirect()
+                ->route('vip.index')
+                ->with('error', 'No puedes eliminar definitivamente este cliente VIP porque tiene ventas o tickets asociados. Puedes mantenerlo dado de baja.');
+        }
+
         $customer->delete();
-        return redirect()->route('vip.index')->with('success', 'Cliente VIP eliminado del sistema.');
+
+        return redirect()
+            ->route('vip.index')
+            ->with('success', 'Cliente VIP eliminado definitivamente porque no tenía ventas asociadas.');
     }
 }

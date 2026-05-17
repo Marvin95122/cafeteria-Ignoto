@@ -34,7 +34,7 @@ class PosController extends Controller
         $ingredients = \App\Models\Ingredient::where('active', true)->get();
         
         // Cargamos todos los clientes VIP para el buscador instantáneo
-        $customers = Customer::latest()->get();
+        $customers = Customer::where('active', true)->latest()->get();
 
         return view('pos.index', compact('categories', 'products', 'ingredients', 'customers', 'activeRegister'));
     }
@@ -55,7 +55,8 @@ class PosController extends Controller
             $customer = Customer::create([
                 'name' => $request->name,
                 'phone' => $request->phone,
-                'points' => 0
+                'points' => 0,
+                'active' => true,
             ]);
 
             return response()->json(['success' => true, 'customer' => $customer]);
@@ -84,6 +85,13 @@ class PosController extends Controller
             // LÓGICA DE PUNTOS VIP
             $customer = $customerId ? Customer::lockForUpdate()->find($customerId) : null;
             $pointsEarned = 0;
+
+            if ($customer && !$customer->active) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Este cliente VIP está dado de baja y no puede usarse en una venta.'
+                ], 400);
+            }
 
             if ($customer) {
                 // Leer valores configurados por el admin (o usar defecto)

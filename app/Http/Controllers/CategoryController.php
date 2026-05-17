@@ -7,9 +7,22 @@ use Illuminate\Http\Request;
 
 class CategoryController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $categories = Category::orderBy('name')->get();
+        $query = Category::withCount('products')->orderBy('name');
+
+        if ($request->filled('status')) {
+            if ($request->status === 'active') {
+                $query->where('active', true);
+            }
+
+            if ($request->status === 'inactive') {
+                $query->where('active', false);
+            }
+        }
+
+        $categories = $query->get();
+
         return view('categories.index', compact('categories'));
     }
 
@@ -55,16 +68,27 @@ class CategoryController extends Controller
 
     public function destroy(Category $category)
     {
-        if ($category->products()->count() > 0) {
+        $category->update([
+            'active' => false,
+        ]);
+
+        return redirect()
+            ->route('categories.index')
+            ->with('success', 'Categoría desactivada correctamente. Los productos asociados se conservaron.');
+    }
+
+    public function forceDelete(Category $category)
+    {
+        if ($category->products()->exists()) {
             return redirect()
                 ->route('categories.index')
-                ->with('error', 'No puedes eliminar una categoría que tiene productos asociados. Puedes desactivarla en lugar de eliminarla.');
+                ->with('error', 'No puedes eliminar definitivamente esta categoría porque tiene productos asociados. Puedes mantenerla desactivada.');
         }
 
         $category->delete();
 
         return redirect()
             ->route('categories.index')
-            ->with('success', 'Categoría eliminada correctamente.');
+            ->with('success', 'Categoría eliminada definitivamente porque no tenía productos asociados.');
     }
 }

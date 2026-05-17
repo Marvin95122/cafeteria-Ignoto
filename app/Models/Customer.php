@@ -13,6 +13,7 @@ class Customer extends Model
         'name',
         'phone',
         'points',
+        'active',
     ];
 
     // Relación: Un cliente puede tener muchas órdenes (recibos)

@@ -15,6 +15,23 @@
     </a>
 </div>
 
+<div class="bg-white p-4 rounded-2xl shadow-sm border border-stone-100 mb-8">
+    <form method="GET" action="{{ route('categories.index') }}" class="flex flex-col md:flex-row gap-4 items-center justify-between">
+        <div>
+            <p class="text-sm font-bold text-stone-700">Filtrar categorías</p>
+            <p class="text-xs text-stone-400">Visualiza categorías activas, inactivas o todas.</p>
+        </div>
+
+        <select name="status"
+                onchange="this.form.submit()"
+                class="w-full md:w-64 rounded-xl border-stone-200 bg-stone-50 text-stone-700 shadow-sm focus:border-amber-500 focus:ring focus:ring-amber-200 focus:ring-opacity-50 transition">
+            <option value="">Todos los estados</option>
+            <option value="active" {{ request('status') === 'active' ? 'selected' : '' }}>Activas</option>
+            <option value="inactive" {{ request('status') === 'inactive' ? 'selected' : '' }}>Inactivas</option>
+        </select>
+    </form>
+</div>
+
 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
     @forelse($categories as $category)
         <div class="bg-white p-6 rounded-2xl shadow-sm border border-stone-100 hover:border-amber-200 hover:shadow-md transition flex flex-col items-center text-center relative group">
@@ -24,6 +41,9 @@
             </div>
 
             <h3 class="font-bold text-xl text-stone-800 mb-1">{{ $category->name }}</h3>
+            <p class="text-xs text-stone-400 mb-3">
+                {{ $category->products_count }} producto(s) asociado(s)
+            </p>
             
             <div class="mb-6">
                 @if($category->active)
@@ -33,16 +53,37 @@
                 @endif
             </div>
 
-            <div class="flex gap-2 w-full justify-center pt-4 border-t border-stone-50">
+            <div class="flex flex-col gap-2 w-full justify-center pt-4 border-t border-stone-50">
                 <a href="{{ route('categories.edit', $category) }}" 
-                   class="flex-1 py-2 text-sm text-stone-500 hover:text-amber-700 hover:bg-amber-50 rounded-lg transition font-medium">
-                   Editar
+                class="w-full py-2 text-sm text-stone-500 hover:text-amber-700 hover:bg-amber-50 rounded-lg transition font-medium">
+                Editar
                 </a>
-                
-                <form method="POST" action="{{ route('categories.destroy', $category) }}" class="flex-1" onsubmit="return confirm('¿Eliminar esta categoría?')">
-                    @csrf @method('DELETE')
+
+                @if($category->active)
+                    <form method="POST"
+                        action="{{ route('categories.destroy', $category) }}"
+                        onsubmit="return confirm('¿Desactivar esta categoría? Los productos asociados se conservarán.')">
+                        @csrf
+                        @method('DELETE')
+
+                        <button class="w-full py-2 text-sm text-stone-500 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition font-medium">
+                            Desactivar
+                        </button>
+                    </form>
+                @else
+                    <div class="w-full py-2 text-sm text-stone-400 bg-stone-50 rounded-lg font-medium">
+                        Categoría inactiva
+                    </div>
+                @endif
+
+                <form method="POST"
+                    action="{{ route('categories.force-delete', $category) }}"
+                    onsubmit="return confirm('¿Eliminar definitivamente esta categoría? Solo se permitirá si no tiene productos asociados.')">
+                    @csrf
+                    @method('DELETE')
+
                     <button class="w-full py-2 text-sm text-stone-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition font-medium">
-                        Eliminar
+                        Eliminar definitivamente
                     </button>
                 </form>
             </div>

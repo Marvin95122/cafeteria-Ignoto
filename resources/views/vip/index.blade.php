@@ -5,12 +5,13 @@
     showCreateModal: false, 
     showEditModal: false, 
     search: '',
-    editForm: { id: '', name: '', phone: '', points: 0 },
+    editForm: { id: '', name: '', phone: '', points: 0, active: true },
     openEdit(customer) {
         this.editForm.id = customer.id;
         this.editForm.name = customer.name;
         this.editForm.phone = customer.phone;
         this.editForm.points = customer.points;
+        this.editForm.active = Boolean(customer.active);
         this.showEditModal = true;
     }
 }">
@@ -84,14 +85,25 @@
 
     {{-- SECCIÓN DE LISTADO Y BÚSQUEDA --}}
     <div class="bg-white rounded-2xl shadow-sm border border-stone-100 overflow-hidden">
-        <div class="p-4 sm:p-6 border-b border-stone-100 flex flex-col sm:flex-row justify-between items-center gap-4">
+        <div class="p-4 sm:p-6 border-b border-stone-100 flex flex-col lg:flex-row justify-between items-center gap-4">
             <h3 class="font-bold text-lg text-stone-800">Directorio de Clientes VIP</h3>
             
-            {{-- Buscador cliente --}}
-            <div class="relative w-full sm:w-72">
-                <input type="text" x-model="search" placeholder="Buscar por nombre o teléfono..." 
-                       class="w-full text-xs rounded-lg border-stone-300 pl-8 pr-4 py-2 focus:ring-amber-500 focus:border-amber-500">
-                <span class="absolute left-2.5 top-2.5 text-stone-400 text-xs">🔍</span>
+            <div class="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
+                <form method="GET" action="{{ route('vip.index') }}" class="w-full sm:w-52">
+                    <select name="status"
+                            onchange="this.form.submit()"
+                            class="w-full text-xs rounded-lg border-stone-300 px-3 py-2 focus:ring-amber-500 focus:border-amber-500">
+                        <option value="">Todos los estados</option>
+                        <option value="active" {{ request('status') === 'active' ? 'selected' : '' }}>Activos</option>
+                        <option value="inactive" {{ request('status') === 'inactive' ? 'selected' : '' }}>Inactivos</option>
+                    </select>
+                </form>
+
+                <div class="relative w-full sm:w-72">
+                    <input type="text" x-model="search" placeholder="Buscar por nombre o teléfono..." 
+                        class="w-full text-xs rounded-lg border-stone-300 pl-8 pr-4 py-2 focus:ring-amber-500 focus:border-amber-500">
+                    <span class="absolute left-2.5 top-2.5 text-stone-400 text-xs">🔍</span>
+                </div>
             </div>
         </div>
 
@@ -104,6 +116,7 @@
                         <th class="py-3 px-6">Teléfono / Cuenta</th>
                         <th class="py-3 px-6 text-center">Saldo de Puntos</th>
                         <th class="py-3 px-6">Fecha de Registro</th>
+                        <th class="py-3 px-6 text-center">Estado</th>
                         <th class="py-3 px-6 text-center">Acciones</th>
                     </tr>
                 </thead>
@@ -132,24 +145,57 @@
                             <td class="py-4 px-6 text-xs text-stone-400">
                                 {{ $customer->created_at->format('d/m/Y') }}
                             </td>
-                            
+
+                            <td class="py-4 px-6 text-center">
+                                @if($customer->active)
+                                    <span class="px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-700">
+                                        Activo
+                                    </span>
+                                @else
+                                    <span class="px-3 py-1 rounded-full text-xs font-bold bg-stone-200 text-stone-600">
+                                        Inactivo
+                                    </span>
+                                @endif
+                            </td>
+                                                        
                             <td class="py-4 px-6 text-center flex justify-center gap-2">
-                                <button @click="openEdit({{ $customer }})" 
+                                <button @click='openEdit(@json($customer))'
                                         class="px-2.5 py-1 text-xs bg-stone-100 hover:bg-amber-100 hover:text-amber-900 text-stone-600 rounded font-medium transition">
                                     Editar
                                 </button>
                                 
-                                <form method="POST" action="{{ route('vip.customer.destroy', $customer) }}" onsubmit="return confirm('¿Estás seguro de eliminar a este cliente VIP y borrar sus puntos?')">
-                                    @csrf @method('DELETE')
+                                @if($customer->active)
+                                    <form method="POST"
+                                        action="{{ route('vip.customer.destroy', $customer) }}"
+                                        onsubmit="return confirm('¿Dar de baja a este cliente VIP? Sus puntos e historial se conservarán.')">
+                                        @csrf
+                                        @method('DELETE')
+
+                                        <button class="px-2.5 py-1 text-xs bg-stone-100 hover:bg-orange-100 hover:text-orange-700 text-stone-600 rounded font-medium transition">
+                                            Baja
+                                        </button>
+                                    </form>
+                                @else
+                                    <span class="px-2.5 py-1 text-xs bg-stone-100 text-stone-400 rounded font-medium">
+                                        Dado de baja
+                                    </span>
+                                @endif
+
+                                <form method="POST"
+                                    action="{{ route('vip.customer.force-delete', $customer) }}"
+                                    onsubmit="return confirm('¿Eliminar definitivamente este cliente? Solo se permitirá si no tiene ventas asociadas.')">
+                                    @csrf
+                                    @method('DELETE')
+
                                     <button class="px-2.5 py-1 text-xs bg-stone-100 hover:bg-red-100 hover:text-red-700 text-stone-600 rounded font-medium transition">
-                                        Baja
+                                        Eliminar
                                     </button>
                                 </form>
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="text-center py-12 text-stone-400">
+                            <td colspan="6" class="text-center py-12 text-stone-400">
                                 No hay clientes VIP registrados en el sistema.
                             </td>
                         </tr>
@@ -223,6 +269,18 @@
                     <input type="number" name="points" x-model="editForm.points" min="0" required 
                            class="w-full rounded-lg border-stone-300 text-sm focus:ring-amber-500 focus:border-amber-500 font-bold text-amber-800">
                     <span class="text-[10px] text-amber-700 mt-1 block">⚠️ Modificar el saldo directamente afectará el poder de compra del cliente.</span>
+                </div>
+
+                <div class="flex items-center gap-2 bg-stone-50 border border-stone-100 rounded-lg px-3 py-2">
+                    <input type="checkbox"
+                        name="active"
+                        value="1"
+                        x-model="editForm.active"
+                        class="rounded border-stone-300 text-amber-700 focus:ring-amber-600">
+
+                    <span class="text-xs font-bold text-stone-700">
+                        Cliente VIP activo
+                    </span>
                 </div>
 
                 <div class="flex justify-end gap-2 pt-3 border-t border-stone-50">

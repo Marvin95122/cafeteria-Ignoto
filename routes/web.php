@@ -45,6 +45,7 @@ Route::middleware(['auth'])->group(function () {
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth', 'role:admin,gerente'])->group(function () {
+    Route::delete('/categories/{category}/force-delete', [CategoryController::class, 'forceDelete'])->name('categories.force-delete');
     Route::resource('categories', CategoryController::class)->except(['show']);
     Route::delete('/products/{product}/force-delete', [ProductController::class, 'forceDelete'])->name('products.force-delete');
     Route::resource('products', ProductController::class)->except(['show']);
@@ -70,6 +71,7 @@ Route::middleware(['auth', 'role:admin,gerente'])->group(function () {
     Route::post('/vip-management/settings', [App\Http\Controllers\VipManagementController::class, 'updateSettings'])->name('vip.settings.update');
     Route::post('/vip-management/customer', [App\Http\Controllers\VipManagementController::class, 'storeCustomer'])->name('vip.customer.store');
     Route::put('/vip-management/customer/{customer}', [App\Http\Controllers\VipManagementController::class, 'updateCustomer'])->name('vip.customer.update');
+    Route::delete('/vip-management/customer/{customer}/force-delete', [App\Http\Controllers\VipManagementController::class, 'forceDeleteCustomer'])->name('vip.customer.force-delete');
     Route::delete('/vip-management/customer/{customer}', [App\Http\Controllers\VipManagementController::class, 'destroyCustomer'])->name('vip.customer.destroy');
 });
 
