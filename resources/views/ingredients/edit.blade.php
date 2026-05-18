@@ -1,106 +1,257 @@
 @extends('layouts.admin')
 
 @section('content')
-<div class="max-w-2xl mx-auto">
-    <div class="flex items-center gap-2 mb-6">
-        <a href="{{ route('ingredients.index') }}" class="text-stone-400 hover:text-amber-700 transition">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
-        </a>
-        <h1 class="font-serif text-2xl font-bold text-stone-800">Editar Inventario</h1>
+
+<div class="max-w-4xl mx-auto space-y-6">
+
+    {{-- ENCABEZADO --}}
+    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        <div class="flex items-center gap-4">
+            <a href="{{ route('ingredients.index') }}"
+               class="p-2 rounded-full hover:bg-stone-200 text-stone-500 transition"
+               title="Volver a materia prima">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M10 19l-7-7m0 0l7-7m-7 7h18">
+                    </path>
+                </svg>
+            </a>
+
+            <div>
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-100 text-amber-800 text-xs font-bold mb-2">
+                    ✏️ Edición de insumo
+                </div>
+
+                <h1 class="font-serif text-3xl font-bold text-amber-900">
+                    Editar Materia Prima
+                </h1>
+
+                <p class="text-stone-500 mt-1">
+                    Actualiza cantidades, unidad de medida y estado del insumo
+                    <span class="font-bold text-stone-700">{{ $ingredient->name }}</span>.
+                </p>
+            </div>
+        </div>
+
+        <div class="bg-white border border-stone-200 rounded-2xl px-4 py-3 shadow-sm text-sm text-stone-600">
+            <span class="font-bold text-amber-800">Estado actual:</span>
+
+            @if($ingredient->active)
+                <span class="text-green-700 font-bold">Activo</span>
+            @else
+                <span class="text-stone-500 font-bold">Inactivo</span>
+            @endif
+        </div>
     </div>
 
-    <div class="bg-white rounded-2xl shadow-lg border border-stone-100 p-8">
-        <form action="{{ route('ingredients.update', $ingredient) }}" method="POST">
+    {{-- ERRORES --}}
+    @if ($errors->any())
+        <div class="bg-red-50 border-l-4 border-red-500 text-red-800 rounded-r p-4 shadow-sm">
+            <p class="font-bold mb-2">Corrige los siguientes errores:</p>
+
+            <ul class="list-disc list-inside text-sm space-y-1">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
+    {{-- FORMULARIO --}}
+    <div class="bg-white rounded-2xl shadow-sm border border-stone-100 overflow-hidden">
+
+        <div class="px-6 py-5 border-b border-stone-100 bg-amber-50">
+            <h2 class="font-bold text-amber-900 text-lg flex items-center gap-2">
+                🧾 Información del insumo
+            </h2>
+            <p class="text-sm text-amber-700 mt-1">
+                Modifica el insumo con cuidado, ya que puede afectar productos calculados por receta.
+            </p>
+        </div>
+
+        <form action="{{ route('ingredients.update', $ingredient) }}" method="POST" class="p-6 md:p-8 space-y-6">
             @csrf
             @method('PUT')
 
-            <div class="mb-6">
-                <label class="block text-sm font-bold text-stone-600 mb-2">Nombre del Insumo</label>
-                <input type="text" name="name" value="{{ $ingredient->name }}" class="w-full rounded-lg border-stone-200 focus:ring-amber-500 focus:border-amber-500" required>
-            </div>
-
-            <div class="grid grid-cols-2 gap-6 mb-6">
-                <div>
-                    <label class="block text-sm font-bold text-stone-600 mb-2">Cantidad Actual</label>
-                    <input type="number" step="0.01" name="current_quantity" value="{{ $ingredient->current_quantity }}" class="w-full rounded-lg border-stone-200 focus:ring-amber-500 focus:border-amber-500" required>
-                </div>
-                <div>
-                    <label class="block text-sm font-bold text-stone-600 mb-2">Unidad de Medida</label>
-                    <select name="unit" class="w-full rounded-lg border-stone-200 focus:ring-amber-500 focus:border-amber-500">
-                        <option value="g" {{ $ingredient->unit == 'g' ? 'selected' : '' }}>Gramos (g)</option>
-                        <option value="ml" {{ $ingredient->unit == 'ml' ? 'selected' : '' }}>Mililitros (ml)</option>
-                        <option value="kg" {{ $ingredient->unit == 'kg' ? 'selected' : '' }}>Kilogramos (kg)</option>
-                        <option value="l" {{ $ingredient->unit == 'l' ? 'selected' : '' }}>Litros (L)</option>
-                        <option value="pza" {{ $ingredient->unit == 'pza' ? 'selected' : '' }}>Piezas (pza)</option>
-                    </select>
-                </div>
-            </div>
-
-            <div class="mb-6 flex items-center gap-2 bg-stone-50 border border-stone-100 rounded-lg px-4 py-3">
-                <input type="checkbox"
-                    name="active"
-                    value="1"
-                    id="active"
-                    {{ old('active', $ingredient->active) ? 'checked' : '' }}
-                    class="rounded border-stone-300 text-amber-700 focus:ring-amber-600">
-
-                <label for="active" class="text-sm font-bold text-stone-700">
-                    Ingrediente activo
+            {{-- Nombre --}}
+            <div>
+                <label class="block text-sm font-bold text-stone-700 mb-2">
+                    Nombre del insumo
                 </label>
 
-                <span class="text-xs text-stone-400">
-                    Si está inactivo, no se usará para nuevas configuraciones.
-                </span>
+                <input type="text"
+                       name="name"
+                       value="{{ old('name', $ingredient->name) }}"
+                       class="w-full rounded-xl border-stone-200 bg-stone-50 focus:ring-amber-500 focus:border-amber-500 py-3 px-4 transition"
+                       required>
+
+                <p class="text-xs text-stone-400 mt-1">
+                    Cambia el nombre solo si deseas actualizar cómo aparece en inventario y recetas.
+                </p>
             </div>
 
-            <div class="flex gap-4">
-                <button type="submit" class="flex-1 bg-amber-600 text-white font-bold py-3 rounded-lg hover:bg-amber-700 transition shadow-md">
-                    Actualizar Inventario
+            {{-- Cantidad y unidad --}}
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-sm font-bold text-stone-700 mb-2">
+                        Cantidad actual
+                    </label>
+
+                    <input type="number"
+                           step="0.01"
+                           min="0"
+                           name="current_quantity"
+                           value="{{ old('current_quantity', $ingredient->current_quantity) }}"
+                           class="w-full rounded-xl border-stone-200 bg-stone-50 focus:ring-amber-500 focus:border-amber-500 py-3 px-4 transition"
+                           required>
+
+                    <p class="text-xs text-stone-400 mt-1">
+                        Esta cantidad actualizará el stock disponible del insumo.
+                    </p>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-bold text-stone-700 mb-2">
+                        Unidad de medida
+                    </label>
+
+                    <select name="unit"
+                            class="w-full rounded-xl border-stone-200 bg-stone-50 focus:ring-amber-500 focus:border-amber-500 py-3 px-4 transition"
+                            required>
+                        <option value="g" {{ old('unit', $ingredient->unit) == 'g' ? 'selected' : '' }}>Gramos (g)</option>
+                        <option value="ml" {{ old('unit', $ingredient->unit) == 'ml' ? 'selected' : '' }}>Mililitros (ml)</option>
+                        <option value="kg" {{ old('unit', $ingredient->unit) == 'kg' ? 'selected' : '' }}>Kilogramos (kg)</option>
+                        <option value="l" {{ old('unit', $ingredient->unit) == 'l' ? 'selected' : '' }}>Litros (L)</option>
+                        <option value="pza" {{ old('unit', $ingredient->unit) == 'pza' ? 'selected' : '' }}>Piezas (pza)</option>
+                    </select>
+
+                    <p class="text-xs text-stone-400 mt-1">
+                        Si eliges kg o L, el sistema volverá a convertirlo a unidad base.
+                    </p>
+                </div>
+            </div>
+
+            {{-- Estado --}}
+            <div class="flex items-start gap-3 rounded-2xl border p-4
+                {{ $ingredient->active ? 'bg-green-50 border-green-100' : 'bg-stone-50 border-stone-200' }}">
+
+                <input type="checkbox"
+                       name="active"
+                       value="1"
+                       id="active"
+                       {{ old('active', $ingredient->active) ? 'checked' : '' }}
+                       class="w-5 h-5 mt-1 rounded border-stone-300 text-green-600 focus:ring-green-500">
+
+                <div>
+                    <label for="active"
+                           class="font-bold cursor-pointer {{ $ingredient->active ? 'text-green-800' : 'text-stone-700' }}">
+                        Insumo activo
+                    </label>
+
+                    <p class="text-xs mt-1 {{ $ingredient->active ? 'text-green-700' : 'text-stone-500' }}">
+                        Si está inactivo, se conserva su historial, pero queda marcado como fuera de uso.
+                    </p>
+                </div>
+            </div>
+
+            {{-- Advertencia --}}
+            <div class="bg-blue-50 border border-blue-100 rounded-2xl p-4 text-sm text-blue-800">
+                <p class="font-bold mb-1">
+                    Recalculo automático
+                </p>
+
+                <p>
+                    Al modificar la cantidad de un insumo, los productos configurados con stock por receta podrán recalcular su disponibilidad.
+                </p>
+            </div>
+
+            {{-- BOTONES --}}
+            <div class="flex flex-col sm:flex-row justify-end gap-3 pt-4 border-t border-stone-100">
+                <a href="{{ route('ingredients.index') }}"
+                   class="inline-flex justify-center items-center px-5 py-3 rounded-xl border border-stone-200 text-stone-600 font-bold hover:bg-stone-50 transition">
+                    Cancelar
+                </a>
+
+                <button type="submit"
+                        class="inline-flex justify-center items-center px-6 py-3 rounded-xl bg-amber-800 text-white font-bold hover:bg-amber-900 transition shadow-md">
+                    Guardar cambios
                 </button>
             </div>
         </form>
+    </div>
 
-        <div class="mt-8 pt-6 border-t border-stone-100">
-            <h3 class="text-sm font-bold text-stone-700 mb-3">
-                Acciones de estado
-            </h3>
+    {{-- ACCIONES DE ESTADO --}}
+    <div class="bg-white rounded-2xl shadow-sm border border-stone-100 overflow-hidden">
+        <div class="px-6 py-5 border-b border-stone-100 bg-stone-50">
+            <h2 class="font-bold text-stone-800 text-lg flex items-center gap-2">
+                ⚙️ Acciones avanzadas
+            </h2>
+            <p class="text-sm text-stone-500 mt-1">
+                Usa estas acciones con cuidado para mantener historial e integridad del inventario.
+            </p>
+        </div>
 
-            <div class="flex flex-col sm:flex-row gap-3">
-                @if($ingredient->active)
-                    <form action="{{ route('ingredients.destroy', $ingredient) }}"
-                        method="POST"
-                        onsubmit="return confirm('¿Desactivar este ingrediente? No se eliminará su historial ni sus relaciones.')">
+        <div class="p-6 md:p-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                {{-- Desactivar --}}
+                <div class="border border-orange-100 bg-orange-50 rounded-2xl p-5">
+                    <h3 class="font-bold text-orange-800 mb-2">
+                        Desactivar insumo
+                    </h3>
+
+                    <p class="text-sm text-orange-700 mb-4">
+                        Conserva historial, recetas y movimientos. Es la opción recomendada cuando el insumo ya fue utilizado.
+                    </p>
+
+                    @if($ingredient->active)
+                        <form action="{{ route('ingredients.destroy', $ingredient) }}"
+                              method="POST"
+                              onsubmit="return confirm('¿Desactivar este ingrediente? No se eliminará su historial ni sus relaciones.')">
+                            @csrf
+                            @method('DELETE')
+
+                            <button type="submit"
+                                    class="w-full px-4 py-3 rounded-xl bg-orange-100 text-orange-700 text-sm font-bold hover:bg-orange-200 transition">
+                                Desactivar insumo
+                            </button>
+                        </form>
+                    @else
+                        <div class="w-full px-4 py-3 rounded-xl bg-stone-100 text-stone-500 text-sm font-bold text-center">
+                            Este insumo ya está desactivado
+                        </div>
+                    @endif
+                </div>
+
+                {{-- Eliminar definitivamente --}}
+                <div class="border border-red-100 bg-red-50 rounded-2xl p-5">
+                    <h3 class="font-bold text-red-800 mb-2">
+                        Eliminar definitivamente
+                    </h3>
+
+                    <p class="text-sm text-red-700 mb-4">
+                        Solo se permitirá si no está asociado a productos, extras ni movimientos de inventario.
+                    </p>
+
+                    <form action="{{ route('ingredients.force-delete', $ingredient) }}"
+                          method="POST"
+                          onsubmit="return confirm('¿Eliminar definitivamente este ingrediente? Solo se permitirá si no tiene productos, extras ni movimientos asociados.')">
                         @csrf
                         @method('DELETE')
 
                         <button type="submit"
-                                class="px-4 py-2 rounded-lg bg-orange-100 text-orange-700 text-sm font-bold hover:bg-orange-200 transition">
-                            Desactivar insumo
+                                class="w-full px-4 py-3 rounded-xl bg-red-100 text-red-700 text-sm font-bold hover:bg-red-200 transition">
+                            Eliminar definitivamente
                         </button>
                     </form>
-                @else
-                    <div class="px-4 py-2 rounded-lg bg-stone-100 text-stone-500 text-sm font-bold">
-                        Este insumo ya está desactivado
-                    </div>
-                @endif
-
-                <form action="{{ route('ingredients.force-delete', $ingredient) }}"
-                    method="POST"
-                    onsubmit="return confirm('¿Eliminar definitivamente este ingrediente? Solo se permitirá si no tiene productos, extras ni movimientos asociados.')">
-                    @csrf
-                    @method('DELETE')
-
-                    <button type="submit"
-                            class="px-4 py-2 rounded-lg bg-red-100 text-red-700 text-sm font-bold hover:bg-red-200 transition">
-                        Eliminar definitivamente
-                    </button>
-                </form>
+                </div>
             </div>
 
-            <p class="text-xs text-stone-400 mt-3">
-                Recomendación: usa “Desactivar” cuando el insumo ya fue usado en productos, extras, inventario o ventas. La eliminación definitiva solo es segura cuando no existe historial.
+            <p class="text-xs text-stone-400 mt-5">
+                Recomendación: utiliza “Desactivar” para insumos con historial. La eliminación definitiva debe usarse solo para registros creados por error y sin relaciones.
             </p>
         </div>
     </div>
 </div>
+
 @endsection

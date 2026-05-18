@@ -9,7 +9,8 @@ class IngredientController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Ingredient::latest();
+        $query = Ingredient::withCount(['products', 'inventoryMovements'])
+            ->latest();
 
         if ($request->filled('search')) {
             $query->where('name', 'like', '%' . $request->search . '%');
@@ -27,7 +28,20 @@ class IngredientController extends Controller
 
         $ingredients = $query->paginate(10)->withQueryString();
 
-        return view('ingredients.index', compact('ingredients'));
+        $totalIngredients = Ingredient::count();
+        $activeIngredients = Ingredient::where('active', true)->count();
+        $inactiveIngredients = Ingredient::where('active', false)->count();
+        $lowStockIngredients = Ingredient::where('active', true)
+            ->where('current_quantity', '<', 500)
+            ->count();
+
+        return view('ingredients.index', compact(
+            'ingredients',
+            'totalIngredients',
+            'activeIngredients',
+            'inactiveIngredients',
+            'lowStockIngredients'
+        ));
     }
 
     public function create()

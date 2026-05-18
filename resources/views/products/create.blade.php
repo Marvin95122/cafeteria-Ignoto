@@ -2,13 +2,36 @@
 
 @section('content')
 
-<div class="flex items-center gap-4 mb-8">
-    <a href="{{ route('products.index') }}" class="p-2 rounded-full hover:bg-stone-200 text-stone-500 transition">
-        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
-    </a>
-    <div>
-        <h1 class="font-serif text-3xl font-bold text-amber-900">Nuevo Producto</h1>
-        <p class="text-stone-500">Agrega un nuevo café o postre al menú.</p>
+<div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-8">
+    <div class="flex items-center gap-4">
+        <a href="{{ route('products.index') }}"
+           class="p-2 rounded-full hover:bg-stone-200 text-stone-500 transition"
+           title="Volver a productos">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M10 19l-7-7m0 0l7-7m-7 7h18">
+                </path>
+            </svg>
+        </a>
+
+        <div>
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-100 text-amber-800 text-xs font-bold mb-2">
+                ☕ Nuevo registro
+            </div>
+
+            <h1 class="font-serif text-3xl font-bold text-amber-900">
+                Nuevo Producto
+            </h1>
+
+            <p class="text-stone-500">
+                Registra un producto del menú, define su precio, imagen, inventario y extras.
+            </p>
+        </div>
+    </div>
+
+    <div class="bg-white border border-stone-200 rounded-2xl px-4 py-3 shadow-sm text-sm text-stone-600 max-w-md">
+        <span class="font-bold text-amber-800">Sugerencia:</span>
+        usa stock manual para productos ya preparados y stock por receta cuando dependa de materia prima.
     </div>
 </div>
 
@@ -24,7 +47,7 @@
     </div>
 @endif
 
-<div class="bg-white p-8 rounded-2xl shadow-sm border border-stone-100 max-w-5xl mx-auto">
+<div class="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-stone-100 max-w-6xl mx-auto">
 
     <form method="POST" action="{{ route('products.store') }}" enctype="multipart/form-data" id="productForm">
         @csrf
@@ -32,55 +55,78 @@
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
             <div class="lg:col-span-2 space-y-6">
-                
-                {{-- Nombre --}}
-                <div>
-                    <label class="block font-bold text-stone-700 mb-2">Nombre del Producto</label>
-                    <input type="text" 
-                           name="name" 
-                           value="{{ old('name') }}" 
-                           class="w-full border-stone-300 rounded-lg shadow-sm focus:border-amber-500 focus:ring focus:ring-amber-200 focus:ring-opacity-50 transition py-3 px-4"
-                           placeholder="Ej. Latte Especial" 
-                           required>
-                </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {{-- Categoría --}}
-                    <div>
-                        <label class="block font-bold text-stone-700 mb-2">Categoría</label>
-                        <select name="category_id" 
-                                class="w-full border-stone-300 rounded-lg shadow-sm focus:border-amber-500 focus:ring focus:ring-amber-200 focus:ring-opacity-50 transition py-3 px-4"
-                                required>
-                            <option value="">-- Selecciona --</option>
-                            @foreach($categories as $category)
-                                <option value="{{ $category->id }}" {{ old('category_id') == $category->id ? 'selected' : '' }}>
-                                    {{ $category->name }}
-                                </option>
-                            @endforeach
-                        </select>
+                {{-- INFORMACIÓN BÁSICA --}}
+                <div class="bg-white border border-stone-200 rounded-2xl p-5 shadow-sm">
+                    <div class="flex items-start justify-between gap-4 mb-5">
+                        <div>
+                            <h2 class="font-bold text-stone-800 text-lg flex items-center gap-2">
+                                🧾 Información básica
+                            </h2>
+                            <p class="text-sm text-stone-500 mt-1">
+                                Define los datos principales que verá el personal en el catálogo y en el POS.
+                            </p>
+                        </div>
                     </div>
 
-                    {{-- Precio --}}
-                    <div>
-                        <label class="block font-bold text-stone-700 mb-2">Precio ($)</label>
-                        <div class="relative">
-                            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-stone-500">$</span>
-                            <input type="number" 
-                                   name="price" 
-                                   step="0.01" 
-                                   min="0" 
-                                   value="{{ old('price') }}" 
-                                   class="w-full border-stone-300 rounded-lg shadow-sm pl-8 focus:border-amber-500 focus:ring focus:ring-amber-200 focus:ring-opacity-50 transition py-3 px-4"
-                                   placeholder="0.00" 
-                                   required>
+                    {{-- Nombre --}}
+                    <div class="mb-6">
+                        <label class="block font-bold text-stone-700 mb-2">Nombre del Producto</label>
+                        <input type="text" 
+                            name="name" 
+                            value="{{ old('name') }}" 
+                            class="w-full border-stone-300 rounded-lg shadow-sm focus:border-amber-500 focus:ring focus:ring-amber-200 focus:ring-opacity-50 transition py-3 px-4"
+                            placeholder="Ej. Latte Especial, Pastel de chocolate, Frappe Oreo" 
+                            required>
+                        <p class="text-xs text-stone-400 mt-1">
+                            Usa un nombre claro y fácil de identificar durante la venta.
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {{-- Categoría --}}
+                        <div>
+                            <label class="block font-bold text-stone-700 mb-2">Categoría</label>
+                            <select name="category_id" 
+                                    class="w-full border-stone-300 rounded-lg shadow-sm focus:border-amber-500 focus:ring focus:ring-amber-200 focus:ring-opacity-50 transition py-3 px-4"
+                                    required>
+                                <option value="">-- Selecciona --</option>
+                                @foreach($categories as $category)
+                                    <option value="{{ $category->id }}" {{ old('category_id') == $category->id ? 'selected' : '' }}>
+                                        {{ $category->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            <p class="text-xs text-stone-400 mt-1">
+                                La categoría ayuda a filtrar productos en administración y POS.
+                            </p>
+                        </div>
+
+                        {{-- Precio --}}
+                        <div>
+                            <label class="block font-bold text-stone-700 mb-2">Precio ($)</label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-stone-500">$</span>
+                                <input type="number" 
+                                    name="price" 
+                                    step="0.01" 
+                                    min="0" 
+                                    value="{{ old('price') }}" 
+                                    class="w-full border-stone-300 rounded-lg shadow-sm pl-8 focus:border-amber-500 focus:ring focus:ring-amber-200 focus:ring-opacity-50 transition py-3 px-4"
+                                    placeholder="0.00" 
+                                    required>
+                            </div>
+                            <p class="text-xs text-stone-400 mt-1">
+                                Este será el precio base; los extras se suman aparte.
+                            </p>
                         </div>
                     </div>
                 </div>
 
-                <hr class="border-stone-100 my-6">
+                {{-- Separación visual --}}
 
                 {{-- SECCIÓN DE INVENTARIO / RECETA --}}
-                <div class="bg-amber-50/50 p-5 rounded-xl border border-amber-100" x-data="{ dynamicStock: {{ old('use_dynamic_stock') ? 'true' : 'false' }} }">
+                <div class="bg-amber-50/60 p-5 rounded-2xl border border-amber-100 shadow-sm" x-data="{ dynamicStock: {{ old('use_dynamic_stock') ? 'true' : 'false' }} }">
                     <div class="flex items-center justify-between mb-4">
                         <h3 class="font-bold text-amber-900 flex items-center gap-2">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
@@ -174,11 +220,23 @@
                     </div>
                 </div>
 
-                {{-- Checkbox Activo --}}
-                <div class="flex items-center gap-3 bg-stone-50 p-4 rounded-lg border border-stone-200">
-                    <input type="checkbox" id="active" name="active" value="1" checked 
-                           class="w-5 h-5 text-amber-600 border-stone-300 rounded focus:ring-amber-500">
-                    <label for="active" class="font-medium text-stone-700 cursor-pointer">Producto disponible para venta</label>
+                {{-- Estado del producto --}}
+                <div class="flex items-start gap-3 bg-green-50 p-4 rounded-2xl border border-green-100">
+                    <input type="checkbox"
+                        id="active"
+                        name="active"
+                        value="1"
+                        checked
+                        class="w-5 h-5 mt-1 text-green-600 border-stone-300 rounded focus:ring-green-500">
+
+                    <div>
+                        <label for="active" class="font-bold text-green-800 cursor-pointer">
+                            Producto disponible para venta
+                        </label>
+                        <p class="text-xs text-green-700 mt-1">
+                            Si está activo, aparecerá disponible para administrarlo y venderlo en el POS.
+                        </p>
+                    </div>
                 </div>
             </div>
 

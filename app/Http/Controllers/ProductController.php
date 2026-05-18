@@ -13,7 +13,7 @@ class ProductController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Product::with(['category', 'ingredients'])->latest();
+        $query = Product::with(['category', 'ingredients', 'extras'])->latest();
 
         if ($request->filled('search')) {
             $query->where('name', 'like', '%' . $request->search . '%');
@@ -23,8 +23,31 @@ class ProductController extends Controller
             $query->where('category_id', $request->category_id);
         }
 
+        if ($request->filled('status')) {
+            if ($request->status === 'active') {
+                $query->where('active', true);
+            }
+
+            if ($request->status === 'inactive') {
+                $query->where('active', false);
+            }
+        }
+
+        if ($request->filled('stock_type')) {
+            if ($request->stock_type === 'manual') {
+                $query->where('use_dynamic_stock', false);
+            }
+
+            if ($request->stock_type === 'dynamic') {
+                $query->where('use_dynamic_stock', true);
+            }
+        }
+
         $products = $query->paginate(12)->withQueryString();
-        $categories = Category::all();
+
+        $categories = Category::where('active', true)
+            ->orderBy('name')
+            ->get();
 
         return view('products.index', compact('products', 'categories'));
     }

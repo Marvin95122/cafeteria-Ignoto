@@ -12,14 +12,70 @@ use Illuminate\Support\Facades\DB;
 
 class InventoryMovementController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $ingredients = Ingredient::where('active', true)->orderBy('name')->get();
-        $movements = InventoryMovement::with(['ingredient', 'user'])
-                        ->latest()
-                        ->get();
+        $ingredients = Ingredient::where('active', true)
+            ->orderBy('name')
+            ->get();
 
-        return view('inventory_movements.index', compact('ingredients', 'movements'));
+        $query = InventoryMovement::with(['ingredient', 'user'])
+            ->latest();
+
+        if ($request->filled('type') && $request->type !== 'all') {
+            $query->where('type', $request->type);
+        }
+
+        if ($request->filled('search')) {
+            $query->where(function ($q) use ($request) {
+                $q->whereHas('ingredient', function ($ingredientQuery) use ($request) {
+                    $ingredientQuery->where('name', 'like', '%' . $request->search . '%');
+                })
+                ->orWhere('reason', 'like', '%' . $request->search . '%')
+                ->orWhereHas('user', function ($userQuery) use ($request) {
+                    $userQuery->where('name', 'like', '%' . $request->search . '%');
+                });
+            });
+        }
+
+        if ($request->filled('period')) {
+            if ($request->period === 'today') {
+                $query->whereDate('created_at', now()->toDateString());
+            }
+
+            if ($request->period === 'week') {
+                $query->whereBetween('created_at', [
+                    now()->startOfWeek(),
+                    now()->endOfWeek()
+                ]);
+            }
+
+            if ($request->period === 'month') {
+                $query->whereYear('created_at', now()->year)
+                    ->whereMonth('created_at', now()->month);
+            }
+        }
+
+        $perPage = $request->integer('per_page', 20);
+
+        if (! in_array($perPage, [10, 20, 50, 100])) {
+            $perPage = 20;
+        }
+
+        $movements = $query->paginate($perPage)->withQueryString();
+
+        $totalMovements = InventoryMovement::count();
+        $entryMovements = InventoryMovement::where('type', 'entrada')->count();
+        $lossMovements = InventoryMovement::where('type', 'merma')->count();
+        $saleMovements = InventoryMovement::where('type', 'venta')->count();
+
+        return view('inventory_movements.index', compact(
+            'ingredients',
+            'movements',
+            'totalMovements',
+            'entryMovements',
+            'lossMovements',
+            'saleMovements'
+        ));
     }
 
     public function store(Request $request)

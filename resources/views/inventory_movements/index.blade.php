@@ -1,45 +1,204 @@
 @extends('layouts.admin')
 
 @section('content')
-<div class="max-w-6xl mx-auto flex flex-col h-full">
+
+<div class="max-w-7xl mx-auto space-y-6">
     
-    {{-- ENCABEZADO Y BOTONES DE ACCIÓN --}}
-    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+    {{-- ENCABEZADO --}}
+    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
-            <h1 class="font-serif text-3xl font-bold text-amber-900">Bitácora de Inventario</h1>
-            <p class="text-stone-500 text-sm mt-1">Historial de entradas, compras y mermas.</p>
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-100 text-amber-800 text-xs font-bold mb-3">
+                📋 Control de movimientos
+            </div>
+
+            <h1 class="font-serif text-3xl md:text-4xl font-bold text-amber-900">
+                Bitácora de Inventario
+            </h1>
+
+            <p class="text-stone-500 mt-1">
+                Consulta entradas, compras, ventas POS, devoluciones y mermas registradas en almacén.
+            </p>
         </div>
-        <div class="flex gap-3">
-            <button onclick="openAdjustmentModal()" class="bg-white border-2 border-stone-200 text-stone-600 hover:bg-stone-50 hover:border-stone-300 font-bold py-2.5 px-4 rounded-xl transition flex items-center gap-2 shadow-sm">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
+
+        <div class="flex flex-col sm:flex-row gap-3">
+            <button onclick="openAdjustmentModal()"
+                    class="inline-flex items-center justify-center gap-2 bg-white border border-stone-200 text-stone-700 hover:bg-stone-50 hover:border-amber-300 font-bold py-3 px-5 rounded-xl transition shadow-sm">
+                <svg class="w-5 h-5 text-amber-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4">
+                    </path>
+                </svg>
                 Ajuste Rápido
             </button>
-            <a href="{{ route('inventory_movements.create_bulk') }}" class="bg-amber-800 hover:bg-amber-900 text-white font-bold py-2.5 px-5 rounded-xl transition flex items-center gap-2 shadow-md">
-                <span class="text-xl leading-none">🛒</span> Ingresar Compra
+
+            <a href="{{ route('inventory_movements.create_bulk') }}"
+               class="inline-flex items-center justify-center gap-2 bg-amber-800 hover:bg-amber-900 text-white font-bold py-3 px-5 rounded-xl transition shadow-md">
+                <span class="text-xl leading-none">🛒</span>
+                Ingresar Compra
             </a>
         </div>
     </div>
 
-    {{-- FILTROS Y BUSCADOR --}}
-    <div class="bg-white p-4 rounded-2xl shadow-sm border border-stone-200 mb-6 flex flex-col md:flex-row justify-between items-center gap-4">
-        <div class="flex bg-stone-100 p-1 rounded-xl w-full md:w-auto" id="type-filters">
-            <button onclick="filterByType('all', this)" class="filter-btn flex-1 md:flex-none px-4 py-2 rounded-lg text-sm font-bold bg-white text-stone-800 shadow-sm transition">Todos</button>
-            <button onclick="filterByType('entrada', this)" class="filter-btn flex-1 md:flex-none px-4 py-2 rounded-lg text-sm font-bold text-stone-500 hover:text-stone-700 transition">Entradas</button>
-            <button onclick="filterByType('merma', this)" class="filter-btn flex-1 md:flex-none px-4 py-2 rounded-lg text-sm font-bold text-stone-500 hover:text-stone-700 transition">Mermas</button>
-            <button onclick="filterByType('venta', this)" class="filter-btn flex-1 md:flex-none px-4 py-2 rounded-lg text-sm font-bold text-stone-500 hover:text-stone-700 transition">Ventas POS</button>
+    {{-- TARJETAS RESUMEN --}}
+    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
+        <div class="bg-white p-5 rounded-2xl shadow-sm border border-stone-200 hover:shadow-md transition">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-bold text-stone-500">Total movimientos</p>
+                    <h3 class="text-3xl font-black text-stone-800 mt-1">
+                        {{ $totalMovements }}
+                    </h3>
+                </div>
+
+                <div class="w-12 h-12 rounded-xl bg-stone-100 flex items-center justify-center text-2xl">
+                    📋
+                </div>
+            </div>
         </div>
-        <div class="relative w-full md:w-72">
-            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-stone-400">🔍</span>
-            <input type="text" id="logSearch" placeholder="Buscar insumo..." onkeyup="filterTable()" class="w-full pl-10 border-stone-200 rounded-xl text-sm focus:border-amber-500 py-2.5 bg-stone-50">
+
+        <div class="bg-white p-5 rounded-2xl shadow-sm border border-stone-200 hover:shadow-md transition">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-bold text-stone-500">Entradas</p>
+                    <h3 class="text-3xl font-black text-green-600 mt-1">
+                        {{ $entryMovements }}
+                    </h3>
+                </div>
+
+                <div class="w-12 h-12 rounded-xl bg-green-100 flex items-center justify-center text-2xl">
+                    ➕
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl shadow-sm border border-stone-200 hover:shadow-md transition">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-bold text-stone-500">Ventas POS</p>
+                    <h3 class="text-3xl font-black text-blue-600 mt-1">
+                        {{ $saleMovements }}
+                    </h3>
+                </div>
+
+                <div class="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center text-2xl">
+                    🧾
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl shadow-sm border border-stone-200 hover:shadow-md transition">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-bold text-stone-500">Mermas</p>
+                    <h3 class="text-3xl font-black text-red-600 mt-1">
+                        {{ $lossMovements }}
+                    </h3>
+                </div>
+
+                <div class="w-12 h-12 rounded-xl bg-red-100 flex items-center justify-center text-2xl">
+                    ⚠️
+                </div>
+            </div>
         </div>
     </div>
 
-    {{-- TABLA DE BITÁCORA --}}
-    <div class="bg-white rounded-2xl shadow-sm border border-stone-200 overflow-hidden flex-1 flex flex-col">
-        <div class="overflow-y-auto custom-scrollbar flex-1">
+    {{-- FILTROS --}}
+    <div class="bg-white rounded-2xl shadow-sm border border-stone-200 overflow-hidden">
+
+        {{-- PESTAÑAS --}}
+        <div class="px-4 pt-4">
+            @php
+                $currentType = request('type', 'all');
+            @endphp
+
+            <div class="flex flex-wrap gap-2 bg-stone-100 p-1 rounded-xl w-full">
+                <a href="{{ route('inventory_movements.index', array_merge(request()->except('page'), ['type' => 'all'])) }}"
+                   class="px-4 py-2 rounded-lg text-sm font-bold transition
+                   {{ $currentType === 'all' ? 'bg-white text-stone-800 shadow-sm' : 'text-stone-500 hover:text-stone-700' }}">
+                    Todos
+                </a>
+
+                <a href="{{ route('inventory_movements.index', array_merge(request()->except('page'), ['type' => 'entrada'])) }}"
+                   class="px-4 py-2 rounded-lg text-sm font-bold transition
+                   {{ $currentType === 'entrada' ? 'bg-white text-green-700 shadow-sm' : 'text-stone-500 hover:text-stone-700' }}">
+                    Entradas
+                </a>
+
+                <a href="{{ route('inventory_movements.index', array_merge(request()->except('page'), ['type' => 'merma'])) }}"
+                   class="px-4 py-2 rounded-lg text-sm font-bold transition
+                   {{ $currentType === 'merma' ? 'bg-white text-red-700 shadow-sm' : 'text-stone-500 hover:text-stone-700' }}">
+                    Mermas
+                </a>
+
+                <a href="{{ route('inventory_movements.index', array_merge(request()->except('page'), ['type' => 'venta'])) }}"
+                   class="px-4 py-2 rounded-lg text-sm font-bold transition
+                   {{ $currentType === 'venta' ? 'bg-white text-blue-700 shadow-sm' : 'text-stone-500 hover:text-stone-700' }}">
+                    Ventas POS
+                </a>
+            </div>
+        </div>
+
+        {{-- BUSCADOR Y FILTROS SECUNDARIOS --}}
+        <form method="GET"
+              action="{{ route('inventory_movements.index') }}"
+              class="p-4 flex flex-col xl:flex-row gap-4 items-center border-b border-stone-100">
+
+            <input type="hidden" name="type" value="{{ request('type', 'all') }}">
+
+            <div class="relative w-full xl:flex-1">
+                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-stone-400">
+                    🔍
+                </span>
+
+                <input type="text"
+                       name="search"
+                       value="{{ request('search') }}"
+                       placeholder="Buscar por insumo, motivo o usuario..."
+                       class="w-full pl-10 border-stone-200 rounded-xl text-sm focus:border-amber-500 focus:ring-amber-200 py-3 bg-stone-50">
+            </div>
+
+            <select name="period"
+                    onchange="this.form.submit()"
+                    class="w-full xl:w-52 border-stone-200 rounded-xl text-sm focus:border-amber-500 focus:ring-amber-200 py-3 bg-stone-50">
+                <option value="">Todos los periodos</option>
+                <option value="today" {{ request('period') === 'today' ? 'selected' : '' }}>Hoy</option>
+                <option value="week" {{ request('period') === 'week' ? 'selected' : '' }}>Esta semana</option>
+                <option value="month" {{ request('period') === 'month' ? 'selected' : '' }}>Este mes</option>
+            </select>
+
+            <select name="per_page"
+                    onchange="this.form.submit()"
+                    class="w-full xl:w-44 border-stone-200 rounded-xl text-sm focus:border-amber-500 focus:ring-amber-200 py-3 bg-stone-50">
+                <option value="10" {{ request('per_page', 20) == 10 ? 'selected' : '' }}>10 por página</option>
+                <option value="20" {{ request('per_page', 20) == 20 ? 'selected' : '' }}>20 por página</option>
+                <option value="50" {{ request('per_page', 20) == 50 ? 'selected' : '' }}>50 por página</option>
+                <option value="100" {{ request('per_page', 20) == 100 ? 'selected' : '' }}>100 por página</option>
+            </select>
+
+            <button type="submit"
+                    class="w-full xl:w-auto px-5 py-3 rounded-xl bg-amber-800 text-white text-sm font-bold hover:bg-amber-900 transition">
+                Buscar
+            </button>
+        </form>
+
+        @if(request('search') || request('period') || (request('type') && request('type') !== 'all') || request('per_page'))
+            <div class="px-4 py-3 bg-stone-50 border-b border-stone-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <p class="text-sm text-stone-500">
+                    Mostrando movimientos filtrados.
+                </p>
+
+                <a href="{{ route('inventory_movements.index') }}"
+                   class="inline-flex items-center justify-center px-4 py-2 rounded-xl bg-white border border-stone-200 text-stone-700 text-sm font-bold hover:bg-stone-100 transition">
+                    Limpiar filtros
+                </a>
+            </div>
+        @endif
+
+        {{-- TABLA --}}
+        <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse">
-                <thead class="bg-stone-50 sticky top-0 z-10">
-                    <tr class="text-xs text-stone-500 uppercase tracking-wider border-b border-stone-200">
+                <thead class="bg-amber-50 text-amber-900 uppercase tracking-wider text-xs">
+                    <tr>
                         <th class="px-6 py-4 font-bold">Fecha / Hora</th>
                         <th class="px-6 py-4 font-bold">Insumo</th>
                         <th class="px-6 py-4 font-bold text-center">Tipo</th>
@@ -48,43 +207,123 @@
                         <th class="px-6 py-4 font-bold">Usuario</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-stone-100" id="log-table-body">
+
+                <tbody class="divide-y divide-stone-100">
                     @forelse($movements as $movement)
-                        <tr class="hover:bg-amber-50/30 transition log-row" data-name="{{ strtolower($movement->ingredient->name) }}" data-type="{{ strtolower($movement->type) }}">
+                        @php
+                            $ingredientName = $movement->ingredient->name ?? 'Insumo no disponible';
+                            $ingredientUnit = $movement->ingredient->unit ?? '';
+                            $userName = $movement->user->name ?? 'Usuario no disponible';
+                        @endphp
+
+                        <tr class="hover:bg-amber-50/40 transition">
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm font-bold text-stone-800">{{ $movement->created_at->format('d M Y') }}</div>
-                                <div class="text-xs text-stone-400">{{ $movement->created_at->format('h:i A') }}</div>
-                            </td>
-                            <td class="px-6 py-4">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-8 h-8 rounded-lg bg-stone-100 flex items-center justify-center text-sm shadow-inner shrink-0">📦</div>
-                                    <span class="text-sm font-bold text-stone-800">{{ $movement->ingredient->name }}</span>
+                                <div class="text-sm font-bold text-stone-800">
+                                    {{ $movement->created_at->format('d M Y') }}
+                                </div>
+
+                                <div class="text-xs text-stone-400">
+                                    {{ $movement->created_at->format('h:i A') }}
                                 </div>
                             </td>
-                            <td class="px-6 py-4 text-center">
-                                @if($movement->type === 'entrada') <span class="px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-700 border border-green-200">Entrada</span>
-                                @elseif($movement->type === 'venta') <span class="px-3 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-700 border border-blue-200">Venta POS</span>
-                                @else <span class="px-3 py-1 rounded-full text-xs font-bold bg-red-100 text-red-700 border border-red-200">Merma</span> @endif
+
+                            <td class="px-6 py-4">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-9 h-9 rounded-xl bg-stone-100 flex items-center justify-center text-sm shadow-inner shrink-0">
+                                        📦
+                                    </div>
+
+                                    <div>
+                                        <span class="text-sm font-bold text-stone-800 block">
+                                            {{ $ingredientName }}
+                                        </span>
+
+                                        <span class="text-xs text-stone-400 uppercase">
+                                            {{ $ingredientUnit }}
+                                        </span>
+                                    </div>
+                                </div>
                             </td>
+
+                            <td class="px-6 py-4 text-center">
+                                @if($movement->type === 'entrada')
+                                    <span class="px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-700 border border-green-200">
+                                        Entrada
+                                    </span>
+                                @elseif($movement->type === 'venta')
+                                    <span class="px-3 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-700 border border-blue-200">
+                                        Venta POS
+                                    </span>
+                                @else
+                                    <span class="px-3 py-1 rounded-full text-xs font-bold bg-red-100 text-red-700 border border-red-200">
+                                        Merma
+                                    </span>
+                                @endif
+                            </td>
+
                             <td class="px-6 py-4 text-right">
                                 <span class="text-sm font-black {{ $movement->type === 'entrada' ? 'text-green-600' : 'text-red-500' }}">
-                                    {{ $movement->type === 'entrada' ? '+' : '-' }}{{ floatval($movement->quantity) }} 
-                                    <span class="text-xs font-normal text-stone-500">{{ $movement->ingredient->unit }}</span>
+                                    {{ $movement->type === 'entrada' ? '+' : '-' }}{{ floatval($movement->quantity) }}
+                                    <span class="text-xs font-normal text-stone-500">
+                                        {{ $ingredientUnit }}
+                                    </span>
                                 </span>
                             </td>
-                            <td class="px-6 py-4 text-sm text-stone-600 truncate max-w-[200px]" title="{{ $movement->reason }}">{{ $movement->reason }}</td>
+
+                            <td class="px-6 py-4">
+                                <div class="max-w-xs">
+                                    <p class="text-sm text-stone-700 truncate" title="{{ $movement->reason }}">
+                                        {{ $movement->reason }}
+                                    </p>
+                                </div>
+                            </td>
+
                             <td class="px-6 py-4">
                                 <div class="flex items-center gap-2">
-                                    <div class="w-6 h-6 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center text-xs font-bold shrink-0">{{ substr($movement->user->name, 0, 1) }}</div>
-                                    <span class="text-sm text-stone-600">{{ explode(' ', $movement->user->name)[0] }}</span>
+                                    <div class="w-7 h-7 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center text-xs font-bold shrink-0">
+                                        {{ substr($userName, 0, 1) }}
+                                    </div>
+
+                                    <span class="text-sm text-stone-600">
+                                        {{ explode(' ', $userName)[0] }}
+                                    </span>
                                 </div>
                             </td>
                         </tr>
                     @empty
-                        <tr id="empty-state"><td colspan="6" class="px-6 py-12 text-center text-stone-400"><span class="text-5xl block mb-3">📋</span><p class="text-lg font-medium">No hay movimientos registrados aún.</p></td></tr>
+                        <tr>
+                            <td colspan="6" class="px-6 py-14 text-center text-stone-400">
+                                <span class="text-5xl block mb-3">📋</span>
+
+                                <p class="text-lg font-bold text-stone-600">
+                                    No se encontraron movimientos.
+                                </p>
+
+                                <p class="text-sm text-stone-400 mt-1">
+                                    Prueba limpiar filtros o registrar un nuevo ajuste.
+                                </p>
+
+                                <a href="{{ route('inventory_movements.index') }}"
+                                   class="inline-flex mt-4 px-4 py-2 rounded-xl bg-stone-100 text-stone-700 text-sm font-bold hover:bg-stone-200 transition">
+                                    Limpiar filtros
+                                </a>
+                            </td>
+                        </tr>
                     @endforelse
                 </tbody>
             </table>
+        </div>
+
+        {{-- PAGINACIÓN --}}
+        <div class="p-4 border-t border-stone-100 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <p class="text-sm text-stone-500">
+                Mostrando {{ $movements->firstItem() ?? 0 }} a {{ $movements->lastItem() ?? 0 }}
+                de {{ $movements->total() }} movimiento(s).
+            </p>
+
+            <div>
+                {{ $movements->links() }}
+            </div>
         </div>
     </div>
 </div>
@@ -263,52 +502,6 @@
         btn.classList.replace('text-stone-500', 'text-stone-800');
         document.getElementById('quick-ingredient-id').value = id;
         closeIngredientModal();
-    }
-
-    //FILTROS EN LA TABLA
-    let currentFilterType = 'all';
-
-    function filterByType(type, btnElement) {
-        currentFilterType = type;
-        document.querySelectorAll('.filter-btn').forEach(btn => {
-            btn.classList.remove('bg-white', 'text-stone-800', 'shadow-sm');
-            btn.classList.add('text-stone-500');
-        });
-        btnElement.classList.remove('text-stone-500');
-        btnElement.classList.add('bg-white', 'text-stone-800', 'shadow-sm');
-        applyFilters();
-    }
-
-    function filterTable() { applyFilters(); }
-
-    function applyFilters() {
-        const searchTerm = document.getElementById('logSearch').value.toLowerCase();
-        const rows = document.querySelectorAll('.log-row');
-        let visibleCount = 0;
-
-        rows.forEach(row => {
-            const name = row.dataset.name;
-            const type = row.dataset.type;
-            const matchesSearch = name.includes(searchTerm);
-            const matchesType = currentFilterType === 'all' || type === currentFilterType;
-
-            if (matchesSearch && matchesType) {
-                row.style.display = '';
-                visibleCount++;
-            } else {
-                row.style.display = 'none';
-            }
-        });
-
-        const emptyState = document.getElementById('empty-state');
-        if(emptyState) {
-            if(visibleCount === 0 && rows.length > 0) {
-                emptyState.style.display = '';
-                emptyState.innerHTML = '<td colspan="6" class="px-6 py-12 text-center text-stone-400"><span class="text-4xl block mb-2">🔍</span><p>No se encontraron movimientos con esos filtros.</p></td>';
-            } else if (rows.length > 0) {
-                emptyState.style.display = 'none';
-            }
-        }
     }
 
     document.addEventListener('keydown', function(event) {

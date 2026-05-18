@@ -18,56 +18,124 @@
 </div>
 
 <div class="bg-white p-4 rounded-2xl shadow-sm border border-stone-100 mb-8">
-    <form id="filterForm" method="GET" action="{{ route('products.index') }}" class="flex flex-col md:flex-row gap-4 items-center">
+    <form id="filterForm" method="GET" action="{{ route('products.index') }}" class="space-y-4">
         
-        <div class="w-full md:w-1/2 relative group">
-            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <svg class="h-5 w-5 text-stone-400 group-focus-within:text-amber-500 transition" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                </svg>
-            </div>
-            <input 
-                type="text" 
-                name="search" 
-                id="searchInput"
-                value="{{ request('search') }}" 
-                placeholder="Buscar producto..." 
-                autocomplete="off"
-                class="pl-10 pr-10 block w-full rounded-xl border-stone-200 bg-stone-50 text-stone-700 shadow-sm focus:border-amber-500 focus:ring focus:ring-amber-200 focus:ring-opacity-50 transition placeholder-stone-400"
-            >
-            @if(request('search'))
-                <a href="{{ route('products.index', ['category_id' => request('category_id')]) }}" class="absolute inset-y-0 right-0 pr-3 flex items-center text-stone-400 hover:text-red-500 transition cursor-pointer" title="Borrar búsqueda">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+        <div class="flex flex-col xl:flex-row gap-4 items-center">
+            {{-- Buscador --}}
+            <div class="w-full xl:flex-1 relative group">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <svg class="h-5 w-5 text-stone-400 group-focus-within:text-amber-500 transition" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                     </svg>
-                </a>
-            @endif
-        </div>
+                </div>
 
-        <div class="w-full md:w-1/3">
-            <div class="relative">
-                <select name="category_id" 
-                        onchange="this.form.submit()" 
-                        class="block w-full rounded-xl border-stone-200 bg-stone-50 text-stone-700 shadow-sm focus:border-amber-500 focus:ring focus:ring-amber-200 focus:ring-opacity-50 transition cursor-pointer appearance-none pl-4 pr-10">
-                    <option value="">Todas las categorías</option>
-                    @foreach($categories as $category)
-                        <option value="{{ $category->id }}" {{ request('category_id') == $category->id ? 'selected' : '' }}>
-                            {{ $category->name }}
-                        </option>
-                    @endforeach
-                </select>
-                <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none text-stone-500">
-                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                <input 
+                    type="text" 
+                    name="search" 
+                    id="searchInput"
+                    value="{{ request('search') }}" 
+                    placeholder="Buscar producto por nombre..." 
+                    autocomplete="off"
+                    class="pl-10 pr-10 block w-full rounded-xl border-stone-200 bg-stone-50 text-stone-700 shadow-sm focus:border-amber-500 focus:ring focus:ring-amber-200 focus:ring-opacity-50 transition placeholder-stone-400"
+                >
+
+                @if(request('search'))
+                    <a href="{{ route('products.index', [
+                        'category_id' => request('category_id'),
+                        'status' => request('status'),
+                        'stock_type' => request('stock_type')
+                    ]) }}"
+                       class="absolute inset-y-0 right-0 pr-3 flex items-center text-stone-400 hover:text-red-500 transition cursor-pointer"
+                       title="Borrar búsqueda">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                        </svg>
+                    </a>
+                @endif
+            </div>
+
+            {{-- Categoría --}}
+            <div class="w-full xl:w-64">
+                <div class="relative">
+                    <select name="category_id" 
+                            onchange="this.form.submit()" 
+                            class="block w-full rounded-xl border-stone-200 bg-stone-50 text-stone-700 shadow-sm focus:border-amber-500 focus:ring focus:ring-amber-200 focus:ring-opacity-50 transition cursor-pointer appearance-none pl-4 pr-10">
+                        <option value="">Todas las categorías</option>
+                        @foreach($categories as $category)
+                            <option value="{{ $category->id }}" {{ request('category_id') == $category->id ? 'selected' : '' }}>
+                                {{ $category->name }}
+                            </option>
+                        @endforeach
+                    </select>
+
+                    <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none text-stone-500">
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </div>
                 </div>
             </div>
+
+            {{-- Estado --}}
+            <div class="w-full xl:w-52">
+                <div class="relative">
+                    <select name="status"
+                            onchange="this.form.submit()"
+                            class="block w-full rounded-xl border-stone-200 bg-stone-50 text-stone-700 shadow-sm focus:border-amber-500 focus:ring focus:ring-amber-200 focus:ring-opacity-50 transition cursor-pointer appearance-none pl-4 pr-10">
+                        <option value="">Todos los estados</option>
+                        <option value="active" {{ request('status') === 'active' ? 'selected' : '' }}>Activos</option>
+                        <option value="inactive" {{ request('status') === 'inactive' ? 'selected' : '' }}>Inactivos</option>
+                    </select>
+
+                    <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none text-stone-500">
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Tipo de stock --}}
+            <div class="w-full xl:w-56">
+                <div class="relative">
+                    <select name="stock_type"
+                            onchange="this.form.submit()"
+                            class="block w-full rounded-xl border-stone-200 bg-stone-50 text-stone-700 shadow-sm focus:border-amber-500 focus:ring focus:ring-amber-200 focus:ring-opacity-50 transition cursor-pointer appearance-none pl-4 pr-10">
+                        <option value="">Todos los stocks</option>
+                        <option value="manual" {{ request('stock_type') === 'manual' ? 'selected' : '' }}>Stock manual</option>
+                        <option value="dynamic" {{ request('stock_type') === 'dynamic' ? 'selected' : '' }}>Stock por receta</option>
+                    </select>
+
+                    <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none text-stone-500">
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Spinner --}}
+            <div id="loadingSpinner" class="hidden text-amber-600">
+                <svg class="animate-spin h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+            </div>
         </div>
 
-        <div id="loadingSpinner" class="hidden text-amber-600">
-            <svg class="animate-spin h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-        </div>
+        {{-- Filtros activos --}}
+        @if(request('search') || request('category_id') || request('status') || request('stock_type'))
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-3 border-t border-stone-100">
+                <p class="text-sm text-stone-500">
+                    Mostrando resultados filtrados.
+                </p>
+
+                <a href="{{ route('products.index') }}"
+                   class="inline-flex items-center justify-center px-4 py-2 rounded-xl bg-stone-100 text-stone-700 text-sm font-bold hover:bg-stone-200 transition">
+                    Limpiar filtros
+                </a>
+            </div>
+        @endif
 
     </form>
 </div>
@@ -120,7 +188,25 @@
                     <h3 class="font-bold text-stone-800 text-lg mb-1 leading-tight group-hover:text-amber-700 transition">
                         {{ $product->name }}
                     </h3>
-                    
+
+                    <div class="flex flex-wrap gap-2 mt-2">
+                        @if($product->use_dynamic_stock)
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200">
+                                Stock por receta
+                            </span>
+                        @else
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-[10px] font-bold bg-stone-100 text-stone-600 border border-stone-200">
+                                Stock manual
+                            </span>
+                        @endif
+
+                        @if($product->extras->count() > 0)
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-[10px] font-bold bg-blue-100 text-blue-700 border border-blue-200">
+                                {{ $product->extras->count() }} extra(s)
+                            </span>
+                        @endif
+                    </div>
+                                        
                     <p class="text-2xl font-serif font-bold text-stone-900 mt-auto pt-4">
                         ${{ number_format($product->price, 2) }}
                     </p>
@@ -201,7 +287,7 @@
                 <svg class="w-10 h-10 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
             </div>
             <h3 class="text-lg font-bold text-stone-800">No se encontraron resultados</h3>
-            <p class="text-stone-500 mt-1 max-w-sm mb-6">No hay productos que coincidan con "{{ request('search') }}" o la categoría seleccionada.</p>
+            <p class="text-stone-500 mt-1 max-w-sm mb-6">No hay productos que coincidan con los filtros seleccionados.</p>
             <a href="{{ route('products.index') }}" class="bg-amber-100 text-amber-800 px-4 py-2 rounded-lg font-bold hover:bg-amber-200 transition">
                 Limpiar filtros
             </a>
