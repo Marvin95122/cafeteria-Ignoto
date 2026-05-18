@@ -29,14 +29,14 @@
     </div>
 @endif
 
-<div class="flex flex-col h-[calc(100vh-theme(spacing.16))] bg-stone-100">
+<div class="flex flex-col min-h-[calc(100vh-theme(spacing.16))] bg-stone-100">
 
 <meta name="csrf-token" content="{{ csrf_token() }}">
 
-<div class="flex gap-6 h-[calc(100vh-140px)] pt-4">
+<div class="flex flex-col lg:flex-row gap-5 lg:h-[calc(100vh-140px)] pt-4 min-h-0">
     
     {{-- SECCIÓN IZQUIERDA: CATÁLOGO DE PRODUCTOS --}}
-    <div class="w-full md:w-2/3 flex flex-col h-full">
+    <div class="w-full lg:flex-1 flex flex-col lg:h-full min-h-0">
         
         <div class="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-5 mb-5 bg-white p-5 rounded-2xl shadow-sm border border-stone-100">
             <div>
@@ -100,8 +100,8 @@
             </div>
         </div>
 
-        <div class="flex-1 overflow-y-auto pr-2 custom-scrollbar">
-            <div class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4" id="products-grid">
+        <div class="lg:flex-1 lg:overflow-y-auto pr-0 lg:pr-2 custom-scrollbar">
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4" id="products-grid">
                 @foreach($products as $product)
                     <button onclick="openProductModal({{ $product->id }})"
                             data-id="{{ $product->id }}"
@@ -151,11 +151,12 @@
     </div>
 
     {{-- SECCIÓN DERECHA: EL TICKET / CARRITO --}}
-    <div class="w-full md:w-1/3 bg-white rounded-2xl shadow-lg border border-stone-200 flex flex-col h-full overflow-hidden">
-        
-       <div class="bg-stone-50 p-5 border-b border-stone-200 flex justify-between items-center"> 
+    <div class="w-full lg:w-[360px] xl:w-[390px] 2xl:w-[420px] lg:shrink-0 bg-white rounded-2xl shadow-lg border border-stone-200 flex flex-col overflow-hidden lg:sticky lg:top-4 lg:h-[calc(100vh-150px)]">
+
+        {{-- HEADER TICKET --}}
+        <div class="flex-none bg-stone-50 px-4 py-3 border-b border-stone-200 flex justify-between items-center">
             <div>
-                <h2 class="font-bold text-stone-800 flex items-center gap-2">
+                <h2 class="font-bold text-stone-800 flex items-center gap-2 text-sm">
                     <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01">
@@ -164,107 +165,201 @@
                     Ticket de venta
                 </h2>
 
-                <p class="text-xs text-stone-400 mt-1">
+                <p class="text-[11px] text-stone-400 mt-1">
                     <span id="cart-count">0</span> producto(s) en carrito
                 </p>
             </div>
 
             <button onclick="clearCart()"
-                    class="text-xs text-red-500 hover:text-red-700 font-bold transition flex items-center gap-1 bg-red-50 hover:bg-red-100 px-3 py-2 rounded-lg">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 011 1v3M4 7h16">
-                    </path>
-                </svg>
-                Vaciar
+                    class="text-[11px] text-red-500 hover:text-red-700 font-bold transition flex items-center gap-1 bg-red-50 hover:bg-red-100 px-3 py-2 rounded-lg">
+                🗑 Vaciar
             </button>
         </div>
 
-        <div class="flex-1 relative bg-stone-50/30 overflow-hidden flex flex-col">
-            <div id="empty-cart-msg" class="absolute inset-0 flex flex-col items-center justify-center text-stone-400 text-sm italic text-center px-6">
-                <span class="text-5xl mb-3">🛒</span>
-                <span class="font-bold text-stone-500 not-italic">El ticket está vacío</span>
-                <span class="mt-1">Selecciona productos del catálogo para comenzar la venta.</span>
+        {{-- LISTA DEL CARRITO CON SCROLL PROPIO --}}
+        <div class="flex-none relative bg-stone-50/30 border-b border-stone-100">
+            <div id="empty-cart-msg"
+                class="h-[135px] flex flex-col items-center justify-center text-stone-400 text-sm italic text-center px-6">
+                <span class="text-4xl mb-2">🛒</span>
+                <span class="font-bold text-stone-500 not-italic">
+                    El ticket está vacío
+                </span>
+                <span class="mt-1 text-xs">
+                    Selecciona productos del catálogo para comenzar.
+                </span>
             </div>
-            <div id="cart-items-container" class="flex-1 overflow-y-auto p-4 custom-scrollbar space-y-3 relative z-10"></div>
+
+            <div id="cart-items-container"
+                class="max-h-[220px] overflow-y-auto p-3 custom-scrollbar space-y-2 relative z-10">
+            </div>
         </div>
 
-       {{-- SECCIÓN DERECHA: Resumen, VIP y Cobro --}}
-        <div class="p-4 bg-white border-t border-stone-200 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] relative z-20">
-            
-            {{-- BUSCADOR DE CLIENTES VIP --}}
-            <div class="mb-4 pt-2 border-t border-stone-100">
-                <div class="flex justify-between items-center mb-1.5">
-                    <label class="text-xs font-bold text-amber-900 flex items-center gap-1">
-                        <span>👑</span> Cliente VIP / Lealtad
-                    </label>
+        {{-- RESUMEN, VIP Y COBRO --}}
+        <div class="flex-1 min-h-0 overflow-y-auto custom-scrollbar p-3 bg-white space-y-3">
+
+            {{-- CLIENTE VIP --}}
+            <div class="bg-amber-50/70 border border-amber-100 rounded-2xl p-3">
+                <div class="flex justify-between items-start gap-3 mb-2">
+                    <div>
+                        <label class="text-[11px] font-black text-amber-900 flex items-center gap-1 uppercase tracking-wide">
+                            <span>👑</span> Cliente VIP / Lealtad
+                        </label>
+
+                        <p class="text-[10px] text-amber-700 mt-0.5 leading-tight">
+                            Vincula un cliente para acumular o pagar con puntos.
+                        </p>
+                    </div>
+
                     @if(Auth::user()->role !== 'empleado')
-                        <button onclick="createNewCustomer()" class="text-xs text-amber-700 hover:text-amber-800 font-bold">
+                        <button onclick="createNewCustomer()"
+                                class="text-[10px] text-amber-800 hover:text-amber-900 font-black bg-white border border-amber-100 px-2.5 py-1.5 rounded-lg transition leading-tight">
                             + Nuevo VIP
                         </button>
                     @endif
                 </div>
 
-                {{-- Input de búsqueda --}}
                 <div id="vip-search-box" class="relative">
-                    <input type="text" id="vipSearchInput" oninput="searchVipCustomer()" placeholder="Buscar por Teléfono o Nombre..." autocomplete="off"
-                           class="w-full border-stone-300 rounded-lg text-xs pl-3 pr-8 py-2 focus:border-amber-500 focus:ring-amber-200">
-                    <span class="absolute inset-y-0 right-0 pr-2.5 flex items-center text-stone-400 pointer-events-none">
+                    <input type="text"
+                        id="vipSearchInput"
+                        oninput="searchVipCustomer()"
+                        placeholder="Buscar por teléfono o nombre..."
+                        autocomplete="off"
+                        class="w-full border-amber-200 rounded-xl text-xs pl-3 pr-9 py-2.5 focus:border-amber-500 focus:ring-amber-200 bg-white">
+
+                    <span class="absolute inset-y-0 right-0 pr-3 flex items-center text-stone-400 pointer-events-none">
                         🔍
                     </span>
-                    {{-- Lista desplegable de resultados --}}
-                    <div id="vip-results" class="absolute left-0 right-0 mt-1 bg-white border border-stone-200 rounded-lg shadow-xl max-h-36 overflow-y-auto hidden z-50 divide-y divide-stone-100 text-xs"></div>
+
+                    <div id="vip-results"
+                        class="absolute left-0 right-0 mt-1 bg-white border border-stone-200 rounded-xl shadow-xl max-h-40 overflow-y-auto hidden z-50 divide-y divide-stone-100 text-xs">
+                    </div>
                 </div>
 
-                {{-- Tarjeta de Cliente Seleccionado (Oculta por defecto) --}}
-                <div id="selected-vip-card" class="hidden bg-amber-50/60 border border-amber-200/80 rounded-lg p-2.5 flex justify-between items-center mt-2">
+                <div id="selected-vip-card"
+                    class="hidden bg-white border border-amber-200 rounded-xl p-3 flex justify-between items-center mt-3 shadow-sm">
                     <div>
-                        <div class="font-bold text-stone-800 text-xs flex items-center gap-1">
+                        <div class="font-black text-stone-800 text-sm flex items-center gap-1">
+                            <span>👤</span>
                             <span id="vip-display-name"></span>
                         </div>
-                        <div class="text-[11px] text-amber-800 mt-0.5">
-                            Saldo: <strong id="vip-display-points">0</strong> Puntos Ignoto
+
+                        <div class="text-xs text-amber-800 mt-1">
+                            Saldo:
+                            <strong id="vip-display-points">0</strong>
+                            puntos
                         </div>
                     </div>
-                    <button onclick="removeVipCustomer()" class="text-stone-400 hover:text-red-500 font-bold px-1.5 py-0.5 text-xs">✖</button>
+
+                    <button onclick="removeVipCustomer()"
+                            class="text-stone-400 hover:text-red-500 font-bold px-2 py-1 text-xs bg-stone-50 hover:bg-red-50 rounded-lg transition">
+                        ✖
+                    </button>
                 </div>
             </div>
 
             {{-- TOTAL --}}
-            <div class="flex justify-between font-bold text-2xl text-stone-800 mb-3 pb-3 border-b border-stone-100 border-dashed">
-                <span>TOTAL A PAGAR</span>
-                <span class="text-amber-700" id="cart-total">$0.00</span>
+            <div class="bg-stone-900 rounded-2xl px-4 py-3 text-white shadow-md">
+                <div class="flex justify-between items-center gap-4">
+                    <div>
+                        <p class="text-[11px] uppercase tracking-widest text-amber-200 font-bold">
+                            Total a pagar
+                        </p>
+
+                        <p class="text-[10px] text-stone-300 mt-0.5">
+                            Importe final del ticket.
+                        </p>
+                    </div>
+
+                    <span class="text-2xl font-black text-amber-300" id="cart-total">
+                        $0.00
+                    </span>
+                </div>
             </div>
 
             {{-- MÉTODOS DE PAGO --}}
-            <div class="mb-4">
-                <label class="text-xs font-bold text-stone-500 mb-2 block">Método de Pago</label>
+            <div>
+                <label class="text-[11px] font-black text-stone-500 mb-2 block uppercase tracking-wide">
+                    Método de pago
+                </label>
+
                 <div class="grid grid-cols-3 gap-2">
-                    <button onclick="setPaymentMethod('efectivo')" id="btn-efectivo" class="payment-btn bg-amber-100 border-amber-500 text-amber-800 border py-2 rounded-lg text-xs font-bold transition">💵 Efectivo</button>
-                    <button onclick="setPaymentMethod('tarjeta')" id="btn-tarjeta" class="payment-btn bg-stone-50 border-stone-200 text-stone-500 border py-2 rounded-lg text-xs font-bold transition">💳 Tarjeta</button>
-                    <button onclick="setPaymentMethod('puntos')" id="btn-puntos" class="payment-btn bg-stone-50 border-stone-200 text-stone-300 border py-2 rounded-lg text-xs font-bold transition cursor-not-allowed" disabled title="Selecciona un cliente con saldo suficiente">🎁 Puntos</button>
+                    <button onclick="setPaymentMethod('efectivo')"
+                            id="btn-efectivo"
+                            class="payment-btn bg-amber-100 border-amber-500 text-amber-800 border py-2 rounded-xl text-[11px] font-black transition flex flex-col items-center gap-1">
+                        <span>💵</span>
+                        <span>Efectivo</span>
+                    </button>
+
+                    <button onclick="setPaymentMethod('tarjeta')"
+                            id="btn-tarjeta"
+                            class="payment-btn bg-stone-50 border-stone-200 text-stone-500 border py-2 rounded-xl text-[11px] font-black transition flex flex-col items-center gap-1">
+                        <span>💳</span>
+                        <span>Tarjeta</span>
+                    </button>
+
+                    <button onclick="setPaymentMethod('puntos')"
+                            id="btn-puntos"
+                            class="payment-btn bg-stone-50 border-stone-200 text-stone-300 border py-2 rounded-xl text-[11px] font-black transition flex flex-col items-center gap-1 cursor-not-allowed"
+                            disabled
+                            title="Selecciona un cliente con saldo suficiente">
+                        <span>🎁</span>
+                        <span>Puntos</span>
+                    </button>
                 </div>
             </div>
 
-            {{-- Dinámica de Efectivo y Cambio --}}
-            <div id="cash-payment-section" class="bg-stone-50 p-3 rounded-lg border border-stone-200 mb-4">
-                <div class="flex gap-3 items-center mb-2">
-                    <label class="text-xs font-bold text-stone-600 w-1/2">Efectivo Recibido:</label>
-                    <div class="relative w-1/2">
-                        <span class="absolute inset-y-0 left-0 pl-2 flex items-center text-stone-500 font-bold">$</span>
-                        <input type="number" id="cash-received" oninput="calculateChange()" step="0.01" min="0" placeholder="0.00" 
-                               class="w-full pl-6 border-stone-300 rounded text-base font-bold focus:border-amber-500 focus:ring-amber-200">
+            {{-- EFECTIVO Y CAMBIO --}}
+            <div id="cash-payment-section" class="bg-stone-50 p-3 rounded-2xl border border-stone-200">
+                <div class="space-y-3">
+                    <div>
+                        <label class="text-[11px] font-black text-stone-600 uppercase tracking-wide">
+                            Efectivo recibido
+                        </label>
+
+                        <div class="relative mt-1">
+                            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-stone-500 font-black">
+                                $
+                            </span>
+
+                            <input type="number"
+                                id="cash-received"
+                                oninput="calculateChange()"
+                                step="0.01"
+                                min="0"
+                                placeholder="0.00"
+                                class="w-full pl-8 border-stone-300 rounded-xl text-base font-bold focus:border-amber-500 focus:ring-amber-200 py-2.5 bg-white">
+                        </div>
+                    </div>
+
+                    <div class="flex justify-between items-center bg-white rounded-xl border border-stone-100 px-4 py-2.5">
+                        <span class="text-sm font-bold text-stone-600">
+                            Cambio
+                        </span>
+
+                        <span id="change-amount" class="text-lg font-black text-stone-500">
+                            $0.00
+                        </span>
                     </div>
                 </div>
-                <div class="flex justify-between items-center text-lg font-bold">
-                    <span class="text-stone-600">Cambio:</span>
-                    <span id="change-amount" class="text-stone-400">$0.00</span>
-                </div>
             </div>
-            
-            <button id="checkout-btn" onclick="processCheckout()" disabled
-                    class="w-full bg-amber-800 hover:bg-amber-900 text-white font-bold text-lg py-4 rounded-xl shadow-lg transition flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
-                COBRAR TICKET
+
+            {{-- AYUDA DE COBRO --}}
+            <div class="bg-blue-50 border border-blue-100 rounded-2xl px-3 py-2">
+                <p class="text-[10px] text-blue-800 leading-snug">
+                    <span class="font-black">Nota:</span>
+                    en efectivo, el botón se activa cuando el monto recibido cubre el total.
+                </p>
+            </div>
+        </div>
+
+        {{-- BOTÓN COBRAR FIJO ABAJO --}}
+        <div class="flex-none bg-white border-t border-stone-200 p-3 shadow-[0_-4px_10px_rgba(0,0,0,0.04)]">
+            <button id="checkout-btn"
+                    onclick="processCheckout()"
+                    disabled
+                    class="w-full bg-amber-800 hover:bg-amber-900 text-white font-black text-base py-3 rounded-2xl shadow-md transition flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-amber-800">
+                <span>🧾</span>
+                <span>Cobrar ticket</span>
             </button>
         </div>
     </div>
@@ -371,11 +466,13 @@
                 let badge = card.querySelector('.stock-badge');
                 badge.innerText = `${available} disp.`;
                 if (available > 0) {
-                    badge.className = 'stock-badge text-xs font-bold text-stone-500 bg-stone-100 px-1.5 py-0.5 rounded';
-                    card.classList.remove('opacity-50', 'cursor-not-allowed'); card.disabled = false;
+                    badge.className = 'stock-badge text-xs font-bold text-stone-500 bg-stone-100 px-2 py-1 rounded-full whitespace-nowrap';
+                    card.classList.remove('opacity-50', 'cursor-not-allowed');
+                    card.disabled = false;
                 } else {
-                    badge.className = 'stock-badge text-xs font-bold text-red-500 bg-red-50 px-1.5 py-0.5 rounded';
-                    card.classList.add('opacity-50', 'cursor-not-allowed'); card.disabled = true;
+                    badge.className = 'stock-badge text-xs font-bold text-red-500 bg-red-50 px-2 py-1 rounded-full whitespace-nowrap';
+                    card.classList.add('opacity-50', 'cursor-not-allowed');
+                    card.disabled = true;
                 }
             }
         });
@@ -530,19 +627,21 @@
         }
 
         if (cart.length === 0) {
+            emptyMsg.classList.remove('hidden');
             emptyMsg.style.display = 'flex';
             document.getElementById('cart-total').innerText = '$0.00';
         } else {
+            emptyMsg.classList.add('hidden');
             emptyMsg.style.display = 'none';
             cart.forEach(item => {
                 globalCartTotal += item.subtotal;
                 let extrasHtml = item.extras.length > 0 ? `<p class="text-xs text-stone-400 mt-0.5">+ ${item.extras.map(e => e.name).join(', ')}</p>` : '';
                 const html = `
-                    <div class="bg-white p-3 rounded-xl shadow-sm border border-stone-100 flex gap-3 animate-fade-in-down z-10">
+                    <div class="bg-white p-2.5 rounded-xl shadow-sm border border-stone-100 flex gap-2 animate-fade-in-down z-10">
                         <div class="flex-1">
-                            <h4 class="font-bold text-sm text-stone-800">${item.product.name}</h4>
+                            <h4 class="font-bold text-xs text-stone-800 leading-tight">${item.product.name}</h4>
                             ${extrasHtml}
-                            <div class="font-bold text-amber-700 text-sm mt-1">$${item.subtotal.toFixed(2)}</div>
+                            <div class="font-black text-amber-700 text-xs mt-1">$${item.subtotal.toFixed(2)}</div>
                         </div>
                         <div class="flex flex-col items-end justify-between">
                             <div class="flex gap-2">
@@ -557,7 +656,8 @@
             document.getElementById('cart-total').innerText = `$${globalCartTotal.toFixed(2)}`;
         }
         calculateChange();
-        updateGridStock(); 
+    evaluatePointsPayment();
+    updateGridStock(); 
     }
 
     function removeFromCart(cartItemId) { cart = cart.filter(item => item.cartItemId !== cartItemId); renderCart(); }
@@ -586,12 +686,19 @@
         const changeLabel = document.getElementById('change-amount');
         const cashInput = document.getElementById('cash-received');
 
-        if (cart.length === 0) { checkoutBtn.disabled = true; changeLabel.innerText = '$0.00'; changeLabel.className = 'text-stone-400'; return; }
+        if (cart.length === 0) {checkoutBtn.disabled = true;changeLabel.innerText = '$0.00';changeLabel.className = 'text-lg font-black text-stone-500';return;}
         if (currentPaymentMethod === 'efectivo') {
             const received = parseFloat(cashInput.value) || 0;
             const change = received - globalCartTotal;
-            if (change >= 0 && received > 0) { changeLabel.innerText = `$${change.toFixed(2)}`; changeLabel.className = 'text-green-600 font-black text-xl'; checkoutBtn.disabled = false; } 
-            else { changeLabel.innerText = 'Falta dinero'; changeLabel.className = 'text-red-500 text-sm'; checkoutBtn.disabled = true; }
+            if (change >= 0 && received > 0) {
+                changeLabel.innerText = `$${change.toFixed(2)}`;
+                changeLabel.className = 'text-lg font-black text-green-600';
+                checkoutBtn.disabled = false;
+            } else {
+                changeLabel.innerText = 'Falta dinero';
+                changeLabel.className = 'text-xs font-bold text-red-500';
+                checkoutBtn.disabled = true;
+            }
         } else { checkoutBtn.disabled = false; }
     }
 
@@ -600,7 +707,7 @@
         
         const btn = document.getElementById('checkout-btn');
         btn.disabled = true;
-        btn.innerHTML = '<svg class="animate-spin h-5 w-5 mr-3" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Cobrando...';
+        btn.innerHTML = '<svg class="animate-spin h-5 w-5" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg><span>Cobrando...</span>';
 
         let exactReceived = globalCartTotal, exactChange = 0;
         if (currentPaymentMethod === 'efectivo') {
@@ -626,8 +733,16 @@
             if (data.success) {
                 window.open(`/pos/ticket/${data.order_id}?received=${exactReceived}&change=${exactChange}`, 'Ticket', 'width=400,height=600');
                 setTimeout(() => { cart = []; document.getElementById('cash-received').value = ''; window.location.reload(); }, 1000);
-            } else { Swal.fire('Error', data.message, 'error'); btn.innerHTML = 'COBRAR TICKET'; btn.disabled = false; }
-        } catch (error) { Swal.fire('Error', 'Ocurrió un error en el cobro.', 'error'); btn.innerHTML = 'COBRAR TICKET'; btn.disabled = false; }
+            } else {
+                Swal.fire('Error', data.message, 'error');
+                btn.innerHTML = '<span>🧾</span><span>Cobrar ticket</span>';
+                btn.disabled = false;
+            }
+        } catch (error) {
+            Swal.fire('Error', 'Ocurrió un error en el cobro.', 'error');
+            btn.innerHTML = '<span>🧾</span><span>Cobrar ticket</span>';
+            btn.disabled = false;
+        }
     }
 
     // --- LÓGICA DE CLIENTES VIP ---
