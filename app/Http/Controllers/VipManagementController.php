@@ -16,7 +16,17 @@ class VipManagementController extends Controller
             abort(403, 'Acceso denegado. Solo administradores y gerentes.');
         }
 
-        $query = Customer::latest();
+        $moneyForOnePoint = Setting::firstOrCreate(
+            ['key' => 'vip_money_for_point'],
+            ['value' => '10']
+        )->value;
+
+        $pointValue = Setting::firstOrCreate(
+            ['key' => 'vip_point_value'],
+            ['value' => '1']
+        )->value;
+
+        $query = Customer::withCount('orders')->latest();
 
         if ($request->filled('status')) {
             if ($request->status === 'active') {
@@ -28,19 +38,37 @@ class VipManagementController extends Controller
             }
         }
 
-        $customers = $query->get();
+        if ($request->filled('search')) {
+            $query->where(function ($q) use ($request) {
+                $q->where('name', 'like', '%' . $request->search . '%')
+                ->orWhere('phone', 'like', '%' . $request->search . '%');
+            });
+        }
 
-        $moneyForOnePoint = Setting::firstOrCreate(
-            ['key' => 'vip_money_for_point'],
-            ['value' => '10']
-        )->value;
+        $perPage = $request->integer('per_page', 10);
 
-        $pointValue = Setting::firstOrCreate(
-            ['key' => 'vip_point_value'],
-            ['value' => '1']
-        )->value;
+        if (! in_array($perPage, [10, 20, 50, 100])) {
+            $perPage = 10;
+        }
 
-        return view('vip.index', compact('customers', 'moneyForOnePoint', 'pointValue'));
+        $customers = $query->paginate($perPage)->withQueryString();
+
+        $totalCustomers = Customer::count();
+        $activeCustomers = Customer::where('active', true)->count();
+        $inactiveCustomers = Customer::where('active', false)->count();
+        $totalPoints = Customer::sum('points');
+        $estimatedPointsValue = $totalPoints * (float) $pointValue;
+
+        return view('vip.index', compact(
+            'customers',
+            'moneyForOnePoint',
+            'pointValue',
+            'totalCustomers',
+            'activeCustomers',
+            'inactiveCustomers',
+            'totalPoints',
+            'estimatedPointsValue'
+        ));
     }
 
     // Guardar ajustes (EXCLUSIVO DE ADMINISTRADOR)

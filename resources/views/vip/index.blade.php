@@ -4,7 +4,6 @@
 <div x-data="{ 
     showCreateModal: false, 
     showEditModal: false, 
-    search: '',
     editForm: { id: '', name: '', phone: '', points: 0, active: true },
     openEdit(customer) {
         this.editForm.id = customer.id;
@@ -16,16 +15,29 @@
     }
 }">
 
-    {{-- Encabezado principal --}}
-    <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+    {{-- ENCABEZADO --}}
+    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-8">
         <div>
-            <h1 class="font-serif text-3xl font-bold text-amber-900">Gestión de Clientes VIP</h1>
-            <p class="text-stone-500 mt-1">Administra el programa de lealtad y el saldo de Puntos Ignoto.</p>
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-100 text-amber-800 text-xs font-bold mb-3">
+                👑 Programa de lealtad
+            </div>
+
+            <h1 class="font-serif text-3xl md:text-4xl font-bold text-amber-900">
+                Clientes VIP
+            </h1>
+
+            <p class="text-stone-500 mt-1">
+                Administra clientes frecuentes, puntos acumulados, estado de cuenta y reglas de canje.
+            </p>
         </div>
 
         <button @click="showCreateModal = true"
-           class="bg-amber-800 text-white px-6 py-3 rounded-full shadow-lg hover:bg-amber-900 hover:shadow-xl transition transform hover:-translate-y-1 flex items-center gap-2 font-medium">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path></svg>
+        class="inline-flex items-center justify-center gap-2 bg-amber-800 text-white px-6 py-3 rounded-full shadow-lg hover:bg-amber-900 hover:shadow-xl transition transform hover:-translate-y-1 font-bold">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z">
+                </path>
+            </svg>
             Nuevo Cliente VIP
         </button>
     </div>
@@ -41,14 +53,95 @@
         </div>
     @endif
 
-    {{-- PANEL DE CONFIGURACIÓN GLOBAL DE PUNTOS --}}
-    <div class="bg-white p-6 rounded-2xl shadow-sm border border-stone-100 mb-8">
-        <div class="flex items-center gap-3 mb-4 border-b border-stone-100 pb-3">
-            <span class="text-2xl">⚙️</span>
-            <div>
-                <h3 class="font-bold text-lg text-stone-800">Reglas de Acumulación y Canje</h3>
-                <p class="text-xs text-stone-400">Ajusta el comportamiento financiero del programa de lealtad.</p>
+    {{-- TARJETAS RESUMEN --}}
+    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5 mb-8">
+        <div class="bg-white p-5 rounded-2xl shadow-sm border border-stone-200 hover:shadow-md transition">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-bold text-stone-500">Clientes registrados</p>
+                    <h3 class="text-3xl font-black text-stone-800 mt-1">
+                        {{ $totalCustomers }}
+                    </h3>
+                </div>
+
+                <div class="w-12 h-12 rounded-xl bg-amber-100 flex items-center justify-center text-2xl">
+                    👑
+                </div>
             </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl shadow-sm border border-stone-200 hover:shadow-md transition">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-bold text-stone-500">Clientes activos</p>
+                    <h3 class="text-3xl font-black text-green-600 mt-1">
+                        {{ $activeCustomers }}
+                    </h3>
+                </div>
+
+                <div class="w-12 h-12 rounded-xl bg-green-100 flex items-center justify-center text-2xl">
+                    ✅
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl shadow-sm border border-stone-200 hover:shadow-md transition">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-bold text-stone-500">Clientes inactivos</p>
+                    <h3 class="text-3xl font-black text-stone-500 mt-1">
+                        {{ $inactiveCustomers }}
+                    </h3>
+                </div>
+
+                <div class="w-12 h-12 rounded-xl bg-stone-100 flex items-center justify-center text-2xl">
+                    ⏸️
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-gradient-to-br from-amber-900 to-stone-900 p-5 rounded-2xl shadow-md border border-amber-800 relative overflow-hidden text-white">
+            <div class="absolute right-[-6px] top-[-8px] text-6xl opacity-20">
+                🎁
+            </div>
+
+            <p class="text-sm font-bold text-amber-200">
+                Puntos acumulados
+            </p>
+
+            <h3 class="text-3xl font-black mt-1">
+                {{ number_format($totalPoints) }}
+            </h3>
+
+            <p class="text-xs text-amber-200 mt-1">
+                Valor estimado: ${{ number_format($estimatedPointsValue, 2) }}
+            </p>
+        </div>
+    </div>
+
+    {{-- PANEL DE CONFIGURACIÓN GLOBAL DE PUNTOS --}}
+    <div class="bg-white p-6 rounded-2xl shadow-sm border border-stone-100 mb-8 overflow-hidden">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5 border-b border-stone-100 pb-4">
+            <div class="flex items-center gap-3">
+                <div class="w-11 h-11 rounded-xl bg-amber-100 flex items-center justify-center text-2xl">
+                    ⚙️
+                </div>
+
+                <div>
+                    <h3 class="font-bold text-lg text-stone-800">
+                        Reglas de acumulación y canje
+                    </h3>
+                    <p class="text-xs text-stone-400">
+                        Configura cuántos puntos gana el cliente y cuánto valor tienen al pagar.
+                    </p>
+                </div>
+            </div>
+
+            @if(Auth::user()->role !== 'admin')
+                <span class="inline-flex px-3 py-1 rounded-full bg-amber-50 text-amber-700 text-xs font-bold border border-amber-100">
+                    Solo lectura para gerente
+                </span>
+            @endif
         </div>
 
         <form method="POST" action="{{ route('vip.settings.update') }}" class="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
@@ -85,64 +178,126 @@
 
     {{-- SECCIÓN DE LISTADO Y BÚSQUEDA --}}
     <div class="bg-white rounded-2xl shadow-sm border border-stone-100 overflow-hidden">
-        <div class="p-4 sm:p-6 border-b border-stone-100 flex flex-col lg:flex-row justify-between items-center gap-4">
-            <h3 class="font-bold text-lg text-stone-800">Directorio de Clientes VIP</h3>
+        <div class="p-4 sm:p-6 border-b border-stone-100 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            <div>
+                <h3 class="font-bold text-lg text-stone-800 flex items-center gap-2">
+                    📇 Directorio de clientes VIP
+                </h3>
+                <p class="text-sm text-stone-500 mt-1">
+                    Consulta, filtra y administra cuentas del programa de lealtad.
+                </p>
+            </div>
             
-            <div class="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
-                <form method="GET" action="{{ route('vip.index') }}" class="w-full sm:w-52">
-                    <select name="status"
-                            onchange="this.form.submit()"
-                            class="w-full text-xs rounded-lg border-stone-300 px-3 py-2 focus:ring-amber-500 focus:border-amber-500">
-                        <option value="">Todos los estados</option>
-                        <option value="active" {{ request('status') === 'active' ? 'selected' : '' }}>Activos</option>
-                        <option value="inactive" {{ request('status') === 'inactive' ? 'selected' : '' }}>Inactivos</option>
-                    </select>
-                </form>
+            <form method="GET"
+                action="{{ route('vip.index') }}"
+                class="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
 
                 <div class="relative w-full sm:w-72">
-                    <input type="text" x-model="search" placeholder="Buscar por nombre o teléfono..." 
-                        class="w-full text-xs rounded-lg border-stone-300 pl-8 pr-4 py-2 focus:ring-amber-500 focus:border-amber-500">
-                    <span class="absolute left-2.5 top-2.5 text-stone-400 text-xs">🔍</span>
+                    <input type="text"
+                        name="search"
+                        value="{{ request('search') }}"
+                        placeholder="Buscar por nombre o teléfono..."
+                        class="w-full text-sm rounded-xl border-stone-300 pl-9 pr-4 py-3 focus:ring-amber-500 focus:border-amber-500 bg-stone-50">
+
+                    <span class="absolute left-3 top-3 text-stone-400 text-sm">
+                        🔍
+                    </span>
                 </div>
-            </div>
+
+                <select name="status"
+                        onchange="this.form.submit()"
+                        class="w-full sm:w-48 text-sm rounded-xl border-stone-300 px-3 py-3 focus:ring-amber-500 focus:border-amber-500 bg-stone-50">
+                    <option value="">Todos los estados</option>
+                    <option value="active" {{ request('status') === 'active' ? 'selected' : '' }}>Activos</option>
+                    <option value="inactive" {{ request('status') === 'inactive' ? 'selected' : '' }}>Inactivos</option>
+                </select>
+
+                <select name="per_page"
+                        onchange="this.form.submit()"
+                        class="w-full sm:w-44 text-sm rounded-xl border-stone-300 px-3 py-3 focus:ring-amber-500 focus:border-amber-500 bg-stone-50">
+                    <option value="10" {{ request('per_page', 10) == 10 ? 'selected' : '' }}>10 por página</option>
+                    <option value="20" {{ request('per_page', 10) == 20 ? 'selected' : '' }}>20 por página</option>
+                    <option value="50" {{ request('per_page', 10) == 50 ? 'selected' : '' }}>50 por página</option>
+                    <option value="100" {{ request('per_page', 10) == 100 ? 'selected' : '' }}>100 por página</option>
+                </select>
+
+                <button type="submit"
+                        class="w-full sm:w-auto px-5 py-3 rounded-xl bg-amber-800 text-white text-sm font-bold hover:bg-amber-900 transition">
+                    Buscar
+                </button>
+            </form>
         </div>
 
+        @if(request('search') || request('status') || request('per_page'))
+            <div class="px-6 py-3 bg-stone-50 border-b border-stone-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <p class="text-sm text-stone-500">
+                    Mostrando clientes filtrados.
+                </p>
+
+                <a href="{{ route('vip.index') }}"
+                class="inline-flex items-center justify-center px-4 py-2 rounded-xl bg-white border border-stone-200 text-stone-700 text-sm font-bold hover:bg-stone-100 transition">
+                    Limpiar filtros
+                </a>
+            </div>
+        @endif
+
         {{-- Tabla de clientes --}}
-        <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse text-sm">
-                <thead>
-                    <tr class="bg-stone-50 text-stone-500 text-xs uppercase border-b border-stone-100 font-bold">
+        <div class="overflow-x-auto max-h-[560px] overflow-y-auto">
+            <table class="w-full text-left border-collapse text-sm min-w-[980px]">
+                <thead class="sticky top-0 z-10">
+                    <tr class="bg-stone-50 text-stone-500 text-xs uppercase border-b border-stone-100 font-bold shadow-sm">
                         <th class="py-3 px-6">Cliente</th>
-                        <th class="py-3 px-6">Teléfono / Cuenta</th>
-                        <th class="py-3 px-6 text-center">Saldo de Puntos</th>
-                        <th class="py-3 px-6">Fecha de Registro</th>
+                        <th class="py-3 px-6">Teléfono</th>
+                        <th class="py-3 px-6 text-center">Puntos</th>
+                        <th class="py-3 px-6 text-center">Compras</th>
+                        <th class="py-3 px-6">Registro</th>
                         <th class="py-3 px-6 text-center">Estado</th>
                         <th class="py-3 px-6 text-center">Acciones</th>
                     </tr>
                 </thead>
+
                 <tbody class="divide-y divide-stone-100 text-stone-700">
                     @forelse($customers as $customer)
-                        <tr class="hover:bg-amber-50/30 transition" 
-                            x-show="search === '' || '{{ strtolower($customer->name) }}'.includes(search.toLowerCase()) || '{{ $customer->phone }}'.includes(search)">
-                            
-                            <td class="py-4 px-6 font-bold text-stone-900 flex items-center gap-2">
-                                <span class="h-8 w-8 rounded-full bg-amber-100 text-amber-800 flex items-center justify-center text-xs">
-                                    {{ strtoupper(substr($customer->name, 0, 2)) }}
-                               </span>
-                                {{ $customer->name }}
+                        <tr class="hover:bg-amber-50/30 transition {{ !$customer->active ? 'opacity-75 bg-stone-50/60' : '' }}">
+                            <td class="py-4 px-6">
+                                <div class="flex items-center gap-3">
+                                    <span class="h-10 w-10 rounded-full bg-amber-100 text-amber-800 flex items-center justify-center text-xs font-black">
+                                        {{ strtoupper(substr($customer->name, 0, 2)) }}
+                                    </span>
+
+                                    <div>
+                                        <p class="font-bold text-stone-900">
+                                            {{ $customer->name }}
+                                        </p>
+
+                                        <p class="text-xs text-stone-400">
+                                            Cliente #{{ $customer->id }}
+                                        </p>
+                                    </div>
+                                </div>
                             </td>
                             
-                            <td class="py-4 px-6 font-mono text-stone-600">
+                            <td class="py-4 px-6 font-mono text-stone-600 whitespace-nowrap">
                                 📱 {{ $customer->phone }}
                             </td>
                             
                             <td class="py-4 px-6 text-center">
                                 <span class="px-3 py-1 rounded-full text-xs font-bold {{ $customer->points > 0 ? 'bg-amber-100 text-amber-800 border border-amber-200' : 'bg-stone-100 text-stone-500' }}">
-                                    🎁 {{ $customer->points }} Pts
+                                    🎁 {{ number_format($customer->points) }} pts
+                                </span>
+
+                                <p class="text-[10px] text-stone-400 mt-1">
+                                    ≈ ${{ number_format($customer->points * (float) $pointValue, 2) }}
+                                </p>
+                            </td>
+
+                            <td class="py-4 px-6 text-center">
+                                <span class="px-3 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-100">
+                                    {{ $customer->orders_count }} ticket(s)
                                 </span>
                             </td>
                             
-                            <td class="py-4 px-6 text-xs text-stone-400">
+                            <td class="py-4 px-6 text-xs text-stone-400 whitespace-nowrap">
                                 {{ $customer->created_at->format('d/m/Y') }}
                             </td>
 
@@ -158,50 +313,77 @@
                                 @endif
                             </td>
                                                         
-                            <td class="py-4 px-6 text-center flex justify-center gap-2">
-                                <button @click='openEdit(@json($customer))'
-                                        class="px-2.5 py-1 text-xs bg-stone-100 hover:bg-amber-100 hover:text-amber-900 text-stone-600 rounded font-medium transition">
-                                    Editar
-                                </button>
-                                
-                                @if($customer->active)
+                            <td class="py-4 px-6 text-center">
+                                <div class="flex justify-center gap-2">
+                                    <button @click='openEdit(@json($customer))'
+                                            class="px-3 py-1.5 text-xs bg-stone-100 hover:bg-amber-100 hover:text-amber-900 text-stone-600 rounded-lg font-bold transition">
+                                        Editar
+                                    </button>
+                                    
+                                    @if($customer->active)
+                                        <form method="POST"
+                                            action="{{ route('vip.customer.destroy', $customer) }}"
+                                            onsubmit="return confirm('¿Dar de baja a este cliente VIP? Sus puntos e historial se conservarán.')">
+                                            @csrf
+                                            @method('DELETE')
+
+                                            <button class="px-3 py-1.5 text-xs bg-stone-100 hover:bg-orange-100 hover:text-orange-700 text-stone-600 rounded-lg font-bold transition">
+                                                Baja
+                                            </button>
+                                        </form>
+                                    @else
+                                        <span class="px-3 py-1.5 text-xs bg-stone-100 text-stone-400 rounded-lg font-bold">
+                                            Dado de baja
+                                        </span>
+                                    @endif
+
                                     <form method="POST"
-                                        action="{{ route('vip.customer.destroy', $customer) }}"
-                                        onsubmit="return confirm('¿Dar de baja a este cliente VIP? Sus puntos e historial se conservarán.')">
+                                        action="{{ route('vip.customer.force-delete', $customer) }}"
+                                        onsubmit="return confirm('¿Eliminar definitivamente este cliente? Solo se permitirá si no tiene ventas asociadas.')">
                                         @csrf
                                         @method('DELETE')
 
-                                        <button class="px-2.5 py-1 text-xs bg-stone-100 hover:bg-orange-100 hover:text-orange-700 text-stone-600 rounded font-medium transition">
-                                            Baja
+                                        <button class="px-3 py-1.5 text-xs bg-stone-100 hover:bg-red-100 hover:text-red-700 text-stone-600 rounded-lg font-bold transition">
+                                            Eliminar
                                         </button>
                                     </form>
-                                @else
-                                    <span class="px-2.5 py-1 text-xs bg-stone-100 text-stone-400 rounded font-medium">
-                                        Dado de baja
-                                    </span>
-                                @endif
-
-                                <form method="POST"
-                                    action="{{ route('vip.customer.force-delete', $customer) }}"
-                                    onsubmit="return confirm('¿Eliminar definitivamente este cliente? Solo se permitirá si no tiene ventas asociadas.')">
-                                    @csrf
-                                    @method('DELETE')
-
-                                    <button class="px-2.5 py-1 text-xs bg-stone-100 hover:bg-red-100 hover:text-red-700 text-stone-600 rounded font-medium transition">
-                                        Eliminar
-                                    </button>
-                                </form>
+                                </div>
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="text-center py-12 text-stone-400">
-                                No hay clientes VIP registrados en el sistema.
+                            <td colspan="7" class="text-center py-14 text-stone-400">
+                                <span class="text-5xl block mb-3">👑</span>
+
+                                <p class="text-lg font-bold text-stone-600">
+                                    No se encontraron clientes VIP.
+                                </p>
+
+                                <p class="text-sm text-stone-400 mt-1">
+                                    Prueba limpiar filtros o registra un nuevo cliente.
+                                </p>
+
+                                <a href="{{ route('vip.index') }}"
+                                class="inline-flex mt-4 px-4 py-2 rounded-xl bg-stone-100 text-stone-700 text-sm font-bold hover:bg-stone-200 transition">
+                                    Limpiar filtros
+                                </a>
                             </td>
                         </tr>
                     @endforelse
                 </tbody>
             </table>
+        </div>
+
+        {{-- PAGINACIÓN --}}
+        <div class="p-4 border-t border-stone-100 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <p class="text-sm text-stone-500">
+                Mostrando {{ $customers->firstItem() ?? 0 }} a {{ $customers->lastItem() ?? 0 }}
+                de {{ $customers->total() }} cliente(s).
+            </p>
+
+            <div>
+                {{ $customers->links() }}
+            </div>
         </div>
     </div>
 

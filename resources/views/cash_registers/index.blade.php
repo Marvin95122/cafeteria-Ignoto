@@ -1,99 +1,250 @@
 @extends('layouts.admin')
 
 @section('content')
-<div class="max-w-7xl mx-auto">
+<div class="max-w-7xl mx-auto space-y-6">
 
-    <div class="flex justify-between items-center mb-6">
+    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
-            <h1 class="font-serif text-3xl font-bold text-amber-900">Control de Caja</h1>
-            <p class="text-stone-500">Administra el flujo de efectivo y auditoría de ventas.</p>
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-100 text-amber-800 text-xs font-bold mb-3">
+                💰 Administración de caja
+            </div>
+
+            <h1 class="font-serif text-3xl md:text-4xl font-bold text-amber-900">
+                Control de Caja
+            </h1>
+
+            <p class="text-stone-500 mt-1">
+                Administra apertura, gastos, ventas del turno, cancelaciones y cierre de caja.
+            </p>
         </div>
+
         @if($activeRegister)
-            <div class="bg-green-100 text-green-800 px-4 py-2 rounded-lg font-bold flex items-center gap-2 border border-green-200">
-                <span class="w-3 h-3 rounded-full bg-green-500 animate-pulse"></span>
-                Caja Abierta (Cajero: {{ $activeRegister->user->name }})
+            <div class="bg-green-50 text-green-800 px-5 py-4 rounded-2xl font-bold flex items-center gap-3 border border-green-200 shadow-sm">
+                <span class="w-3 h-3 rounded-full bg-green-500 animate-pulse shrink-0"></span>
+
+                <div>
+                    <p class="text-sm">
+                        Caja abierta
+                    </p>
+                    <p class="text-xs text-green-700 font-normal">
+                        Apertura por {{ $activeRegister->user->name ?? 'Usuario' }}
+                        · {{ $activeRegister->opened_at->format('d/m/Y h:i A') }}
+                    </p>
+                </div>
             </div>
         @else
-            <div class="bg-red-100 text-red-800 px-4 py-2 rounded-lg font-bold flex items-center gap-2 border border-red-200">
-                <span class="w-3 h-3 rounded-full bg-red-500"></span>
-                Caja Cerrada
+            <div class="bg-red-50 text-red-800 px-5 py-4 rounded-2xl font-bold flex items-center gap-3 border border-red-200 shadow-sm">
+                <span class="w-3 h-3 rounded-full bg-red-500 shrink-0"></span>
+
+                <div>
+                    <p class="text-sm">
+                        Caja cerrada
+                    </p>
+                    <p class="text-xs text-red-700 font-normal">
+                        Abre un turno para comenzar a registrar ventas y gastos.
+                    </p>
+                </div>
             </div>
         @endif
     </div>
 
     {{-- SI LA CAJA ESTÁ CERRADA --}}
     @if(!$activeRegister)
-        <div class="bg-white p-8 rounded-2xl shadow-sm border border-stone-200 max-w-md mx-auto text-center mt-10 mb-10">
-            <div class="w-20 h-20 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span class="text-4xl">💰</span>
+        <div class="bg-white p-8 rounded-3xl shadow-sm border border-stone-200 max-w-xl mx-auto text-center mt-10 mb-10">
+            <div class="w-24 h-24 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-5 shadow-inner">
+                <span class="text-5xl">💰</span>
             </div>
-            <h2 class="text-2xl font-bold text-stone-800 mb-2">Abrir Turno</h2>
-            <p class="text-stone-500 mb-6 text-sm">Ingresa el fondo de caja (morralla) con el que vas a empezar el día.</p>
+
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-100 text-red-700 text-xs font-bold mb-4">
+                Caja sin turno activo
+            </div>
+
+            <h2 class="text-3xl font-serif font-bold text-amber-900 mb-2">
+                Abrir Turno de Caja
+            </h2>
+
+            <p class="text-stone-500 mb-6 text-sm max-w-md mx-auto">
+                Ingresa el fondo inicial con el que comenzará el turno. Este monto servirá para calcular el efectivo esperado al cerrar caja.
+            </p>
             
-            <form action="{{ route('cash_registers.open') }}" method="POST">
+            <form action="{{ route('cash_registers.open') }}" method="POST" class="space-y-5">
                 @csrf
-                <div class="relative mb-6 text-left">
-                    <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-stone-500 font-bold text-xl">$</span>
-                    <input type="number" name="opening_amount" step="0.01" min="0" required placeholder="0.00"
-                           class="w-full pl-10 pr-4 py-3 border-stone-300 rounded-xl text-xl font-bold focus:border-amber-500 focus:ring-amber-200">
+
+                <div class="relative text-left">
+                    <label class="block text-sm font-bold text-stone-700 mb-2">
+                        Fondo inicial
+                    </label>
+
+                    <span class="absolute left-4 top-[42px] flex items-center text-stone-500 font-bold text-xl">$</span>
+
+                    <input type="number"
+                        name="opening_amount"
+                        step="0.01"
+                        min="0"
+                        required
+                        placeholder="0.00"
+                        class="w-full pl-10 pr-4 py-4 border-stone-300 rounded-2xl text-2xl font-black focus:border-amber-500 focus:ring-amber-200 bg-stone-50">
                 </div>
-                <button type="submit" class="w-full bg-amber-800 hover:bg-amber-900 text-white font-bold py-3 rounded-xl shadow-md transition">
-                    Abrir Caja Registradora
+
+                <button type="submit"
+                        class="w-full bg-amber-800 hover:bg-amber-900 text-white font-bold py-4 rounded-2xl shadow-md transition">
+                    Abrir caja registradora
                 </button>
             </form>
+
+            <p class="text-xs text-stone-400 mt-5">
+                Solo debe existir una caja abierta a la vez para mantener el control del turno.
+            </p>
         </div>
     
     {{-- SI LA CAJA ESTÁ ABIERTA --}}
     @else
         
-        {{-- Tarjetas de Resumen --}}
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-            <div class="bg-white p-5 rounded-2xl shadow-sm border border-stone-200 border-l-4 border-l-blue-500">
-                <p class="text-stone-500 text-sm font-bold">Fondo Inicial</p>
-                <h3 class="text-2xl font-black text-stone-800">${{ number_format($activeRegister->opening_amount, 2) }}</h3>
-                <p class="text-xs text-stone-400 mt-1">Apertura: {{ $activeRegister->opened_at->format('h:i A') }}</p>
-            </div>
-            
-            <div class="bg-white p-5 rounded-2xl shadow-sm border border-stone-200 border-l-4 border-l-green-500">
-                <p class="text-stone-500 text-sm font-bold">Ventas (Solo Efectivo)</p>
-                <h3 class="text-2xl font-black text-green-700">+ ${{ number_format($stats['sales_cash'], 2) }}</h3>
-                <p class="text-xs text-stone-400 mt-1">Tarjetas (No en caja): ${{ number_format($stats['sales_card'], 2) }}</p>
+        {{-- ESTADO Y RESUMEN DEL TURNO --}}
+        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-5">
+
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-stone-200 hover:shadow-md transition">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-bold text-stone-500">Fondo inicial</p>
+                        <h3 class="text-2xl font-black text-stone-800 mt-1">
+                            ${{ number_format($activeRegister->opening_amount, 2) }}
+                        </h3>
+                        <p class="text-xs text-stone-400 mt-1">
+                            {{ $activeRegister->opened_at->format('h:i A') }}
+                        </p>
+                    </div>
+
+                    <div class="w-12 h-12 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center text-2xl">
+                        🏦
+                    </div>
+                </div>
             </div>
 
-            <div class="bg-white p-5 rounded-2xl shadow-sm border border-stone-200 border-l-4 border-l-red-500">
-                <p class="text-stone-500 text-sm font-bold">Gastos (Retiros)</p>
-                <h3 class="text-2xl font-black text-red-600">- ${{ number_format($stats['total_expenses'], 2) }}</h3>
-                <p class="text-xs text-stone-400 mt-1">{{ $expenses->count() }} gastos registrados</p>
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-stone-200 hover:shadow-md transition">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-bold text-stone-500">Ventas efectivo</p>
+                        <h3 class="text-2xl font-black text-green-600 mt-1">
+                            +${{ number_format($stats['sales_cash'], 2) }}
+                        </h3>
+                        <p class="text-xs text-stone-400 mt-1">
+                            {{ $stats['orders_count'] }} venta(s) activas
+                        </p>
+                    </div>
+
+                    <div class="w-12 h-12 rounded-xl bg-green-100 text-green-700 flex items-center justify-center text-2xl">
+                        💵
+                    </div>
+                </div>
             </div>
 
-            <div class="bg-amber-50 p-5 rounded-2xl shadow-md border border-amber-200 border-l-4 border-l-amber-600 relative overflow-hidden">
-                <div class="absolute right-0 top-0 opacity-10 text-6xl">💵</div>
-                <p class="text-amber-800 text-sm font-bold">Efectivo Esperado en Cajón</p>
-                <h3 class="text-3xl font-black text-amber-900 mt-1">${{ number_format($stats['expected_cash'], 2) }}</h3>
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-stone-200 hover:shadow-md transition">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-bold text-stone-500">Pagos no efectivos</p>
+                        <h3 class="text-2xl font-black text-blue-600 mt-1">
+                            ${{ number_format($stats['sales_card'] + $stats['sales_points'], 2) }}
+                        </h3>
+                        <p class="text-xs text-stone-400 mt-1">
+                            Tarjeta: ${{ number_format($stats['sales_card'], 2) }} · Puntos: ${{ number_format($stats['sales_points'], 2) }}
+                        </p>
+                    </div>
+
+                    <div class="w-12 h-12 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center text-2xl">
+                        💳
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-stone-200 hover:shadow-md transition">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-bold text-stone-500">Gastos activos</p>
+                        <h3 class="text-2xl font-black text-red-600 mt-1">
+                            -${{ number_format($stats['total_expenses'], 2) }}
+                        </h3>
+                        <p class="text-xs text-stone-400 mt-1">
+                            {{ $stats['expenses_count'] }} activo(s), {{ $stats['cancelled_expenses_count'] }} anulado(s)
+                        </p>
+                    </div>
+
+                    <div class="w-12 h-12 rounded-xl bg-red-100 text-red-700 flex items-center justify-center text-2xl">
+                        💸
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-gradient-to-br from-amber-900 to-stone-900 p-5 rounded-2xl shadow-md border border-amber-800 relative overflow-hidden text-white hover:shadow-lg transition">
+                <div class="absolute right-[-6px] top-[-8px] text-6xl opacity-20">
+                    💰
+                </div>
+
+                <p class="text-sm font-bold text-amber-200">
+                    Efectivo esperado
+                </p>
+
+                <h3 class="text-3xl font-black mt-1">
+                    ${{ number_format($stats['expected_cash'], 2) }}
+                </h3>
+
+                <p class="text-xs text-amber-200 mt-1">
+                    Fondo + efectivo - gastos
+                </p>
             </div>
         </div>
 
-        {{-- Botones de Acción --}}
-        <div class="flex gap-4 mb-8">
-            <button onclick="document.getElementById('modal-expense').classList.remove('hidden')" 
-                    class="bg-white border border-stone-300 text-stone-700 hover:bg-stone-50 font-bold py-3 px-6 rounded-xl shadow-sm transition flex items-center gap-2">
-                <span>💸</span> Registrar Gasto
-            </button>
-            
-            <button onclick="document.getElementById('modal-close').classList.remove('hidden')" 
-                    class="bg-amber-800 hover:bg-amber-900 text-white font-bold py-3 px-6 rounded-xl shadow-md transition flex items-center gap-2">
-                <span>🔐</span> Hacer Corte de Caja (Cerrar)
-            </button>
+        {{-- ACCIONES PRINCIPALES --}}
+        <div class="bg-white rounded-2xl shadow-sm border border-stone-200 p-5 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            <div>
+                <h3 class="font-bold text-stone-800 text-lg">
+                    Acciones del turno
+                </h3>
+                <p class="text-sm text-stone-500 mt-1">
+                    Registra gastos o realiza el corte cuando finalice el turno.
+                </p>
+            </div>
+
+            <div class="flex flex-col sm:flex-row gap-3">
+                <button onclick="document.getElementById('modal-expense').classList.remove('hidden')" 
+                        class="inline-flex items-center justify-center gap-2 bg-white border border-stone-300 text-stone-700 hover:bg-stone-50 font-bold py-3 px-6 rounded-xl shadow-sm transition">
+                    <span>💸</span>
+                    Registrar gasto
+                </button>
+                
+                <button onclick="document.getElementById('modal-close').classList.remove('hidden')" 
+                        class="inline-flex items-center justify-center gap-2 bg-amber-800 hover:bg-amber-900 text-white font-bold py-3 px-6 rounded-xl shadow-md transition">
+                    <span>🔐</span>
+                    Hacer corte de caja
+                </button>
+            </div>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
             {{-- SECCIÓN: GASTOS DEL TURNO --}}
             <div class="bg-white rounded-2xl shadow-sm border border-stone-200 overflow-hidden">
-                <div class="bg-stone-50 px-6 py-4 border-b border-stone-200">
-                    <h3 class="font-bold text-stone-800">Gastos Registrados</h3>
+                <div class="bg-red-50 px-6 py-4 border-b border-red-100 flex items-center justify-between gap-3">
+                    <div>
+                        <h3 class="font-bold text-red-900 flex items-center gap-2">
+                            💸 Gastos registrados
+                        </h3>
+                        <p class="text-xs text-red-700 mt-1">
+                            Salidas de dinero durante el turno actual.
+                        </p>
+                    </div>
+
+                    <div class="flex flex-wrap gap-2">
+                        <span class="px-3 py-1 rounded-full bg-white border border-red-100 text-red-700 text-xs font-bold">
+                            {{ $stats['expenses_count'] }} activo(s)
+                        </span>
+
+                        <span class="px-3 py-1 rounded-full bg-white border border-stone-200 text-stone-600 text-xs font-bold">
+                            {{ $stats['cancelled_expenses_count'] }} anulado(s)
+                        </span>
+                    </div>
                 </div>
-                <div class="overflow-y-auto max-h-96">
-                   <table class="w-full text-left border-collapse">
+                <div class="overflow-x-auto max-h-[420px] overflow-y-auto">
+                    <table class="w-full text-left text-sm">
                         <thead class="bg-stone-50 border-b border-stone-200">
                             <tr class="text-xs text-stone-500 uppercase tracking-wider">
                                 <th class="px-4 py-3 font-bold">Hora</th>
@@ -166,12 +317,29 @@
 
             {{-- SECCION: VENTAS DEL TURNO --}}
             <div class="bg-white rounded-2xl shadow-sm border border-stone-200 overflow-hidden">
-                <div class="bg-stone-50 px-6 py-4 border-b border-stone-200">
-                    <h3 class="font-bold text-stone-800">Ventas Registradas (Auditoría)</h3>
+                <div class="bg-green-50 px-6 py-4 border-b border-green-100 flex items-center justify-between gap-3">
+                    <div>
+                        <h3 class="font-bold text-green-900 flex items-center gap-2">
+                            🧾 Ventas registradas
+                        </h3>
+                        <p class="text-xs text-green-700 mt-1">
+                            Tickets cobrados, cancelados y auditados durante el turno.
+                        </p>
+                    </div>
+
+                    <div class="flex flex-wrap gap-2">
+                        <span class="px-3 py-1 rounded-full bg-white border border-green-100 text-green-700 text-xs font-bold">
+                            {{ $stats['orders_count'] }} activa(s)
+                        </span>
+
+                        <span class="px-3 py-1 rounded-full bg-white border border-red-100 text-red-700 text-xs font-bold">
+                            {{ $stats['cancelled_orders_count'] }} cancelada(s)
+                        </span>
+                    </div>
                 </div>
-                <div class="overflow-y-auto max-h-96">
-                    <table class="w-full text-left text-sm text-stone-600">
-                        <thead class="bg-stone-50 text-stone-500 uppercase text-xs sticky top-0">
+                <div class="overflow-x-auto max-h-[520px] overflow-y-auto">
+                    <table class="w-full text-left text-sm">
+                        <thead class="bg-white text-stone-500 uppercase text-xs sticky top-0 z-10 shadow-sm">
                             <tr>
                                 <th class="px-4 py-3">Hora/Cajero</th>
                                 <th class="px-4 py-3">Productos Vendidos</th>

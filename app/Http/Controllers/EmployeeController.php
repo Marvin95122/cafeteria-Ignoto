@@ -13,6 +13,13 @@ class EmployeeController extends Controller
     {
         $query = User::latest();
 
+        if ($request->filled('search')) {
+            $query->where(function ($q) use ($request) {
+                $q->where('name', 'like', '%' . $request->search . '%')
+                ->orWhere('email', 'like', '%' . $request->search . '%');
+            });
+        }
+
         if ($request->filled('status')) {
             if ($request->status === 'active') {
                 $query->where('active', true);
@@ -27,9 +34,30 @@ class EmployeeController extends Controller
             $query->where('role', $request->role);
         }
 
-        $employees = $query->get();
+        $perPage = $request->integer('per_page', 12);
 
-        return view('employees.index', compact('employees'));
+        if (! in_array($perPage, [6, 12, 24, 48])) {
+            $perPage = 12;
+        }
+
+        $employees = $query->paginate($perPage)->withQueryString();
+
+        $totalUsers = User::count();
+        $activeUsers = User::where('active', true)->count();
+        $inactiveUsers = User::where('active', false)->count();
+        $adminUsers = User::where('role', 'admin')->count();
+        $managerUsers = User::where('role', 'gerente')->count();
+        $employeeUsers = User::where('role', 'empleado')->count();
+
+        return view('employees.index', compact(
+            'employees',
+            'totalUsers',
+            'activeUsers',
+            'inactiveUsers',
+            'adminUsers',
+            'managerUsers',
+            'employeeUsers'
+        ));
     }
 
     public function create()
@@ -43,14 +71,15 @@ class EmployeeController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
             'password' => 'required|min:6|confirmed',
+            'role' => 'required|in:admin,gerente,empleado',
         ]);
 
         User::create([
             'name' => $request->name,
             'email' => $request->email,
-            'password' => bcrypt($request->password),
-            'role' => 'empleado',
-            'active' => true,
+            'password' => Hash::make($request->password),
+            'role' => $request->role,
+            'active' => $request->has('active'),
         ]);
 
         return redirect()

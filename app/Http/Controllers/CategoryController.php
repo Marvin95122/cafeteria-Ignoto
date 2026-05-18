@@ -9,7 +9,12 @@ class CategoryController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Category::withCount('products')->orderBy('name');
+        $query = Category::withCount('products')
+            ->orderBy('name');
+
+        if ($request->filled('search')) {
+            $query->where('name', 'like', '%' . $request->search . '%');
+        }
 
         if ($request->filled('status')) {
             if ($request->status === 'active') {
@@ -21,9 +26,26 @@ class CategoryController extends Controller
             }
         }
 
-        $categories = $query->get();
+        $perPage = $request->integer('per_page', 12);
 
-        return view('categories.index', compact('categories'));
+        if (! in_array($perPage, [8, 12, 24, 48])) {
+            $perPage = 12;
+        }
+
+        $categories = $query->paginate($perPage)->withQueryString();
+
+        $totalCategories = Category::count();
+        $activeCategories = Category::where('active', true)->count();
+        $inactiveCategories = Category::where('active', false)->count();
+        $categoriesWithProducts = Category::has('products')->count();
+
+        return view('categories.index', compact(
+            'categories',
+            'totalCategories',
+            'activeCategories',
+            'inactiveCategories',
+            'categoriesWithProducts'
+        ));
     }
 
     public function create()
@@ -34,16 +56,17 @@ class CategoryController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name' => 'required|unique:categories,name',
+            'name' => 'required|string|max:255|unique:categories,name',
         ]);
 
         Category::create([
             'name' => $request->name,
-            'active' => true,
+            'active' => $request->has('active'),
         ]);
 
-        return redirect()->route('categories.index')
-            ->with('success', 'Categoría creada correctamente');
+        return redirect()
+            ->route('categories.index')
+            ->with('success', 'Categoría creada correctamente.');
     }
 
     public function edit(Category $category)
@@ -54,7 +77,7 @@ class CategoryController extends Controller
     public function update(Request $request, Category $category)
     {
         $request->validate([
-            'name' => 'required|unique:categories,name,' . $category->id,
+            'name' => 'required|string|max:255|unique:categories,name,' . $category->id,
         ]);
 
         $category->update([
@@ -62,8 +85,9 @@ class CategoryController extends Controller
             'active' => $request->has('active'),
         ]);
 
-        return redirect()->route('categories.index')
-            ->with('success', 'Categoría actualizada');
+        return redirect()
+            ->route('categories.index')
+            ->with('success', 'Categoría actualizada correctamente.');
     }
 
     public function destroy(Category $category)

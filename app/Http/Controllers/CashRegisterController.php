@@ -17,49 +17,71 @@ class CashRegisterController extends Controller
 {
     public function index()
     {
-        $activeRegister = CashRegister::where('status', 'abierta')->latest()->first();
+        $activeRegister = CashRegister::with('user')
+            ->where('status', 'abierta')
+            ->latest()
+            ->first();
 
         $stats = [];
         $expenses = collect();
-        $orders = collect(); 
-        $salesPoints = 0; // <-- AÑADIDO: Variable para Puntos VIP
+        $orders = collect();
+        $salesPoints = 0;
 
         if ($activeRegister) {
-            $expenses = Expense::with(['user', 'canceller'])->where('cash_register_id', $activeRegister->id)->latest()->get();
-            // Solo sumamos los gastos que siguen activos
-            $totalExpenses = $expenses->where('status', 'activo')->sum('amount');
+            $expenses = Expense::with(['user', 'canceller'])
+                ->where('cash_register_id', $activeRegister->id)
+                ->latest()
+                ->get();
 
-            // Cargamos ventas y a quién las canceló (si están canceladas)
+            $activeExpenses = $expenses->where('status', 'activo');
+            $cancelledExpenses = $expenses->where('status', 'cancelado');
+
+            $totalExpenses = $activeExpenses->sum('amount');
+
             $orders = Order::with(['user', 'canceller', 'items.product'])
-                           ->where('created_at', '>=', $activeRegister->opened_at)
-                           ->latest()
-                           ->get();
+                ->where('created_at', '>=', $activeRegister->opened_at)
+                ->latest()
+                ->get();
 
-            // Desglose de ventas por método de pago
-            $salesCash = $orders->where('status', 'completado')->where('payment_method', 'efectivo')->sum('total');
-            $salesCard = $orders->where('status', 'completado')->where('payment_method', 'tarjeta')->sum('total');
-            
-            // <-- AÑADIDO: Sumamos lo pagado con Puntos VIP en este turno -->
-            $salesPoints = $orders->where('status', 'completado')->where('payment_method', 'puntos')->sum('total');
-            
-            $totalSales = $salesCash + $salesCard; // El total monetario real
+            $completedOrders = $orders->where('status', 'completado');
+            $cancelledOrders = $orders->where('status', 'cancelado');
 
+            $salesCash = $completedOrders->where('payment_method', 'efectivo')->sum('total');
+            $salesCard = $completedOrders->where('payment_method', 'tarjeta')->sum('total');
+            $salesPoints = $completedOrders->where('payment_method', 'puntos')->sum('total');
+
+            $totalSales = $salesCash + $salesCard;
             $expectedCash = $activeRegister->opening_amount + $salesCash - $totalExpenses;
 
             $stats = [
                 'total_sales' => $totalSales,
                 'sales_cash' => $salesCash,
                 'sales_card' => $salesCard,
-                'sales_points' => $salesPoints, // <-- AÑADIDO al arreglo de estadísticas
+                'sales_points' => $salesPoints,
                 'total_expenses' => $totalExpenses,
                 'expected_cash' => $expectedCash,
-                'orders_count' => $orders->where('status', 'completado')->count(),
+                'orders_count' => $completedOrders->count(),
+                'cancelled_orders_count' => $cancelledOrders->count(),
+                'expenses_count' => $activeExpenses->count(),
+                'cancelled_expenses_count' => $cancelledExpenses->count(),
+                'cash_flow' => $salesCash - $totalExpenses,
             ];
         }
 
-        $history = CashRegister::with(['user', 'closedBy'])->where('status', 'cerrada')->latest()->take(10)->get();
+        $history = CashRegister::with(['user', 'closedBy'])
+            ->where('status', 'cerrada')
+            ->latest()
+            ->take(10)
+            ->get();
 
-        return view('cash_registers.index', compact('activeRegister', 'stats', 'expenses', 'history', 'orders', 'salesPoints'));
+        return view('cash_registers.index', compact(
+            'activeRegister',
+            'stats',
+            'expenses',
+            'history',
+            'orders',
+            'salesPoints'
+        ));
     }
 
     public function open(Request $request)
