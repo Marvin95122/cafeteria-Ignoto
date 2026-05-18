@@ -33,57 +33,113 @@
 
 <meta name="csrf-token" content="{{ csrf_token() }}">
 
-<div class="h-[calc(100vh-8rem)] flex flex-col md:flex-row gap-6 -mt-4 relative">
+<div class="flex gap-6 h-[calc(100vh-140px)] pt-4">
     
     {{-- SECCIÓN IZQUIERDA: CATÁLOGO DE PRODUCTOS --}}
     <div class="w-full md:w-2/3 flex flex-col h-full">
         
-        <div class="flex items-center justify-between mb-4 bg-white p-4 rounded-xl shadow-sm border border-stone-100">
+        <div class="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-5 mb-5 bg-white p-5 rounded-2xl shadow-sm border border-stone-100">
             <div>
-                <h1 class="font-serif text-2xl font-bold text-amber-900">Selecciona los productos para cobrar</h1>
-                {{-- <p class="text-stone-500 mt-1">Selecciona los productos para cobrar.</p> --}}
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-100 text-amber-800 text-[11px] font-bold mb-2">
+                    🧾 Punto de venta activo
+                </div>
+
+                <h1 class="font-serif text-2xl md:text-3xl font-bold text-amber-900">
+                    Selecciona productos para cobrar
+                </h1>
+
+                <p class="text-sm text-stone-500 mt-1">
+                    Busca por nombre o filtra por categoría para armar el ticket de venta.
+                </p>
             </div>
-            <div class="relative w-64">
-                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-stone-400">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                </span>
-                <input type="text" id="posSearch" placeholder="Buscar producto..." onkeyup="filterProducts()"
-                       class="w-full pl-10 border-stone-200 rounded-lg text-sm focus:border-amber-500 focus:ring-amber-200 py-2">
+
+            <div class="flex flex-col sm:flex-row gap-3 xl:items-center">
+                <div class="bg-stone-50 border border-stone-200 rounded-xl px-4 py-2 text-sm text-stone-600">
+                    <span class="font-bold text-amber-800">{{ $products->count() }}</span>
+                    producto(s) disponible(s)
+                </div>
+
+                <div class="relative w-full sm:w-80">
+                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-stone-400">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z">
+                            </path>
+                        </svg>
+                    </span>
+
+                    <input type="text"
+                        id="posSearch"
+                        placeholder="Buscar producto..."
+                        onkeyup="filterProducts()"
+                        class="w-full pl-10 pr-10 border-stone-200 rounded-xl text-sm focus:border-amber-500 focus:ring-amber-200 py-3 bg-stone-50">
+
+                    <button type="button"
+                            onclick="clearProductSearch()"
+                            class="absolute inset-y-0 right-0 pr-3 flex items-center text-stone-400 hover:text-red-500 transition"
+                            title="Limpiar búsqueda">
+                        ✕
+                    </button>
+                </div>
             </div>
         </div>
 
-        <div class="flex gap-2 mb-4 overflow-x-auto pb-2 scrollbar-hide" id="category-filters">
-            <button onclick="filterByCategory('all')" class="cat-btn active-cat px-4 py-2 bg-amber-800 text-white text-sm font-bold rounded-full shadow-sm whitespace-nowrap transition">
-                Todos
-            </button>
-            @foreach($categories as $category)
-                <button onclick="filterByCategory({{ $category->id }})" class="cat-btn px-4 py-2 bg-white text-stone-600 hover:bg-amber-50 text-sm font-medium rounded-full border border-stone-200 shadow-sm whitespace-nowrap transition">
-                    {{ $category->name }}
+        <div class="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-5 mb-5 bg-white p-5 rounded-2xl shadow-sm border border-stone-100">
+            <div class="flex gap-2 overflow-x-auto pb-1 scrollbar-hide" id="category-filters">
+                <button onclick="filterByCategory('all', event)"
+                        class="cat-btn active-cat px-4 py-2 bg-amber-800 text-white text-sm font-bold rounded-full shadow-sm whitespace-nowrap transition">
+                    Todos
                 </button>
-            @endforeach
+
+                @foreach($categories as $category)
+                    <button onclick="filterByCategory({{ $category->id }}, event)"
+                            class="cat-btn px-4 py-2 bg-white text-stone-600 hover:bg-amber-50 text-sm font-bold rounded-full border border-stone-200 shadow-sm whitespace-nowrap transition">
+                        {{ $category->name }}
+                    </button>
+                @endforeach
+            </div>
         </div>
 
         <div class="flex-1 overflow-y-auto pr-2 custom-scrollbar">
             <div class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4" id="products-grid">
                 @foreach($products as $product)
-                    <button onclick="openProductModal({{ $product->id }})" 
+                    <button onclick="openProductModal({{ $product->id }})"
                             data-id="{{ $product->id }}"
                             data-category="{{ $product->category_id }}"
-                            class="product-card bg-white p-3 rounded-xl shadow-sm border border-stone-100 hover:border-amber-300 hover:shadow-md transition text-left flex flex-col h-full relative group">
+                            class="product-card bg-white p-3 rounded-2xl shadow-sm border border-stone-100 hover:border-amber-300 hover:shadow-md transition text-left flex flex-col h-full relative group overflow-hidden">
                         
-                        <div class="w-full h-24 bg-stone-100 rounded-lg mb-3 overflow-hidden flex items-center justify-center">
+                        <div class="relative w-full h-28 bg-stone-100 rounded-xl mb-3 overflow-hidden flex items-center justify-center">
                             @if($product->image)
-                                <img src="{{ asset('storage/' . $product->image) }}" class="w-full h-full object-cover">
+                                <img src="{{ asset('storage/' . $product->image) }}"
+                                    class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
                             @else
                                 <span class="text-5xl drop-shadow-sm">☕</span>
+                            @endif
+
+                            @if($product->extras->count() > 0)
+                                <span class="absolute top-2 right-2 bg-white/90 text-amber-800 text-[10px] font-black px-2 py-1 rounded-full shadow-sm">
+                                    + Extras
+                                </span>
                             @endif
                         </div>
                         
                         <div class="flex-1 flex flex-col justify-between w-full">
-                            <h3 class="product-name font-bold text-stone-800 text-sm leading-tight mb-1">{{ $product->name }}</h3>
-                            <div class="flex justify-between items-end mt-2">
-                                <span class="text-amber-700 font-bold">${{ number_format($product->price, 2) }}</span>
-                                <span class="stock-badge text-xs font-bold {{ $product->calculated_stock > 0 ? 'text-stone-500 bg-stone-100' : 'text-red-500 bg-red-50' }} px-1.5 py-0.5 rounded">
+                            <div>
+                                <p class="text-[10px] uppercase tracking-wide text-stone-400 font-bold mb-1">
+                                    {{ $product->category->name ?? 'Sin categoría' }}
+                                </p>
+
+                                <h3 class="product-name font-bold text-stone-800 text-sm leading-tight mb-2 group-hover:text-amber-800 transition">
+                                    {{ $product->name }}
+                                </h3>
+                            </div>
+
+                            <div class="flex justify-between items-end gap-2 mt-2">
+                                <span class="text-amber-700 font-black text-lg">
+                                    ${{ number_format($product->price, 2) }}
+                                </span>
+
+                                <span class="stock-badge text-xs font-bold {{ $product->calculated_stock > 0 ? 'text-stone-500 bg-stone-100' : 'text-red-500 bg-red-50' }} px-2 py-1 rounded-full whitespace-nowrap">
                                     {{ $product->calculated_stock }} disp.
                                 </span>
                             </div>
@@ -97,20 +153,38 @@
     {{-- SECCIÓN DERECHA: EL TICKET / CARRITO --}}
     <div class="w-full md:w-1/3 bg-white rounded-2xl shadow-lg border border-stone-200 flex flex-col h-full overflow-hidden">
         
-        <div class="bg-stone-50 p-4 border-b border-stone-200 flex justify-between items-center">
-            <h2 class="font-bold text-stone-800 flex items-center gap-2">
-                <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
-                Ticket de Venta
-            </h2>
-            <button onclick="clearCart()" class="text-xs text-red-500 hover:text-red-700 font-bold transition flex items-center gap-1">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+       <div class="bg-stone-50 p-5 border-b border-stone-200 flex justify-between items-center"> 
+            <div>
+                <h2 class="font-bold text-stone-800 flex items-center gap-2">
+                    <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01">
+                        </path>
+                    </svg>
+                    Ticket de venta
+                </h2>
+
+                <p class="text-xs text-stone-400 mt-1">
+                    <span id="cart-count">0</span> producto(s) en carrito
+                </p>
+            </div>
+
+            <button onclick="clearCart()"
+                    class="text-xs text-red-500 hover:text-red-700 font-bold transition flex items-center gap-1 bg-red-50 hover:bg-red-100 px-3 py-2 rounded-lg">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 011 1v3M4 7h16">
+                    </path>
+                </svg>
                 Vaciar
             </button>
         </div>
 
         <div class="flex-1 relative bg-stone-50/30 overflow-hidden flex flex-col">
-            <div id="empty-cart-msg" class="absolute inset-0 flex flex-col items-center justify-center text-stone-400 text-sm italic">
-                El carrito está vacío.<br>Selecciona productos a la izquierda.
+            <div id="empty-cart-msg" class="absolute inset-0 flex flex-col items-center justify-center text-stone-400 text-sm italic text-center px-6">
+                <span class="text-5xl mb-3">🛒</span>
+                <span class="font-bold text-stone-500 not-italic">El ticket está vacío</span>
+                <span class="mt-1">Selecciona productos del catálogo para comenzar la venta.</span>
             </div>
             <div id="cart-items-container" class="flex-1 overflow-y-auto p-4 custom-scrollbar space-y-3 relative z-10"></div>
         </div>
@@ -243,6 +317,7 @@
     let editingCartItemId = null; 
     let currentPaymentMethod = 'efectivo'; 
     let globalCartTotal = 0;
+    let currentCategoryFilter = 'all';
 
     // --- Calculadora de Stock Compartido ---
     function getAvailableStock(product, ignoreCartItemId = null) {
@@ -307,24 +382,39 @@
     }
 
     // --- LÓGICA DEL CARRITO Y MODALES ---
-    function filterProducts() {
-        const search = document.getElementById('posSearch').value.toLowerCase();
+    function applyProductFilters() {
+        const search = document.getElementById('posSearch').value.toLowerCase().trim();
+
         document.querySelectorAll('.product-card').forEach(card => {
             const name = card.querySelector('.product-name').innerText.toLowerCase();
-            card.style.display = name.includes(search) ? 'flex' : 'none';
+            const matchesSearch = name.includes(search);
+            const matchesCategory = currentCategoryFilter === 'all' || card.dataset.category == currentCategoryFilter;
+
+            card.style.display = (matchesSearch && matchesCategory) ? 'flex' : 'none';
         });
     }
 
-    function filterByCategory(categoryId) {
+    function filterProducts() {
+        applyProductFilters();
+    }
+
+    function filterByCategory(categoryId, event) {
+        currentCategoryFilter = categoryId;
+
         document.querySelectorAll('.cat-btn').forEach(btn => {
             btn.classList.remove('bg-amber-800', 'text-white', 'active-cat');
             btn.classList.add('bg-white', 'text-stone-600');
         });
+
         event.currentTarget.classList.remove('bg-white', 'text-stone-600');
         event.currentTarget.classList.add('bg-amber-800', 'text-white', 'active-cat');
-        document.querySelectorAll('.product-card').forEach(card => {
-            card.style.display = (categoryId === 'all' || card.dataset.category == categoryId) ? 'flex' : 'none';
-        });
+
+        applyProductFilters();
+    }
+
+    function clearProductSearch() {
+        document.getElementById('posSearch').value = '';
+        applyProductFilters();
     }
 
     function openProductModal(productId, editItemId = null) {
@@ -431,7 +521,13 @@
     function renderCart() {
         const container = document.getElementById('cart-items-container');
         const emptyMsg = document.getElementById('empty-cart-msg');
-        globalCartTotal = 0; container.innerHTML = '';
+        globalCartTotal = 0; 
+        container.innerHTML = '';
+
+        const cartCount = document.getElementById('cart-count');
+        if (cartCount) {
+            cartCount.innerText = cart.reduce((sum, item) => sum + item.quantity, 0);
+        }
 
         if (cart.length === 0) {
             emptyMsg.style.display = 'flex';

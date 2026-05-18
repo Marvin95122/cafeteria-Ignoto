@@ -29,8 +29,8 @@ class PosController extends Controller
             ]);
         }
 
-        $categories = Category::where('active', true)->get();
-        $products = Product::with(['extras.ingredients', 'ingredients'])->where('active', true)->get();
+        $categories = Category::where('active', true)->orderBy('name')->get();
+        $products = Product::with(['category', 'extras.ingredients', 'ingredients'])->where('active', true)->orderBy('name')->get();
         $ingredients = \App\Models\Ingredient::where('active', true)->get();
         
         // Cargamos todos los clientes VIP para el buscador instantáneo
