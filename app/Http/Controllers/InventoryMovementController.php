@@ -18,6 +18,8 @@ class InventoryMovementController extends Controller
             ->orderBy('name')
             ->get();
 
+        $activeRegister = CashRegister::where('status', 'abierta')->first();
+
         $query = InventoryMovement::with(['ingredient', 'user'])
             ->latest();
 
@@ -70,6 +72,7 @@ class InventoryMovementController extends Controller
 
         return view('inventory_movements.index', compact(
             'ingredients',
+            'activeRegister',
             'movements',
             'totalMovements',
             'entryMovements',
@@ -80,48 +83,83 @@ class InventoryMovementController extends Controller
 
     public function store(Request $request)
     {
-        // 1. Validamos los datos
         $request->validate([
             'ingredient_id' => 'required|exists:ingredients,id',
             'type' => 'required|in:entrada,merma',
             'quantity' => 'required|numeric|min:0.01',
             'reason' => 'required|string|max:255',
+
+            'register_expense' => 'nullable|boolean',
+            'expense_amount' => 'required_if:register_expense,1|nullable|numeric|min:0.01',
+            'expense_description' => 'nullable|string|max:255',
         ]);
+
+        if ($request->boolean('register_expense') && $request->type !== 'entrada') {
+            return back()->with('error', 'Solo puedes registrar gasto en caja cuando el ajuste sea una entrada de inventario.');
+        }
+
+        $activeRegister = null;
+
+        if ($request->boolean('register_expense')) {
+            $activeRegister = CashRegister::where('status', 'abierta')->first();
+
+            if (!$activeRegister) {
+                return back()->with('error', 'No hay caja abierta. No se puede registrar el gasto en caja.');
+            }
+        }
 
         try {
             DB::beginTransaction();
 
-            // 2. Guardamos el movimiento en la bitacora
+            $ingredient = Ingredient::findOrFail($request->ingredient_id);
+
             InventoryMovement::create([
-                'ingredient_id' => $request->ingredient_id,
+                'ingredient_id' => $ingredient->id,
                 'user_id' => Auth::id(),
                 'type' => $request->type,
                 'quantity' => $request->quantity,
                 'reason' => $request->reason,
             ]);
 
-            // 3. Actualizamos la cantidad fisica del ingrediente
-            $ingredient = Ingredient::findOrFail($request->ingredient_id);
-            
             if ($request->type === 'entrada') {
                 $ingredient->current_quantity += $request->quantity;
             } else {
                 $ingredient->current_quantity -= $request->quantity;
+
                 if ($ingredient->current_quantity < 0) {
                     $ingredient->current_quantity = 0;
                 }
             }
-            
+
             $ingredient->save();
+
+            if ($request->boolean('register_expense') && $activeRegister) {
+                Expense::create([
+                    'user_id' => Auth::id(),
+                    'cash_register_id' => $activeRegister->id,
+                    'description' => $request->expense_description ?: 'Gasto por ajuste rápido de inventario: ' . $ingredient->name,
+                    'category' => 'Insumos',
+                    'amount' => $request->expense_amount,
+                    'status' => 'activo',
+                ]);
+            }
 
             DB::commit();
 
-            $mensaje = $request->type === 'entrada' ? 'Entrada registrada y stock sumado.' : 'Merma registrada y stock descontado.';
+            $mensaje = $request->type === 'entrada'
+                ? 'Entrada registrada y stock sumado correctamente.'
+                : 'Merma registrada y stock descontado correctamente.';
+
+            if ($request->boolean('register_expense')) {
+                $mensaje .= ' También se registró el gasto en caja.';
+            }
+
             return back()->with('success', $mensaje);
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->with('error', 'Hubo un error al registrar el movimiento.');
+
+            return back()->with('error', 'Hubo un error al registrar el movimiento: ' . $e->getMessage());
         }
     }
 

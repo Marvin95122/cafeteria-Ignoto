@@ -343,34 +343,130 @@
             <div>
                 <label class="block text-sm font-bold text-stone-700 mb-2">Materia Prima</label>
                 <input type="hidden" name="ingredient_id" id="quick-ingredient-id">
-                <button type="button" onclick="openIngredientModal()" id="quick-ingredient-btn" class="w-full text-left bg-white border border-stone-300 rounded-xl px-4 py-3 text-sm text-stone-500 hover:bg-amber-50 hover:border-amber-400 transition flex justify-between items-center group">
+
+                <button type="button"
+                        onclick="openIngredientModal()"
+                        id="quick-ingredient-btn"
+                        class="w-full text-left bg-white border border-stone-300 rounded-xl px-4 py-3 text-sm text-stone-500 hover:bg-amber-50 hover:border-amber-400 transition flex justify-between items-center group">
                     <span class="flex items-center gap-2">🔍 Buscar insumo...</span>
-                    <svg class="w-4 h-4 text-stone-400 group-hover:text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    <svg class="w-4 h-4 text-stone-400 group-hover:text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M19 9l-7 7-7-7">
+                        </path>
+                    </svg>
                 </button>
             </div>
 
             <div class="grid grid-cols-2 gap-4">
                 <div>
                     <label class="block text-sm font-bold text-stone-700 mb-2">Tipo de Ajuste</label>
-                    <select name="type" id="adjust-type" required onchange="updateReasonPlaceholder()" class="w-full rounded-xl border-stone-300 focus:border-amber-500 font-bold">
+
+                    <select name="type"
+                            id="adjust-type"
+                            required
+                            onchange="updateReasonPlaceholder()"
+                            class="w-full rounded-xl border-stone-300 focus:border-amber-500 font-bold">
                         <option value="entrada" class="text-green-600">➕ Entrada (+)</option>
                         <option value="merma" class="text-red-600">➖ Merma (-)</option>
                     </select>
                 </div>
+
                 <div>
                     <label class="block text-sm font-bold text-stone-700 mb-2">Cantidad</label>
-                    <input type="number" name="quantity" required step="0.01" min="0.01" placeholder="0.00" class="w-full rounded-xl border-stone-300 focus:border-amber-500 font-bold text-lg">
+
+                    <input type="number"
+                        name="quantity"
+                        required
+                        step="0.01"
+                        min="0.01"
+                        placeholder="0.00"
+                        class="w-full rounded-xl border-stone-300 focus:border-amber-500 font-bold text-lg">
                 </div>
             </div>
 
             <div>
                 <label class="block text-sm font-bold text-stone-700 mb-2">Motivo / Justificación</label>
-                <input type="text" name="reason" id="adjust-reason" required placeholder="Ej: Ajuste por conteo físico" class="w-full rounded-xl border-stone-300 focus:border-amber-500 text-sm">
+
+                <input type="text"
+                    name="reason"
+                    id="adjust-reason"
+                    required
+                    placeholder="Ej: Ajuste por conteo físico"
+                    class="w-full rounded-xl border-stone-300 focus:border-amber-500 text-sm">
+            </div>
+
+            {{-- GASTO EN CAJA --}}
+            <div id="expense-option-section" class="bg-amber-50 border border-amber-100 rounded-2xl p-4">
+                @if($activeRegister)
+                    <label class="flex items-start gap-3 cursor-pointer">
+                        <input type="checkbox"
+                            name="register_expense"
+                            value="1"
+                            id="register-expense-checkbox"
+                            onchange="toggleExpenseInputs()"
+                            class="mt-1 rounded border-stone-300 text-amber-700 focus:ring-amber-600">
+
+                        <div>
+                            <span class="block text-sm font-bold text-amber-900">
+                                Registrar también como gasto en caja
+                            </span>
+
+                            <span class="block text-xs text-amber-700 mt-1">
+                                Úsalo cuando esta entrada corresponde a una compra pagada desde la caja abierta.
+                            </span>
+                        </div>
+                    </label>
+
+                    <div id="expense-details" class="hidden mt-4 space-y-3">
+                        <div>
+                            <label class="block text-xs font-bold text-stone-700 mb-1">
+                                Monto del gasto ($)
+                            </label>
+
+                            <input type="number"
+                                name="expense_amount"
+                                id="expense-amount"
+                                step="0.01"
+                                min="0.01"
+                                disabled
+                                class="expense-input w-full rounded-xl border-stone-300 focus:border-amber-500 text-sm"
+                                placeholder="Ej. 150.00">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-stone-700 mb-1">
+                                Descripción del gasto
+                            </label>
+
+                            <input type="text"
+                                name="expense_description"
+                                id="expense-description"
+                                disabled
+                                class="expense-input w-full rounded-xl border-stone-300 focus:border-amber-500 text-sm"
+                                placeholder="Ej. Compra rápida de leche o café">
+                        </div>
+                    </div>
+                @else
+                    <div class="text-sm text-amber-800">
+                        <p class="font-bold">No hay caja abierta.</p>
+                        <p class="text-xs mt-1">
+                            Puedes registrar el movimiento de inventario, pero no se podrá cargar como gasto hasta abrir caja.
+                        </p>
+                    </div>
+                @endif
             </div>
 
             <div class="pt-4 border-t border-stone-100 flex gap-3">
-                <button type="button" onclick="closeAdjustmentModal()" class="flex-1 py-3 text-stone-600 font-bold rounded-xl hover:bg-stone-200 transition">Cancelar</button>
-                <button type="submit" class="flex-1 py-3 bg-stone-800 text-white font-bold rounded-xl hover:bg-black transition shadow-md">Guardar Ajuste</button>
+                <button type="button"
+                        onclick="closeAdjustmentModal()"
+                        class="flex-1 py-3 text-stone-600 font-bold rounded-xl hover:bg-stone-200 transition">
+                    Cancelar
+                </button>
+
+                <button type="submit"
+                        class="flex-1 py-3 bg-stone-800 text-white font-bold rounded-xl hover:bg-black transition shadow-md">
+                    Guardar Ajuste
+                </button>
             </div>
         </form>
     </div>
@@ -418,19 +514,118 @@
     function updateReasonPlaceholder() {
         const type = document.getElementById('adjust-type').value;
         const reasonInput = document.getElementById('adjust-reason');
-        reasonInput.placeholder = type === 'merma' ? 'Ej: Caducidad, Producto derramado, etc.' : 'Ej: Ingreso individual, Devolución, etc.';
+
+        reasonInput.placeholder = type === 'merma'
+            ? 'Ej: Caducidad, producto derramado, error de preparación, etc.'
+            : 'Ej: Ingreso individual, devolución, compra rápida, ajuste por conteo físico, etc.';
+
+        toggleExpenseSection();
+    }
+
+    function toggleExpenseSection() {
+        const type = document.getElementById('adjust-type').value;
+        const section = document.getElementById('expense-option-section');
+        const checkbox = document.getElementById('register-expense-checkbox');
+
+        if (!section) {
+            return;
+        }
+
+        if (type === 'entrada') {
+            section.classList.remove('hidden');
+        } else {
+            section.classList.add('hidden');
+
+            if (checkbox) {
+                checkbox.checked = false;
+            }
+
+            toggleExpenseInputs();
+        }
+    }
+
+    function toggleExpenseInputs() {
+        const checkbox = document.getElementById('register-expense-checkbox');
+        const details = document.getElementById('expense-details');
+        const inputs = document.querySelectorAll('.expense-input');
+
+        if (!checkbox || !details) {
+            return;
+        }
+
+        if (checkbox.checked) {
+            details.classList.remove('hidden');
+
+            inputs.forEach(input => {
+                input.disabled = false;
+            });
+        } else {
+            details.classList.add('hidden');
+
+            inputs.forEach(input => {
+                input.disabled = true;
+                input.value = '';
+            });
+        }
     }
 
     document.getElementById('quick-adjust-form').addEventListener('submit', function(e) {
         e.preventDefault();
+
         const id = document.getElementById('quick-ingredient-id').value;
-        if(!id) {
-            Swal.fire('Falta Insumo', 'Por favor usa el buscador para seleccionar la materia prima.', 'error');
+
+        if (!id) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Falta insumo',
+                text: 'Por favor usa el buscador para seleccionar la materia prima.',
+                confirmButtonColor: '#b45309'
+            });
             return;
         }
+
         const tipo = document.getElementById('adjust-type').value;
-        let mensaje = tipo === 'merma' ? 'Se descontará este producto de tu stock (Merma).' : 'Se sumará este producto a tu stock.';
-        confirmarAccion(e, 'quick-adjust-form', mensaje);
+        const registerExpense = document.getElementById('register-expense-checkbox');
+        const expenseAmount = document.getElementById('expense-amount');
+
+        if (registerExpense && registerExpense.checked) {
+            if (!expenseAmount || !expenseAmount.value || parseFloat(expenseAmount.value) <= 0) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Monto requerido',
+                    text: 'Ingresa el monto del gasto para registrarlo en caja.',
+                    confirmButtonColor: '#b45309'
+                });
+                return;
+            }
+        }
+
+        let mensaje = tipo === 'merma'
+            ? 'Se descontará esta cantidad del stock como merma.'
+            : 'Se sumará esta cantidad al stock del insumo.';
+
+        if (registerExpense && registerExpense.checked) {
+            mensaje += ' Además, se registrará un gasto en caja.';
+        }
+
+        Swal.fire({
+            title: 'Confirmar ajuste',
+            text: mensaje,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#92400e',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: 'Sí, guardar ajuste',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                this.submit();
+            }
+        });
+    });
+
+    document.addEventListener('DOMContentLoaded', function () {
+        toggleExpenseSection();
     });
 
     //BUSCADOR DE INSUMOS

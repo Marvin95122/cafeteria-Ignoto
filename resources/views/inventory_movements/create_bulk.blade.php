@@ -1,17 +1,39 @@
 @extends('layouts.admin')
 
 @section('content')
-<div class="max-w-4xl mx-auto">
+<div class="max-w-6xl mx-auto space-y-6">
     
-    <div class="flex justify-between items-center mb-6">
-        <div>
-            <h1 class="font-serif text-3xl font-bold text-amber-900">Ingresar Compra</h1>
-            <p class="text-stone-500 text-sm">Agrega varios insumos al mismo tiempo.</p>
+    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        <div class="flex items-center gap-4">
+            <a href="{{ route('inventory_movements.index') }}"
+            class="p-2 rounded-full hover:bg-stone-200 text-stone-500 transition"
+            title="Volver a bitácora">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M10 19l-7-7m0 0l7-7m-7 7h18">
+                    </path>
+                </svg>
+            </a>
+
+            <div>
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-100 text-amber-800 text-xs font-bold mb-2">
+                    🛒 Registro de compra
+                </div>
+
+                <h1 class="font-serif text-3xl md:text-4xl font-bold text-amber-900">
+                    Ingresar Compra
+                </h1>
+
+                <p class="text-stone-500 mt-1">
+                    Registra varios insumos en una sola operación y actualiza el inventario automáticamente.
+                </p>
+            </div>
         </div>
-        <a href="{{ route('inventory_movements.index') }}" class="text-stone-500 hover:text-stone-700 transition font-bold text-sm flex items-center gap-1">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
-            Volver
-        </a>
+
+        <div class="bg-white border border-stone-200 rounded-2xl px-4 py-3 shadow-sm text-sm text-stone-600 max-w-md">
+            <span class="font-bold text-amber-800">Importante:</span>
+            si marcas gasto en caja, el total de la compra quedará registrado en el corte actual.
+        </div>
     </div>
 
     <form action="{{ route('inventory_movements.store_bulk') }}" method="POST" id="bulk-form" class="space-y-6">
@@ -19,18 +41,29 @@
 
         {{-- TARJETA DE PRODUCTOS --}}
         <div class="bg-white rounded-2xl shadow-sm border border-stone-200 overflow-hidden">
-            <div class="bg-amber-50/50 p-4 border-b border-stone-100 flex justify-between items-center">
-                <h2 class="font-bold text-stone-800 flex items-center gap-2">
-                    <span class="text-xl">🛒</span> Lista de Insumos Comprados
-                </h2>
-                <button type="button" onclick="addRow()" class="bg-amber-800 hover:bg-amber-900 text-white px-4 py-2 rounded-lg text-sm font-bold transition shadow-sm">
-                    + Agregar Fila
+            <div class="bg-amber-50 p-5 border-b border-stone-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div>
+                    <h2 class="font-bold text-amber-900 flex items-center gap-2 text-lg">
+                        <span class="text-xl">🛒</span>
+                        Lista de insumos comprados
+                    </h2>
+
+                    <p class="text-sm text-amber-700 mt-1">
+                        Selecciona cada materia prima, captura cantidad, unidad de compra y costo total.
+                    </p>
+                </div>
+
+                <button type="button"
+                        onclick="addRow()"
+                        class="inline-flex items-center justify-center gap-2 bg-amber-800 hover:bg-amber-900 text-white px-5 py-3 rounded-xl text-sm font-bold transition shadow-sm">
+                    <span>+</span>
+                    Agregar fila
                 </button>
             </div>
             
             <div class="p-4">
                 <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse" id="items-table">
+                    <table class="w-full text-left border-collapse min-w-[900px]" id="items-table">
                         <thead>
                             <tr class="text-xs text-stone-500 uppercase tracking-wider border-b border-stone-200">
                                 <th class="pb-3 font-bold w-4/12">Materia Prima</th>
@@ -74,6 +107,14 @@
 
         {{-- TARJETA DE GASTO DE CAJA --}}
         <div class="bg-white rounded-2xl shadow-sm border border-stone-200 p-6">
+            <div class="mb-5">
+                <h2 class="font-bold text-stone-800 text-lg flex items-center gap-2">
+                    💰 Registro financiero
+                </h2>
+                <p class="text-sm text-stone-500 mt-1">
+                    Decide si esta compra también debe registrarse como gasto dentro de la caja abierta.
+                </p>
+            </div>
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div class="flex-1">
                     @if($activeRegister)
@@ -107,9 +148,16 @@
             </div>
         </div>
 
-        <div class="text-right">
-            <button type="submit" class="bg-amber-800 hover:bg-amber-900 text-white font-bold text-lg py-3 px-8 rounded-xl shadow-lg transition">
-                Guardar Compra
+        <div class="flex flex-col sm:flex-row justify-end gap-3">
+            <a href="{{ route('inventory_movements.index') }}"
+            class="inline-flex justify-center items-center px-6 py-3 rounded-xl border border-stone-200 text-stone-600 font-bold hover:bg-stone-50 transition">
+                Cancelar
+            </a>
+
+            <button type="submit"
+                    class="inline-flex justify-center items-center gap-2 bg-amber-800 hover:bg-amber-900 text-white font-bold text-lg py-3 px-8 rounded-xl shadow-lg transition">
+                <span>💾</span>
+                Guardar compra
             </button>
         </div>
     </form>
