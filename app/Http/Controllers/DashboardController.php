@@ -6,7 +6,8 @@ use App\Models\Order;
 use App\Models\Expense;
 use App\Models\Product;
 use App\Models\Ingredient;
-use Illuminate\Http\Request;
+use App\Models\CashRegister;
+use App\Models\Customer;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -18,46 +19,128 @@ class DashboardController extends Controller
         $startOfWeek = Carbon::now()->startOfWeek();
         $startOfMonth = Carbon::now()->startOfMonth();
 
-        // 1. TARJETAS DE RESUMEN (Ingresos y Gastos)
-        $salesToday = Order::where('status', 'completado')->whereDate('created_at', $today)->sum('total');
-        $salesWeek = Order::where('status', 'completado')->where('created_at', '>=', $startOfWeek)->sum('total');
-        $salesMonth = Order::where('status', 'completado')->where('created_at', '>=', $startOfMonth)->sum('total');
+        /*
+        |--------------------------------------------------------------------------
+        | Métricas financieras
+        |--------------------------------------------------------------------------
+        */
+        $salesToday = Order::where('status', 'completado')
+            ->whereDate('created_at', $today)
+            ->sum('total');
 
-        $expensesToday = Expense::whereDate('created_at', today())->where('status', 'activo')->sum('amount');
-        $expensesMonth = Expense::whereMonth('created_at', now()->month)->where('status', 'activo')->sum('amount');
+        $salesWeek = Order::where('status', 'completado')
+            ->where('created_at', '>=', $startOfWeek)
+            ->sum('total');
+
+        $salesMonth = Order::where('status', 'completado')
+            ->where('created_at', '>=', $startOfMonth)
+            ->sum('total');
+
+        $expensesToday = Expense::where('status', 'activo')
+            ->whereDate('created_at', $today)
+            ->sum('amount');
+
+        $expensesMonth = Expense::where('status', 'activo')
+            ->whereYear('created_at', now()->year)
+            ->whereMonth('created_at', now()->month)
+            ->sum('amount');
 
         $netProfitMonth = $salesMonth - $expensesMonth;
 
-        // 2. ALERTAS DE INVENTARIO BAJO
-        // Productos directos
-        $lowStockProducts = Product::where('use_dynamic_stock', false)
-                                   ->where('stock', '<=', 10)
-                                   ->get();
+        $ordersToday = Order::where('status', 'completado')
+            ->whereDate('created_at', $today)
+            ->count();
 
-        // Filtro Inteligente para Materia Prima Crítica (Conservamos la versión flexible)
-        $lowStockIngredients = Ingredient::where('active', true)->get()->filter(function ($ingredient) {
-            $unit = strtolower(trim($ingredient->unit));
-            $qty = $ingredient->current_quantity;
-            
-            // Si la unidad es gramos o mililitros, avisar si hay 1000 o menos (1 Kilo/Litro)
-            if (in_array($unit, ['g', 'gr', 'ml', 'gramos', 'mililitros'])) {
-                return $qty <= 1000;
-            }
-            // Si la unidad es Kilos o Litros, avisar si hay 1.5 o menos
-            elseif (in_array($unit, ['kg', 'kilo', 'kilos', 'l', 'litro', 'litros'])) {
-                return $qty <= 1.5;
-            }
-            // Para piezas, rebanadas u otras medidas, avisar si hay 15 o menos
-            else {
+        $cancelledOrdersToday = Order::where('status', 'cancelado')
+            ->whereDate('created_at', $today)
+            ->count();
+
+        $averageTicketToday = $ordersToday > 0
+            ? $salesToday / $ordersToday
+            : 0;
+
+        /*
+        |--------------------------------------------------------------------------
+        | Caja activa
+        |--------------------------------------------------------------------------
+        */
+        $activeRegister = CashRegister::with('user')
+            ->where('status', 'abierta')
+            ->latest()
+            ->first();
+
+        $expectedCash = 0;
+
+        if ($activeRegister) {
+            $cashSales = Order::where('status', 'completado')
+                ->where('payment_method', 'efectivo')
+                ->where('created_at', '>=', $activeRegister->opened_at)
+                ->sum('total');
+
+            $activeExpenses = Expense::where('status', 'activo')
+                ->where('cash_register_id', $activeRegister->id)
+                ->sum('amount');
+
+            $expectedCash = $activeRegister->opening_amount + $cashSales - $activeExpenses;
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Inventario bajo
+        |--------------------------------------------------------------------------
+        */
+        $manualLowStockProducts = Product::with('category')
+            ->where('active', true)
+            ->where('use_dynamic_stock', false)
+            ->where('stock', '<=', 10)
+            ->get();
+
+        $dynamicLowStockProducts = Product::with(['category', 'ingredients'])
+            ->where('active', true)
+            ->where('use_dynamic_stock', true)
+            ->get()
+            ->filter(function ($product) {
+                return $product->calculated_stock <= 10;
+            });
+
+        $lowStockProducts = $manualLowStockProducts
+            ->merge($dynamicLowStockProducts)
+            ->sortBy('calculated_stock')
+            ->take(8);
+
+        $lowStockIngredients = Ingredient::where('active', true)
+            ->get()
+            ->filter(function ($ingredient) {
+                $unit = strtolower(trim($ingredient->unit));
+                $qty = (float) $ingredient->current_quantity;
+
+                if (in_array($unit, ['g', 'gr', 'gramos', 'ml', 'mililitros'])) {
+                    return $qty <= 1000;
+                }
+
+                if (in_array($unit, ['kg', 'kilo', 'kilos', 'l', 'litro', 'litros'])) {
+                    return $qty <= 1.5;
+                }
+
                 return $qty <= 15;
-            }
-        });
+            })
+            ->take(8);
 
-        // 3. PRODUCTOS MÁS VENDIDOS DEL MES
+        $totalInventoryAlerts = $lowStockProducts->count() + $lowStockIngredients->count();
+
+        /*
+        |--------------------------------------------------------------------------
+        | Productos más vendidos
+        |--------------------------------------------------------------------------
+        */
         $topProducts = DB::table('order_items')
             ->join('orders', 'order_items.order_id', '=', 'orders.id')
             ->join('products', 'order_items.product_id', '=', 'products.id')
-            ->select('products.name', DB::raw('SUM(order_items.quantity) as total_sold'))
+            ->select(
+                'products.name',
+                DB::raw('SUM(order_items.quantity) as total_sold'),
+                DB::raw('SUM(order_items.subtotal) as total_revenue')
+            )
             ->where('orders.status', 'completado')
             ->where('orders.created_at', '>=', $startOfMonth)
             ->groupBy('products.name')
@@ -65,24 +148,69 @@ class DashboardController extends Controller
             ->limit(5)
             ->get();
 
-        // 4. DATOS PARA LA GRÁFICA (Últimos 7 días blindados)
+        /*
+        |--------------------------------------------------------------------------
+        | Ventas recientes
+        |--------------------------------------------------------------------------
+        */
+        $recentOrders = Order::with(['user', 'customer'])
+            ->latest()
+            ->take(6)
+            ->get();
+
+        /*
+        |--------------------------------------------------------------------------
+        | Clientes VIP
+        |--------------------------------------------------------------------------
+        */
+        $totalCustomers = Customer::count();
+        $totalVipPoints = Customer::sum('points');
+
+        /*
+        |--------------------------------------------------------------------------
+        | Gráfica últimos 7 días
+        |--------------------------------------------------------------------------
+        */
         $chartDates = [];
         $chartSales = [];
         $chartExpenses = [];
 
         for ($i = 6; $i >= 0; $i--) {
             $date = Carbon::today()->subDays($i);
-            $chartDates[] = $date->format('d M'); 
-            
-            $chartSales[] = Order::where('status', 'completado')->whereDate('created_at', $date)->sum('total');
-            // Corregido: Excluimos de la gráfica los gastos cancelados
-            $chartExpenses[] = Expense::whereDate('created_at', $date)->where('status', 'activo')->sum('amount');
+
+            $chartDates[] = $date->format('d M');
+
+            $chartSales[] = Order::where('status', 'completado')
+                ->whereDate('created_at', $date)
+                ->sum('total');
+
+            $chartExpenses[] = Expense::where('status', 'activo')
+                ->whereDate('created_at', $date)
+                ->sum('amount');
         }
 
         return view('dashboard', compact(
-            'salesToday', 'salesWeek', 'salesMonth', 'expensesToday', 'expensesMonth', 'netProfitMonth',
-            'lowStockProducts', 'lowStockIngredients', 'topProducts',
-            'chartDates', 'chartSales', 'chartExpenses'
+            'salesToday',
+            'salesWeek',
+            'salesMonth',
+            'expensesToday',
+            'expensesMonth',
+            'netProfitMonth',
+            'ordersToday',
+            'cancelledOrdersToday',
+            'averageTicketToday',
+            'activeRegister',
+            'expectedCash',
+            'lowStockProducts',
+            'lowStockIngredients',
+            'totalInventoryAlerts',
+            'topProducts',
+            'recentOrders',
+            'totalCustomers',
+            'totalVipPoints',
+            'chartDates',
+            'chartSales',
+            'chartExpenses'
         ));
     }
 }

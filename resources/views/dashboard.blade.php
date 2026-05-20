@@ -1,16 +1,16 @@
 @extends('layouts.admin')
 
 @section('content')
-{{-- Chart.js para las gráficas --}}
+
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <div class="max-w-7xl mx-auto space-y-6">
 
-    {{-- ENCABEZADO DEL MÓDULO --}}
+    {{-- ENCABEZADO --}}
     <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
             <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-100 text-amber-800 text-xs font-bold mb-3">
-                📊 Panel administrativo
+                📊 Panel general
             </div>
 
             <h1 class="font-serif text-3xl md:text-4xl font-bold text-amber-900">
@@ -18,316 +18,405 @@
             </h1>
 
             <p class="text-stone-500 mt-1">
-                Consulta ventas, gastos, ganancia neta, productos destacados y alertas de inventario.
+                Consulta ventas, caja, inventario, clientes VIP y actividad reciente del sistema.
             </p>
         </div>
 
-        <div class="flex flex-col sm:flex-row gap-3">
-            <a href="{{ route('pos.index') }}"
-               class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-amber-800 text-white font-bold shadow-sm hover:bg-amber-900 hover:shadow-md transition">
-                🧾 Ir al POS
-            </a>
-
-            <a href="{{ route('cash_registers.index') }}"
-               class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-white border border-stone-200 text-stone-700 font-bold shadow-sm hover:bg-stone-50 hover:border-amber-300 transition">
-                💰 Corte de caja
-            </a>
+        <div class="bg-white border border-stone-200 rounded-2xl px-4 py-3 shadow-sm text-sm text-stone-600">
+            <span class="font-bold text-amber-800">Hoy:</span>
+            {{ now()->format('d/m/Y h:i A') }}
         </div>
     </div>
 
-    {{-- RESUMEN PRINCIPAL --}}
-    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
-        
-        {{-- Ventas hoy --}}
-        <div class="bg-white p-6 rounded-2xl shadow-sm border border-stone-200 relative overflow-hidden hover:shadow-md transition">
-            <div class="absolute right-4 top-4 text-4xl opacity-10">💵</div>
-
-            <div class="flex items-center gap-3 mb-4">
-                <div class="w-11 h-11 rounded-xl bg-green-100 text-green-700 flex items-center justify-center text-xl">
-                    $
+    {{-- ESTADO DE CAJA --}}
+    <div class="bg-white rounded-2xl shadow-sm border border-stone-200 overflow-hidden">
+        <div class="p-5 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            <div class="flex items-center gap-4">
+                <div class="w-14 h-14 rounded-2xl {{ $activeRegister ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' }} flex items-center justify-center text-2xl">
+                    {{ $activeRegister ? '💰' : '🔒' }}
                 </div>
+
+                <div>
+                    <h2 class="font-black text-stone-800 text-lg">
+                        {{ $activeRegister ? 'Caja abierta' : 'Caja cerrada' }}
+                    </h2>
+
+                    @if($activeRegister)
+                        <p class="text-sm text-stone-500">
+                            Apertura por {{ $activeRegister->user->name ?? 'Usuario' }}
+                            · {{ $activeRegister->opened_at->format('d/m/Y h:i A') }}
+                        </p>
+                    @else
+                        <p class="text-sm text-stone-500">
+                            No hay turno de caja activo. Abre caja para registrar ventas.
+                        </p>
+                    @endif
+                </div>
+            </div>
+
+            <div class="flex flex-col sm:flex-row gap-3">
+                @if($activeRegister)
+                    <div class="bg-green-50 border border-green-100 rounded-2xl px-4 py-3">
+                        <p class="text-xs font-bold text-green-700 uppercase">
+                            Efectivo esperado
+                        </p>
+                        <p class="text-xl font-black text-green-800">
+                            ${{ number_format($expectedCash, 2) }}
+                        </p>
+                    </div>
+                @endif
+
+                <a href="{{ route('cash_registers.index') }}"
+                   class="inline-flex justify-center items-center px-5 py-3 rounded-xl bg-amber-800 text-white font-bold hover:bg-amber-900 transition">
+                    Ir a Corte de Caja
+                </a>
+            </div>
+        </div>
+    </div>
+
+    {{-- TARJETAS PRINCIPALES --}}
+    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
+
+        <div class="bg-white p-5 rounded-2xl shadow-sm border border-stone-200 hover:shadow-md transition">
+            <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm font-bold text-stone-500">Ventas de hoy</p>
-                    <p class="text-xs text-stone-400">{{ now()->format('d/m/Y') }}</p>
+                    <h3 class="text-3xl font-black text-green-600 mt-1">
+                        ${{ number_format($salesToday, 2) }}
+                    </h3>
+                    <p class="text-xs text-stone-400 mt-1">
+                        {{ $ordersToday }} ticket(s) · Promedio ${{ number_format($averageTicketToday, 2) }}
+                    </p>
                 </div>
-            </div>
 
-            <h3 class="text-3xl font-black text-green-600">
-                ${{ number_format($salesToday, 2) }}
-            </h3>
-
-            <div class="mt-4 bg-stone-50 rounded-xl px-3 py-2 text-xs text-stone-500">
-                Gastos del día:
-                <span class="font-bold text-red-600">
-                    ${{ number_format($expensesToday, 2) }}
-                </span>
+                <div class="w-12 h-12 rounded-xl bg-green-100 flex items-center justify-center text-2xl">
+                    💵
+                </div>
             </div>
         </div>
 
-        {{-- Ventas semana --}}
-        <div class="bg-white p-6 rounded-2xl shadow-sm border border-stone-200 relative overflow-hidden hover:shadow-md transition">
-            <div class="absolute right-4 top-4 text-4xl opacity-10">📅</div>
+        <div class="bg-white p-5 rounded-2xl shadow-sm border border-stone-200 hover:shadow-md transition">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-bold text-stone-500">Ventas semana</p>
+                    <h3 class="text-3xl font-black text-blue-600 mt-1">
+                        ${{ number_format($salesWeek, 2) }}
+                    </h3>
+                    <p class="text-xs text-stone-400 mt-1">
+                        Ingresos acumulados de la semana.
+                    </p>
+                </div>
 
-            <div class="flex items-center gap-3 mb-4">
-                <div class="w-11 h-11 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center text-xl">
+                <div class="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center text-2xl">
                     📈
                 </div>
+            </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl shadow-sm border border-stone-200 hover:shadow-md transition">
+            <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-sm font-bold text-stone-500">Ventas de la semana</p>
-                    <p class="text-xs text-stone-400">Desde inicio de semana</p>
+                    <p class="text-sm font-bold text-stone-500">Gastos del mes</p>
+                    <h3 class="text-3xl font-black text-red-600 mt-1">
+                        ${{ number_format($expensesMonth, 2) }}
+                    </h3>
+                    <p class="text-xs text-stone-400 mt-1">
+                        Hoy: ${{ number_format($expensesToday, 2) }}
+                    </p>
+                </div>
+
+                <div class="w-12 h-12 rounded-xl bg-red-100 flex items-center justify-center text-2xl">
+                    💸
                 </div>
             </div>
+        </div>
 
-            <h3 class="text-3xl font-black text-blue-600">
-                ${{ number_format($salesWeek, 2) }}
-            </h3>
+        <div class="bg-gradient-to-br from-amber-900 to-stone-900 p-5 rounded-2xl shadow-md border border-amber-800 relative overflow-hidden text-white">
+            <div class="absolute right-[-6px] top-[-8px] text-6xl opacity-20">
+                📊
+            </div>
 
-            <p class="mt-4 text-xs text-stone-400">
-                Acumulado semanal de ventas completadas.
+            <p class="text-sm font-bold text-amber-200">
+                Ganancia neta del mes
             </p>
-        </div>
 
-        {{-- Ventas mes --}}
-        <div class="bg-white p-6 rounded-2xl shadow-sm border border-stone-200 relative overflow-hidden hover:shadow-md transition">
-            <div class="absolute right-4 top-4 text-4xl opacity-10">🗓️</div>
-
-            <div class="flex items-center gap-3 mb-4">
-                <div class="w-11 h-11 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center text-xl">
-                    ☕
-                </div>
-                <div>
-                    <p class="text-sm font-bold text-stone-500">Ventas del mes</p>
-                    <p class="text-xs text-stone-400">{{ now()->translatedFormat('F Y') }}</p>
-                </div>
-            </div>
-
-            <h3 class="text-3xl font-black text-amber-700">
-                ${{ number_format($salesMonth, 2) }}
-            </h3>
-
-            <div class="mt-4 bg-stone-50 rounded-xl px-3 py-2 text-xs text-stone-500">
-                Gastos del mes:
-                <span class="font-bold text-red-600">
-                    ${{ number_format($expensesMonth, 2) }}
-                </span>
-            </div>
-        </div>
-
-        {{-- Ganancia neta --}}
-        <div class="bg-gradient-to-br from-amber-900 to-stone-900 p-6 rounded-2xl shadow-md border border-amber-800 relative overflow-hidden text-white hover:shadow-lg transition">
-            <div class="absolute right-[-8px] top-[-8px] opacity-20 text-7xl">📊</div>
-
-            <div class="flex items-center gap-3 mb-4">
-                <div class="w-11 h-11 rounded-xl bg-white/10 text-amber-200 flex items-center justify-center text-xl">
-                    ★
-                </div>
-                <div>
-                    <p class="text-sm font-bold text-amber-200">Ganancia neta mensual</p>
-                    <p class="text-xs text-amber-300">Ventas - gastos</p>
-                </div>
-            </div>
-
-            <h3 class="text-3xl font-black">
+            <h3 class="text-3xl font-black mt-1">
                 ${{ number_format($netProfitMonth, 2) }}
             </h3>
 
-            <p class="mt-4 text-xs text-amber-200">
-                Estimación basada en ventas completadas y gastos activos.
+            <p class="text-xs text-amber-200 mt-1">
+                Ventas del mes - gastos activos.
             </p>
         </div>
     </div>
 
-    {{-- GRÁFICA + TOP PRODUCTOS --}}
+    {{-- TARJETAS SECUNDARIAS --}}
+    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
+        <div class="bg-white p-5 rounded-2xl shadow-sm border border-stone-200">
+            <p class="text-sm font-bold text-stone-500">Ventas canceladas hoy</p>
+            <h3 class="text-2xl font-black text-orange-600 mt-1">
+                {{ $cancelledOrdersToday }}
+            </h3>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl shadow-sm border border-stone-200">
+            <p class="text-sm font-bold text-stone-500">Alertas de inventario</p>
+            <h3 class="text-2xl font-black {{ $totalInventoryAlerts > 0 ? 'text-red-600' : 'text-green-600' }} mt-1">
+                {{ $totalInventoryAlerts }}
+            </h3>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl shadow-sm border border-stone-200">
+            <p class="text-sm font-bold text-stone-500">Clientes VIP</p>
+            <h3 class="text-2xl font-black text-amber-700 mt-1">
+                {{ $totalCustomers }}
+            </h3>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl shadow-sm border border-stone-200">
+            <p class="text-sm font-bold text-stone-500">Puntos VIP acumulados</p>
+            <h3 class="text-2xl font-black text-purple-600 mt-1">
+                {{ number_format($totalVipPoints) }}
+            </h3>
+        </div>
+    </div>
+
+    {{-- ACCESOS RÁPIDOS --}}
+    <div class="bg-white rounded-2xl shadow-sm border border-stone-200 p-5">
+        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-4">
+            <div>
+                <h2 class="font-bold text-stone-800 text-lg">
+                    Accesos rápidos
+                </h2>
+                <p class="text-sm text-stone-500">
+                    Atajos a los módulos más usados durante la operación.
+                </p>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
+            <a href="{{ route('pos.index') }}"
+               class="p-4 rounded-2xl bg-amber-50 text-amber-800 font-bold hover:bg-amber-100 transition text-center">
+                🧾<br>
+                <span class="text-sm">POS</span>
+            </a>
+
+            <a href="{{ route('cash_registers.index') }}"
+               class="p-4 rounded-2xl bg-green-50 text-green-700 font-bold hover:bg-green-100 transition text-center">
+                💰<br>
+                <span class="text-sm">Caja</span>
+            </a>
+
+            <a href="{{ route('inventory_movements.index') }}"
+               class="p-4 rounded-2xl bg-blue-50 text-blue-700 font-bold hover:bg-blue-100 transition text-center">
+                📋<br>
+                <span class="text-sm">Inventario</span>
+            </a>
+
+            <a href="{{ route('products.index') }}"
+               class="p-4 rounded-2xl bg-stone-50 text-stone-700 font-bold hover:bg-stone-100 transition text-center">
+                ☕<br>
+                <span class="text-sm">Productos</span>
+            </a>
+
+            <a href="{{ route('ingredients.index') }}"
+               class="p-4 rounded-2xl bg-orange-50 text-orange-700 font-bold hover:bg-orange-100 transition text-center">
+                📦<br>
+                <span class="text-sm">Materia Prima</span>
+            </a>
+
+            <a href="{{ route('vip.index') }}"
+               class="p-4 rounded-2xl bg-purple-50 text-purple-700 font-bold hover:bg-purple-100 transition text-center">
+                👑<br>
+                <span class="text-sm">VIP</span>
+            </a>
+        </div>
+    </div>
+
+    {{-- GRÁFICA Y TOP PRODUCTOS --}}
     <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
-        
-        {{-- Gráfica --}}
+
         <div class="xl:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-stone-200">
-            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
+            <div class="flex items-center justify-between gap-3 mb-4">
                 <div>
                     <h3 class="font-bold text-stone-800 text-lg">
                         Flujo de dinero
                     </h3>
                     <p class="text-sm text-stone-500">
-                        Comparación de ingresos y egresos de los últimos 7 días.
+                        Ingresos y egresos de los últimos 7 días.
                     </p>
                 </div>
-
-                <span class="inline-flex items-center px-3 py-1 rounded-full bg-stone-100 text-stone-500 text-xs font-bold">
-                    Últimos 7 días
-                </span>
             </div>
 
-            <div class="relative h-80 w-full">
+            <div class="relative h-72 w-full">
                 <canvas id="salesChart"></canvas>
             </div>
         </div>
 
-        {{-- Top ventas --}}
-        <div class="bg-white rounded-2xl shadow-sm border border-stone-200 overflow-hidden">
-            <div class="px-6 py-5 border-b border-stone-100 bg-amber-50">
-                <h3 class="font-bold text-amber-900 text-lg flex items-center gap-2">
-                    🏆 Productos más vendidos
-                </h3>
-                <p class="text-sm text-amber-700 mt-1">
-                    Ranking del mes actual.
-                </p>
-            </div>
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-stone-200">
+            <h3 class="font-bold text-stone-800 mb-4 flex items-center gap-2">
+                🏆 Top 5 productos del mes
+            </h3>
 
-            <div class="p-6">
-                <ul class="space-y-3">
-                    @forelse($topProducts as $index => $top)
-                        <li class="flex items-center justify-between gap-3 p-3 rounded-xl border border-stone-100 hover:bg-stone-50 transition">
-                            <div class="flex items-center gap-3">
-                                <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-black
-                                    {{ $index == 0 ? 'bg-amber-200 text-amber-900' : 'bg-stone-100 text-stone-600' }}">
-                                    {{ $index + 1 }}
-                                </div>
-
-                                <div>
-                                    <p class="font-bold text-stone-800 leading-tight">
-                                        {{ $top->name }}
-                                    </p>
-                                    <p class="text-xs text-stone-400">
-                                        Producto vendido este mes
-                                    </p>
-                                </div>
-                            </div>
+            <ul class="divide-y divide-stone-100">
+                @forelse($topProducts as $top)
+                    <li class="py-3">
+                        <div class="flex justify-between items-center gap-3">
+                            <span class="font-bold text-stone-700">
+                                {{ $top->name }}
+                            </span>
 
                             <span class="bg-amber-100 text-amber-800 px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap">
                                 {{ $top->total_sold }} vendidos
                             </span>
-                        </li>
-                    @empty
-                        <li class="py-8 text-center text-stone-400 italic text-sm">
-                            Aún no hay ventas registradas este mes.
-                        </li>
-                    @endforelse
-                </ul>
-            </div>
+                        </div>
+
+                        <p class="text-xs text-stone-400 mt-1">
+                            Ingreso generado: ${{ number_format($top->total_revenue, 2) }}
+                        </p>
+                    </li>
+                @empty
+                    <li class="py-8 text-center text-stone-400 italic text-sm">
+                        Aún no hay ventas este mes.
+                    </li>
+                @endforelse
+            </ul>
         </div>
     </div>
 
-    {{-- ALERTAS DE INVENTARIO --}}
-    <div class="bg-white rounded-2xl shadow-sm border border-stone-200 overflow-hidden">
-        <div class="px-6 py-5 border-b border-stone-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3
-            {{ $lowStockProducts->isEmpty() && $lowStockIngredients->isEmpty() ? 'bg-green-50' : 'bg-red-50' }}">
-            
-            <div>
-                <h3 class="font-bold text-lg flex items-center gap-2
-                    {{ $lowStockProducts->isEmpty() && $lowStockIngredients->isEmpty() ? 'text-green-800' : 'text-red-800' }}">
-                    @if($lowStockProducts->isEmpty() && $lowStockIngredients->isEmpty())
-                        ✅ Inventario saludable
-                    @else
-                        ⚠️ Alertas de inventario bajo
-                    @endif
-                </h3>
+    {{-- ALERTAS Y VENTAS RECIENTES --}}
+    <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
 
-                <p class="text-sm mt-1
-                    {{ $lowStockProducts->isEmpty() && $lowStockIngredients->isEmpty() ? 'text-green-700' : 'text-red-700' }}">
-                    @if($lowStockProducts->isEmpty() && $lowStockIngredients->isEmpty())
-                        No hay productos ni materia prima en nivel crítico.
-                    @else
-                        Revisa los productos o insumos que necesitan atención.
-                    @endif
+        {{-- ALERTAS DE INVENTARIO --}}
+        <div class="bg-white rounded-2xl shadow-sm border border-stone-200 overflow-hidden">
+            <div class="bg-red-50 px-6 py-4 border-b border-red-100 flex items-center justify-between gap-3">
+                <div>
+                    <h3 class="font-bold text-red-900 flex items-center gap-2">
+                        ⚠️ Alertas de inventario
+                    </h3>
+                    <p class="text-xs text-red-700 mt-1">
+                        Productos o insumos que requieren atención.
+                    </p>
+                </div>
+
+                <span class="px-3 py-1 rounded-full bg-white border border-red-100 text-red-700 text-xs font-bold">
+                    {{ $totalInventoryAlerts }} alerta(s)
+                </span>
+            </div>
+
+            <div class="p-5">
+                @if($lowStockProducts->isEmpty() && $lowStockIngredients->isEmpty())
+                    <div class="text-center text-green-600 font-bold py-8 flex flex-col items-center">
+                        <span class="text-5xl mb-3">✅</span>
+                        Todo tu inventario está en niveles saludables.
+                    </div>
+                @else
+                    <div class="space-y-5">
+                        @if($lowStockIngredients->count() > 0)
+                            <div>
+                                <h4 class="font-bold text-stone-700 mb-3">
+                                    Materia prima crítica
+                                </h4>
+
+                                <ul class="space-y-2">
+                                    @foreach($lowStockIngredients as $ingredient)
+                                        <li class="flex justify-between items-center bg-red-50 p-3 rounded-xl border border-red-100">
+                                            <span class="font-bold text-stone-800">
+                                                {{ $ingredient->name }}
+                                            </span>
+
+                                            <span class="text-red-600 font-bold text-sm">
+                                                {{ $ingredient->full_quantity }}
+                                            </span>
+                                        </li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        @endif
+
+                        @if($lowStockProducts->count() > 0)
+                            <div>
+                                <h4 class="font-bold text-stone-700 mb-3">
+                                    Productos críticos
+                                </h4>
+
+                                <ul class="space-y-2">
+                                    @foreach($lowStockProducts as $product)
+                                        <li class="flex justify-between items-center bg-red-50 p-3 rounded-xl border border-red-100">
+                                            <div>
+                                                <span class="font-bold text-stone-800 block">
+                                                    {{ $product->name }}
+                                                </span>
+                                                <span class="text-xs text-stone-400">
+                                                    {{ $product->category->name ?? 'Sin categoría' }}
+                                                </span>
+                                            </div>
+
+                                            <span class="text-red-600 font-bold text-sm">
+                                                {{ $product->calculated_stock }} disp.
+                                            </span>
+                                        </li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        @endif
+                    </div>
+                @endif
+            </div>
+        </div>
+
+        {{-- VENTAS RECIENTES --}}
+        <div class="bg-white rounded-2xl shadow-sm border border-stone-200 overflow-hidden">
+            <div class="bg-stone-50 px-6 py-4 border-b border-stone-100">
+                <h3 class="font-bold text-stone-800 flex items-center gap-2">
+                    🧾 Ventas recientes
+                </h3>
+                <p class="text-xs text-stone-500 mt-1">
+                    Últimos tickets registrados en el sistema.
                 </p>
             </div>
 
-            <a href="{{ route('ingredients.index') }}"
-               class="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-white border border-stone-200 text-stone-700 text-sm font-bold hover:bg-stone-50 transition">
-                📦 Ver materia prima
-            </a>
-        </div>
-        
-        <div class="p-6">
-            @if($lowStockProducts->isEmpty() && $lowStockIngredients->isEmpty())
-                <div class="text-center text-green-700 font-bold py-10 flex flex-col items-center">
-                    <span class="text-5xl mb-3">✅</span>
-                    Todo tu inventario está en niveles saludables.
-                    <span class="text-sm font-normal text-green-600 mt-1">
-                        No hay alertas críticas por el momento.
-                    </span>
-                </div>
-            @else
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    {{-- Materia Prima --}}
-                    <div class="rounded-2xl border border-stone-100 overflow-hidden">
-                        <div class="bg-stone-50 px-5 py-4 border-b border-stone-100">
-                            <h4 class="font-bold text-stone-800">
-                                Materia prima crítica
-                            </h4>
-                        </div>
+            <div class="divide-y divide-stone-100">
+                @forelse($recentOrders as $order)
+                    <div class="p-4 flex items-center justify-between gap-4 hover:bg-stone-50 transition">
+                        <div>
+                            <p class="font-bold text-stone-800">
+                                Ticket #{{ str_pad($order->id, 5, '0', STR_PAD_LEFT) }}
+                            </p>
 
-                        <div class="p-5">
-                            @if($lowStockIngredients->count() > 0)
-                                <ul class="space-y-3">
-                                    @foreach($lowStockIngredients as $ing)
-                                        <li class="flex justify-between items-center bg-red-50 p-3 rounded-xl border border-red-100">
-                                            <div>
-                                                <p class="font-bold text-stone-800">
-                                                    {{ $ing->name }}
-                                                </p>
-                                                <p class="text-xs text-stone-400">
-                                                    Insumo en nivel bajo
-                                                </p>
-                                            </div>
+                            <p class="text-xs text-stone-400">
+                                {{ $order->created_at->format('d/m/Y h:i A') }}
+                                · {{ $order->user->name ?? 'Caja' }}
+                            </p>
 
-                                            <span class="text-red-600 font-bold text-sm">
-                                                {{ floatval($ing->current_quantity) }} {{ $ing->unit }}
-                                            </span>
-                                        </li>
-                                    @endforeach
-                                </ul>
-                            @else
-                                <div class="text-center py-8 text-stone-400 text-sm">
-                                    No hay materia prima crítica.
-                                </div>
+                            @if($order->customer)
+                                <p class="text-xs text-amber-700 mt-1">
+                                    👑 {{ $order->customer->name }}
+                                </p>
                             @endif
                         </div>
-                    </div>
 
-                    {{-- Productos Directos --}}
-                    <div class="rounded-2xl border border-stone-100 overflow-hidden">
-                        <div class="bg-stone-50 px-5 py-4 border-b border-stone-100">
-                            <h4 class="font-bold text-stone-800">
-                                Productos críticos
-                            </h4>
-                        </div>
+                        <div class="text-right">
+                            <p class="font-black {{ $order->status === 'completado' ? 'text-green-600' : 'text-red-600' }}">
+                                ${{ number_format($order->total, 2) }}
+                            </p>
 
-                        <div class="p-5">
-                            @if($lowStockProducts->count() > 0)
-                                <ul class="space-y-3">
-                                    @foreach($lowStockProducts as $prod)
-                                        <li class="flex justify-between items-center bg-red-50 p-3 rounded-xl border border-red-100">
-                                            <div>
-                                                <p class="font-bold text-stone-800">
-                                                    {{ $prod->name }}
-                                                </p>
-                                                <p class="text-xs text-stone-400">
-                                                    Producto con stock bajo
-                                                </p>
-                                            </div>
-
-                                            <span class="text-red-600 font-bold text-sm">
-                                                {{ $prod->stock }} pz
-                                            </span>
-                                        </li>
-                                    @endforeach
-                                </ul>
-                            @else
-                                <div class="text-center py-8 text-stone-400 text-sm">
-                                    No hay productos críticos.
-                                </div>
-                            @endif
+                            <span class="text-[10px] px-2 py-1 rounded-full font-bold
+                                {{ $order->status === 'completado' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' }}">
+                                {{ ucfirst($order->status) }}
+                            </span>
                         </div>
                     </div>
-                </div>
-            @endif
+                @empty
+                    <div class="p-8 text-center text-stone-400">
+                        No hay ventas recientes.
+                    </div>
+                @endforelse
+            </div>
         </div>
     </div>
-
 </div>
 
-{{-- SCRIPT PARA LA GRÁFICA --}}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const chartCanvas = document.getElementById('salesChart');
@@ -337,23 +426,23 @@
         }
 
         const ctx = chartCanvas.getContext('2d');
-        
+
         new Chart(ctx, {
             type: 'bar',
             data: {
                 labels: {!! json_encode($chartDates) !!},
                 datasets: [
                     {
-                        label: 'Ingresos (Ventas)',
+                        label: 'Ingresos',
                         data: {!! json_encode($chartSales) !!},
                         backgroundColor: '#16a34a',
-                        borderRadius: 8,
+                        borderRadius: 6,
                     },
                     {
-                        label: 'Egresos (Gastos)',
+                        label: 'Gastos',
                         data: {!! json_encode($chartExpenses) !!},
                         backgroundColor: '#dc2626',
-                        borderRadius: 8,
+                        borderRadius: 6,
                     }
                 ]
             },
@@ -362,14 +451,7 @@
                 maintainAspectRatio: false,
                 plugins: {
                     legend: {
-                        position: 'top',
-                        labels: {
-                            usePointStyle: true,
-                            boxWidth: 8,
-                            font: {
-                                family: 'Inter'
-                            }
-                        }
+                        position: 'top'
                     },
                     tooltip: {
                         callbacks: {
@@ -393,11 +475,6 @@
                     }
                 },
                 scales: {
-                    x: {
-                        grid: {
-                            display: false
-                        }
-                    },
                     y: {
                         beginAtZero: true,
                         ticks: {
@@ -411,4 +488,5 @@
         });
     });
 </script>
+
 @endsection
