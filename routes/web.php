@@ -30,6 +30,7 @@ Route::middleware(['auth'])->group(function () {
 
     // Perfil
     Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::post('/profile/edit', [ProfileController::class, 'update'])->name('profile.update.admin');
     Route::post('/profile/update', [ProfileController::class, 'update'])->name('profile.update');
 
     // Módulo de Ventas (Punto de Venta)

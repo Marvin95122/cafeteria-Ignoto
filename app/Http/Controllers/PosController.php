@@ -215,9 +215,25 @@ class PosController extends Controller
     public function ticket(Request $request, Order $order)
     {
         $order->load(['items.product', 'user', 'customer']);
+
         $received = (float) $request->query('received', $order->total);
         $change = (float) $request->query('change', 0);
+        $pointsEarned = (int) $request->query('points_earned', 0);
 
-        return view('pos.ticket', compact('order', 'received', 'change'));
+        $pointValue = (float) \App\Models\Setting::where('key', 'vip_point_value')->value('value') ?: 1;
+
+        $pointsUsed = 0;
+
+        if ($order->payment_method === 'puntos') {
+            $pointsUsed = (int) ceil($order->total / $pointValue);
+        }
+
+        return view('pos.ticket', compact(
+            'order',
+            'received',
+            'change',
+            'pointsEarned',
+            'pointsUsed'
+        ));
     }
 }

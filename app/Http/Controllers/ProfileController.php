@@ -14,19 +14,20 @@ class ProfileController extends Controller
 
     public function update(Request $request)
     {
-        // Validar la solicitud
+        $user = Auth::user();
+
         $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users,email,' . Auth::id(),
+            'email' => 'required|email|max:255|unique:users,email,' . $user->id,
         ]);
 
-        // Actualizar los datos del usuario autenticado
-        $user = Auth::user();
-        $user->name = $request->name;
-        $user->email = $request->email;
-        $user->save();
+        $user->update([
+            'name' => $request->name,
+            'email' => $request->email,
+        ]);
 
-        // Redirigir de vuelta con un mensaje de éxito
-        return redirect()->route('profile.edit')->with('success', 'Perfil actualizado correctamente.');
+        return redirect()
+            ->route('dashboard')
+            ->with('success', 'Perfil actualizado correctamente.');
     }
 }

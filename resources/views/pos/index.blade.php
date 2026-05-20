@@ -359,35 +359,158 @@
     </div>
 </div>
 
-{{-- MODAL --}}
-<div id="product-modal" class="fixed inset-0 bg-stone-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform scale-95 transition-transform duration-300" id="product-modal-content">
-        <div class="p-5 border-b border-stone-100 flex justify-between items-center bg-amber-50/50">
-            <h3 class="font-bold text-xl text-stone-800" id="modal-product-name">Nombre del Producto</h3>
-            <button onclick="closeProductModal()" class="text-stone-400 hover:text-red-500 transition">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+{{-- MODAL DE PRODUCTO --}}
+<div id="product-modal"
+     class="fixed inset-0 bg-stone-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-3 sm:p-4 opacity-0 transition-opacity duration-300">
+
+    <div id="product-modal-content"
+         class="bg-white rounded-3xl shadow-2xl w-full max-w-lg max-h-[92vh] overflow-hidden transform scale-95 transition-transform duration-300 flex flex-col">
+
+        {{-- ENCABEZADO --}}
+        <div class="flex-none bg-amber-50 border-b border-amber-100 px-5 py-4 flex items-start justify-between gap-4">
+            <div>
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white border border-amber-100 text-amber-800 text-[10px] font-black mb-2">
+                    ☕ Producto seleccionado
+                </div>
+
+                <h3 class="font-serif font-black text-xl text-stone-900 leading-tight" id="modal-product-name">
+                    Nombre del producto
+                </h3>
+
+                <p class="text-xs text-stone-500 mt-1">
+                    Configura cantidad, extras y revisa el subtotal antes de agregar.
+                </p>
+            </div>
+
+            <button onclick="closeProductModal()"
+                    class="w-9 h-9 rounded-full bg-white text-stone-400 hover:text-red-500 hover:bg-red-50 flex items-center justify-center transition shrink-0"
+                    title="Cerrar">
+                ✕
             </button>
         </div>
-        <div class="p-5">
-            <p class="text-2xl font-bold text-amber-700 mb-6" id="modal-product-price">$0.00</p>
-            <div class="mb-6">
-                <label class="text-sm font-bold text-stone-600 mb-2 block">Cantidad</label>
-                <div class="flex items-center gap-3">
-                    <button onclick="changeModalQuantity(-1)" class="w-10 h-10 rounded-full bg-stone-100 text-stone-600 font-bold hover:bg-stone-200 transition">-</button>
-                    <span id="modal-quantity" class="text-xl font-bold text-stone-800 w-8 text-center">1</span>
-                    <button onclick="changeModalQuantity(1)" class="w-10 h-10 rounded-full bg-amber-100 text-amber-700 font-bold hover:bg-amber-200 transition">+</button>
+
+        {{-- CONTENIDO --}}
+        <div class="flex-1 overflow-y-auto custom-scrollbar p-5 space-y-5">
+
+            {{-- IMAGEN Y PRECIO --}}
+            <div class="grid grid-cols-1 sm:grid-cols-[150px_1fr] gap-4 items-stretch">
+
+                <div class="h-36 sm:h-full bg-stone-100 rounded-2xl overflow-hidden flex items-center justify-center border border-stone-100">
+                    <img id="modal-product-image"
+                         src=""
+                         alt="Producto"
+                         class="w-full h-full object-cover hidden">
+
+                    <div id="modal-product-placeholder"
+                         class="text-5xl text-stone-300">
+                        ☕
+                    </div>
+                </div>
+
+                <div class="bg-stone-50 border border-stone-100 rounded-2xl p-4 flex flex-col justify-between">
+                    <div>
+                        <p class="text-xs uppercase tracking-wide font-black text-stone-400">
+                            Precio base
+                        </p>
+
+                        <p class="text-3xl font-black text-amber-700 mt-1" id="modal-product-price">
+                            $0.00
+                        </p>
+
+                        <p class="text-xs text-stone-500 mt-2" id="modal-unit-detail">
+                            Sin extras seleccionados.
+                        </p>
+                    </div>
+
+                    <div class="mt-4">
+                        <label class="text-xs font-black text-stone-600 mb-2 block uppercase tracking-wide">
+                            Cantidad
+                        </label>
+
+                        <div class="inline-flex items-center gap-3 bg-white border border-stone-200 rounded-2xl p-2">
+                            <button onclick="changeModalQuantity(-1)"
+                                    class="w-9 h-9 rounded-xl bg-stone-100 text-stone-700 font-black hover:bg-stone-200 transition">
+                                −
+                            </button>
+
+                            <span id="modal-quantity"
+                                  class="text-xl font-black text-stone-900 w-10 text-center">
+                                1
+                            </span>
+
+                            <button onclick="changeModalQuantity(1)"
+                                    class="w-9 h-9 rounded-xl bg-amber-100 text-amber-800 font-black hover:bg-amber-200 transition">
+                                +
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div id="modal-extras-container" class="mb-2 hidden">
-                <label class="text-sm font-bold text-stone-600 mb-2 block">Agregar Extras (Opcional)</label>
-                <div class="space-y-2 max-h-40 overflow-y-auto custom-scrollbar pr-2" id="modal-extras-list"></div>
+
+            {{-- EXTRAS --}}
+            <div id="modal-extras-container" class="hidden">
+                <div class="flex items-center justify-between gap-3 mb-3">
+                    <div>
+                        <label class="text-sm font-black text-stone-800 block">
+                            Extras disponibles
+                        </label>
+
+                        <p class="text-xs text-stone-400">
+                            Selecciona complementos para este producto.
+                        </p>
+                    </div>
+
+                    <span id="modal-extras-count"
+                          class="px-3 py-1 rounded-full bg-amber-100 text-amber-800 text-[10px] font-black">
+                        0 extra(s)
+                    </span>
+                </div>
+
+                <div id="modal-extras-list"
+                     class="space-y-2 max-h-44 overflow-y-auto custom-scrollbar pr-1">
+                </div>
+            </div>
+
+            {{-- SIN EXTRAS --}}
+            <div id="modal-no-extras"
+                 class="hidden bg-stone-50 border border-stone-100 rounded-2xl p-4 text-sm text-stone-500">
+                <span class="font-bold text-stone-700">Sin extras disponibles.</span>
+                Este producto se agregará únicamente con su precio base.
             </div>
         </div>
-        <div class="p-5 border-t border-stone-100 bg-stone-50 flex gap-3">
-            <button onclick="closeProductModal()" class="flex-1 py-3 text-stone-600 font-bold rounded-xl hover:bg-stone-200 transition">Cancelar</button>
-            <button onclick="addToCartFromModal()" id="btn-add-modal" class="flex-1 py-3 bg-amber-800 text-white font-bold rounded-xl hover:bg-amber-900 transition shadow-md">
-                Agregar al Ticket
-            </button>
+
+        {{-- RESUMEN Y BOTONES --}}
+        <div class="flex-none border-t border-stone-100 bg-white p-4">
+            <div class="bg-stone-900 text-white rounded-2xl px-4 py-3 mb-3 flex items-center justify-between">
+                <div>
+                    <p class="text-[10px] uppercase tracking-widest text-amber-200 font-black">
+                        Subtotal
+                    </p>
+
+                    <p class="text-[10px] text-stone-300 mt-0.5">
+                        Producto + extras × cantidad
+                    </p>
+                </div>
+
+                <span id="modal-subtotal"
+                      class="text-2xl font-black text-amber-300">
+                    $0.00
+                </span>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <button onclick="closeProductModal()"
+                        class="py-3 text-stone-600 font-black rounded-2xl hover:bg-stone-100 border border-stone-200 transition">
+                    Cancelar
+                </button>
+
+                <button onclick="addToCartFromModal()"
+                        id="btn-add-modal"
+                        class="py-3 bg-amber-800 text-white font-black rounded-2xl hover:bg-amber-900 transition shadow-md flex items-center justify-center gap-2">
+                    <span>🛒</span>
+                    <span>Agregar</span>
+                </button>
+            </div>
         </div>
     </div>
 </div>
@@ -513,53 +636,147 @@
         editingCartItemId = editItemId;
 
         let available = getAvailableStock(currentSelectedProduct, editingCartItemId);
+
         if (available <= 0 && !editItemId) {
             Swal.fire('Agotado', 'No hay suficientes ingredientes para preparar esto.', 'error');
-            return; 
+            return;
         }
 
-        document.getElementById('modal-product-name').innerText = currentSelectedProduct.name + (editItemId ? ' (Editando)' : '');
-        document.getElementById('modal-product-price').innerText = `$${parseFloat(currentSelectedProduct.price).toFixed(2)}`;
+        document.getElementById('modal-product-name').innerText =
+            currentSelectedProduct.name + (editItemId ? ' (Editando)' : '');
+
+        document.getElementById('modal-product-price').innerText =
+            `$${parseFloat(currentSelectedProduct.price).toFixed(2)}`;
+
         document.getElementById('modal-quantity').innerText = '1';
-        document.getElementById('btn-add-modal').innerText = editItemId ? 'Guardar Cambios' : 'Agregar al Ticket';
+
+        document.getElementById('btn-add-modal').innerHTML = editItemId
+            ? '<span>💾</span><span>Guardar</span>'
+            : '<span>🛒</span><span>Agregar</span>';
+
+        // Imagen del producto
+        const modalImage = document.getElementById('modal-product-image');
+        const modalPlaceholder = document.getElementById('modal-product-placeholder');
+
+        if (currentSelectedProduct.image) {
+            modalImage.src = `{{ asset('storage') }}/${currentSelectedProduct.image}`;
+            modalImage.classList.remove('hidden');
+            modalPlaceholder.classList.add('hidden');
+        } else {
+            modalImage.src = '';
+            modalImage.classList.add('hidden');
+            modalPlaceholder.classList.remove('hidden');
+        }
 
         const extrasContainer = document.getElementById('modal-extras-container');
+        const noExtrasBox = document.getElementById('modal-no-extras');
         const extrasList = document.getElementById('modal-extras-list');
+
         extrasList.innerHTML = '';
-        const activeExtras = currentSelectedProduct.extras ? currentSelectedProduct.extras.filter(e => e.pivot.active == 1) : [];
+
+        const activeExtras = currentSelectedProduct.extras
+            ? currentSelectedProduct.extras.filter(e => e.pivot.active == 1)
+            : [];
 
         if (activeExtras.length > 0) {
             extrasContainer.classList.remove('hidden');
+            noExtrasBox.classList.add('hidden');
+
             activeExtras.forEach(extra => {
                 const price = parseFloat(extra.pivot.price);
+
                 const html = `
-                    <label class="flex items-center justify-between p-3 border border-stone-200 rounded-lg cursor-pointer hover:bg-amber-50">
-                        <div class="flex items-center gap-3">
-                            <input type="checkbox" class="extra-checkbox w-5 h-5 text-amber-600 rounded border-stone-300" value="${extra.id}" data-name="${extra.name}" data-price="${price}">
-                            <span class="font-medium text-stone-700">${extra.name}</span>
+                    <label class="flex items-center justify-between gap-3 p-3 border border-stone-200 rounded-2xl cursor-pointer hover:bg-amber-50 hover:border-amber-200 transition extra-option">
+                        <div class="flex items-center gap-3 min-w-0">
+                            <input type="checkbox"
+                                class="extra-checkbox w-5 h-5 text-amber-700 rounded border-stone-300 focus:ring-amber-500 shrink-0"
+                                value="${extra.id}"
+                                data-name="${extra.name}"
+                                data-price="${price}"
+                                onchange="updateModalSubtotal()">
+
+                            <div class="min-w-0">
+                                <span class="font-bold text-stone-800 text-sm block truncate">
+                                    ${extra.name}
+                                </span>
+                                <span class="text-xs text-stone-400">
+                                    Extra opcional
+                                </span>
+                            </div>
                         </div>
-                        <span class="font-bold text-stone-500">+$${price.toFixed(2)}</span>
-                    </label>`;
+
+                        <span class="font-black text-amber-700 text-sm whitespace-nowrap">
+                            +$${price.toFixed(2)}
+                        </span>
+                    </label>
+                `;
+
                 extrasList.insertAdjacentHTML('beforeend', html);
             });
-        } else { extrasContainer.classList.add('hidden'); }
+        } else {
+            extrasContainer.classList.add('hidden');
+            noExtrasBox.classList.remove('hidden');
+        }
 
         if (editItemId) {
             let itemToEdit = cart.find(i => i.cartItemId === editItemId);
-            if(itemToEdit) {
+
+            if (itemToEdit) {
                 document.getElementById('modal-quantity').innerText = itemToEdit.quantity;
+
                 itemToEdit.extras.forEach(ext => {
                     let cb = document.querySelector(`.extra-checkbox[value="${ext.id}"]`);
-                    if(cb) cb.checked = true;
+                    if (cb) cb.checked = true;
                 });
             }
         }
 
+        updateModalSubtotal();
+
         const modal = document.getElementById('product-modal');
         const content = document.getElementById('product-modal-content');
+
         modal.classList.remove('hidden');
-        setTimeout(() => { modal.classList.remove('opacity-0'); content.classList.remove('scale-95'); }, 10);
+
+        setTimeout(() => {
+            modal.classList.remove('opacity-0');
+            content.classList.remove('scale-95');
+        }, 10);
     }
+
+    function updateModalSubtotal() {
+        if (!currentSelectedProduct) return;
+
+        const quantity = parseInt(document.getElementById('modal-quantity').innerText) || 1;
+        const basePrice = parseFloat(currentSelectedProduct.price) || 0;
+
+        const selectedExtras = Array.from(document.querySelectorAll('.extra-checkbox:checked'));
+        const extrasTotal = selectedExtras.reduce((sum, cb) => {
+            return sum + (parseFloat(cb.dataset.price) || 0);
+        }, 0);
+
+        const subtotal = (basePrice + extrasTotal) * quantity;
+
+        document.getElementById('modal-subtotal').innerText = `$${subtotal.toFixed(2)}`;
+
+        const extrasCount = selectedExtras.length;
+        const extrasCountLabel = document.getElementById('modal-extras-count');
+
+        if (extrasCountLabel) {
+            extrasCountLabel.innerText = `${extrasCount} extra(s)`;
+        }
+
+        const unitDetail = document.getElementById('modal-unit-detail');
+
+        if (unitDetail) {
+            if (extrasCount > 0) {
+                unitDetail.innerText = `Precio base + $${extrasTotal.toFixed(2)} en extras.`;
+            } else {
+                unitDetail.innerText = 'Sin extras seleccionados.';
+            }
+        }
+    }
+
 
     function closeProductModal() {
         const modal = document.getElementById('product-modal');
@@ -574,10 +791,14 @@
         let available = getAvailableStock(currentSelectedProduct, editingCartItemId);
 
         if (amount > 0 && current >= available) {
-            Swal.fire('Stock Limitado', `Solo puedes preparar ${available} unidad(es) con tu inventario actual.`, 'warning');
+            Swal.fire('Stock limitado', `Solo puedes preparar ${available} unidad(es) con tu inventario actual.`, 'warning');
             return;
         }
-        if (current + amount > 0) { span.innerText = current + amount; }
+
+        if (current + amount > 0) {
+            span.innerText = current + amount;
+            updateModalSubtotal();
+        }
     }
 
     function addToCartFromModal() {
@@ -725,7 +946,11 @@
             const data = await response.json();
 
             if (data.success) {
-                window.open(`/pos/ticket/${data.order_id}?received=${exactReceived}&change=${exactChange}`, 'Ticket', 'width=400,height=600');
+                window.open(
+                    `/pos/ticket/${data.order_id}?received=${exactReceived}&change=${exactChange}&points_earned=${data.points_earned ?? 0}`,
+                    'Ticket',
+                    'width=420,height=650'
+                );
                 setTimeout(() => { cart = []; document.getElementById('cash-received').value = ''; window.location.reload(); }, 1000);
             } else {
                 Swal.fire('Error', data.message, 'error');
