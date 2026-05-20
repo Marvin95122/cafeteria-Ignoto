@@ -33,7 +33,7 @@
 
 <meta name="csrf-token" content="{{ csrf_token() }}">
 
-<div class="flex flex-col lg:flex-row gap-5 lg:h-[calc(100vh-140px)] pt-4 min-h-0">
+<div class="flex flex-col lg:flex-row lg:items-start gap-5 lg:h-[calc(100vh-140px)] pt-4 min-h-0">
     
     {{-- SECCIÓN IZQUIERDA: CATÁLOGO DE PRODUCTOS --}}
     <div class="w-full lg:flex-1 flex flex-col lg:h-full min-h-0">
@@ -151,10 +151,10 @@
     </div>
 
     {{-- SECCIÓN DERECHA: EL TICKET / CARRITO --}}
-    <div class="w-full lg:w-[350px] xl:w-[380px] 2xl:w-[400px] lg:shrink-0 bg-white rounded-2xl shadow-lg border border-stone-200 flex flex-col lg:sticky lg:top-4 relative z-20">
+    <div class="w-full lg:w-[340px] xl:w-[360px] 2xl:w-[380px] lg:shrink-0 lg:self-start bg-white rounded-2xl shadow-lg border border-stone-200 flex flex-col overflow-hidden lg:sticky lg:top-4 lg:h-[calc(100vh-145px)] lg:max-h-[720px] relative z-20">
 
         {{-- HEADER TICKET --}}
-        <div class="bg-stone-50 px-4 py-3 border-b border-stone-200 flex justify-between items-center rounded-t-2xl">
+        <div class="flex-none bg-stone-50 px-4 py-3 border-b border-stone-200 flex justify-between items-center rounded-t-2xl">
             <div>
                 <h2 class="font-bold text-stone-800 flex items-center gap-2 text-sm">
                     🧾 Ticket de venta
@@ -171,11 +171,11 @@
             </button>
         </div>
 
-        {{-- LISTA DEL CARRITO: ÚNICA PARTE CON SCROLL --}}
-        <div class="bg-stone-50/40 border-b border-stone-100">
+        {{-- LISTA DEL CARRITO --}}
+        <div class="h-[220px] lg:h-auto lg:flex-1 lg:min-h-0 bg-stone-50/40 border-b border-stone-100 relative overflow-hidden">
 
             <div id="empty-cart-msg"
-                class="h-[125px] flex flex-col items-center justify-center text-stone-400 text-sm italic text-center px-6">
+                class="absolute inset-0 flex flex-col items-center justify-center text-stone-400 text-xs italic text-center px-4">
                 <span class="text-4xl mb-2">🛒</span>
                 <span class="font-bold text-stone-500 not-italic">
                     El ticket está vacío
@@ -186,21 +186,21 @@
             </div>
 
             <div id="cart-items-container"
-                class="max-h-[190px] overflow-y-auto p-2.5 custom-scrollbar space-y-2">
+                class="h-full overflow-y-auto p-2.5 custom-scrollbar space-y-2 relative z-10">
             </div>
         </div>
 
         {{-- CLIENTE VIP --}}
-        <div class="p-3 space-y-3">
+        <div class="flex-none p-2.5 space-y-2">
 
-            <div class="bg-amber-50/70 border border-amber-100 rounded-2xl p-2.5">
+            <div class="bg-amber-50/70 border border-amber-100 rounded-xl p-2">
                 <div class="flex justify-between items-start gap-2 mb-2">
                     <div>
                         <label class="text-[10px] font-black text-amber-900 flex items-center gap-1 uppercase tracking-wide">
                             👑 Cliente VIP / Lealtad
                         </label>
 
-                        <p class="text-[10px] text-amber-700 mt-0.5 leading-tight">
+                        <p class="text-[10px] text-amber-700 mt-0.5 leading-tight hidden xl:block">
                             Acumula o paga con puntos.
                         </p>
                     </div>
@@ -252,7 +252,7 @@
             </div>
 
             {{-- TOTAL --}}
-            <div class="bg-stone-900 rounded-2xl px-4 py-2.5 text-white shadow-md">
+            <div class="bg-stone-900 rounded-xl px-4 py-2 text-white shadow-md">
                 <div class="flex justify-between items-center gap-4">
                     <div>
                         <p class="text-[10px] uppercase tracking-widest text-amber-200 font-bold">
@@ -264,7 +264,7 @@
                         </p>
                     </div>
 
-                    <span class="text-2xl font-black text-amber-300" id="cart-total">
+                    <span class="text-xl font-black text-amber-300" id="cart-total">
                         $0.00
                     </span>
                 </div>
@@ -279,21 +279,21 @@
                 <div class="grid grid-cols-3 gap-2">
                     <button onclick="setPaymentMethod('efectivo')"
                             id="btn-efectivo"
-                            class="payment-btn bg-amber-100 border-amber-500 text-amber-800 border py-1.5 rounded-xl text-[10px] font-black transition flex flex-col items-center gap-0.5">
+                            class="payment-btn bg-amber-100 border-amber-500 text-amber-800 border py-1 rounded-xl text-[10px] font-black transition flex flex-col items-center gap-0.5">
                         <span>💵</span>
                         <span>Efectivo</span>
                     </button>
 
                     <button onclick="setPaymentMethod('tarjeta')"
                             id="btn-tarjeta"
-                            class="payment-btn bg-stone-50 border-stone-200 text-stone-500 border py-1.5 rounded-xl text-[10px] font-black transition flex flex-col items-center gap-0.5">
+                            class="payment-btn bg-stone-50 border-stone-200 text-stone-500 border py-1 rounded-xl text-[10px] font-black transition flex flex-col items-center gap-0.5">
                         <span>💳</span>
                         <span>Tarjeta</span>
                     </button>
 
                     <button onclick="setPaymentMethod('puntos')"
                             id="btn-puntos"
-                            class="payment-btn bg-stone-50 border-stone-200 text-stone-300 border py-1.5 rounded-xl text-[10px] font-black transition flex flex-col items-center gap-0.5 cursor-not-allowed"
+                            class="payment-btn bg-stone-50 border-stone-200 text-stone-300 border py-1 rounded-xl text-[10px] font-black transition flex flex-col items-center gap-0.5 cursor-not-allowed"
                             disabled
                             title="Selecciona un cliente con saldo suficiente">
                         <span>🎁</span>
@@ -303,7 +303,7 @@
             </div>
 
             {{-- EFECTIVO Y CAMBIO --}}
-            <div id="cash-payment-section" class="bg-stone-50 p-2.5 rounded-2xl border border-stone-200">
+            <div id="cash-payment-section" class="bg-stone-50 p-2 rounded-xl border border-stone-200">
                 <div class="space-y-2">
                     <div>
                         <label class="text-[10px] font-black text-stone-600 uppercase tracking-wide">
@@ -321,11 +321,11 @@
                                 step="0.01"
                                 min="0"
                                 placeholder="0.00"
-                                class="w-full pl-8 border-stone-300 rounded-xl text-sm font-bold focus:border-amber-500 focus:ring-amber-200 py-2 bg-white">
+                                class="w-full pl-8 border-stone-300 rounded-xl text-sm font-bold focus:border-amber-500 focus:ring-amber-200 py-1.5 bg-white">
                         </div>
                     </div>
 
-                    <div class="flex justify-between items-center bg-white rounded-xl border border-stone-100 px-3 py-2">
+                    <div class="flex justify-between items-center bg-white rounded-xl border border-stone-100 px-3 py-1.5">
                         <span class="text-xs font-bold text-stone-600">
                             Cambio
                         </span>
@@ -338,7 +338,7 @@
             </div>
 
             {{-- NOTA COMPACTA --}}
-            <div class="bg-blue-50 border border-blue-100 rounded-xl px-3 py-1.5">
+            <div class="hidden xl:block bg-blue-50 border border-blue-100 rounded-xl px-3 py-1.5">
                 <p class="text-[10px] text-blue-800 leading-snug">
                     <span class="font-black">Nota:</span>
                     en efectivo, el botón se activa al cubrir el total.
@@ -347,11 +347,11 @@
         </div>
 
         {{-- BOTÓN COBRAR FIJO ABAJO --}}
-        <div class="bg-white border-t border-stone-200 p-3 rounded-b-2xl">
+        <div class="flex-none bg-white border-t border-stone-200 p-2.5 rounded-b-2xl">
             <button id="checkout-btn"
                     onclick="processCheckout()"
                     disabled
-                    class="w-full bg-amber-800 hover:bg-amber-900 text-white font-black text-sm py-2.5 rounded-2xl shadow-md transition flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-amber-800">
+                    class="w-full bg-amber-800 hover:bg-amber-900 text-white font-black text-sm py-2 rounded-xl shadow-md transition flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-amber-800">
                 <span>🧾</span>
                 <span>Cobrar ticket</span>
             </button>
