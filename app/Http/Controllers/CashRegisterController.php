@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Hash;
 use App\Models\CashRegisterAdjustment;
+use Illuminate\Validation\ValidationException;
 
 class CashRegisterController extends Controller
 {
@@ -399,6 +400,9 @@ class CashRegisterController extends Controller
             ]);
 
             DB::commit();
+            if ($expense->cashRegister) {
+                $this->recalculateCashRegisterTotals($expense->cashRegister);
+            }
             return back()->with('success', 'Gasto anulado. El dinero vuelve a estar disponible en caja.');
 
         } catch (\Exception $e) {
@@ -421,10 +425,17 @@ class CashRegisterController extends Controller
             'notes' => 'nullable|string|max:1000',
             'admin_password' => 'required|string',
             'adjustment_reason' => 'required|string|min:5|max:1000',
+        ], [
+            'admin_password.required' => 'Debes escribir tu contraseña de administrador para guardar la corrección.',
+            'adjustment_reason.required' => 'Debes escribir el motivo de la corrección.',
+            'adjustment_reason.min' => 'El motivo de la corrección debe tener al menos 5 caracteres.',
+            'opening_amount.required' => 'El fondo inicial es obligatorio.',
         ]);
 
         if (!Hash::check($request->admin_password, $user->password)) {
-            return back()->with('error', 'La contraseña del administrador no es correcta.');
+            return back()
+                ->withErrors(['admin_password' => 'La contraseña del administrador no es correcta. No se guardaron cambios.'])
+                ->withInput();
         }
 
         DB::beginTransaction();
@@ -441,13 +452,10 @@ class CashRegisterController extends Controller
             $start = $cashRegister->opened_at;
             $end = $cashRegister->closed_at ?? now();
 
-            $completedOrders = Order::where('status', 'completado')
+            $salesCash = Order::where('status', 'completado')
+                ->where('payment_method', 'efectivo')
                 ->where('created_at', '>=', $start)
                 ->where('created_at', '<=', $end)
-                ->get();
-
-            $salesCash = $completedOrders
-                ->where('payment_method', 'efectivo')
                 ->sum('total');
 
             $totalExpenses = Expense::where('cash_register_id', $cashRegister->id)
@@ -455,7 +463,6 @@ class CashRegisterController extends Controller
                 ->sum('amount');
 
             $newOpeningAmount = (float) $request->opening_amount;
-
             $newExpectedAmount = $newOpeningAmount + $salesCash - $totalExpenses;
 
             $newActualAmount = $request->actual_amount !== null && $request->actual_amount !== ''
@@ -514,12 +521,481 @@ class CashRegisterController extends Controller
 
             DB::commit();
 
-            return back()->with('success', 'Corrección administrativa guardada correctamente. La auditoría fue registrada.');
+            return redirect()
+                ->route('cash_registers.show', $cashRegister)
+                ->with('success', 'Corrección administrativa guardada correctamente. Los datos del corte fueron recalculados.');
 
         } catch (\Exception $e) {
             DB::rollBack();
 
             return back()->with('error', 'No se pudo guardar la corrección: ' . $e->getMessage());
+        }
+    }
+
+    private function validateAdminPassword(Request $request, string $reasonField = 'adjustment_reason'): void
+    {
+        $request->validate([
+            'admin_password' => 'required|string',
+            $reasonField => 'required|string|min:5|max:1000',
+        ], [
+            'admin_password.required' => 'Debes escribir tu contraseña de administrador.',
+            $reasonField . '.required' => 'Debes escribir el motivo del cambio.',
+            $reasonField . '.min' => 'El motivo debe tener al menos 5 caracteres.',
+        ]);
+
+        $user = Auth::user();
+
+        if (!$user || $user->role !== 'admin') {
+            throw ValidationException::withMessages([
+                'permission' => 'Solo un administrador puede realizar cambios en cortes de caja.',
+            ]);
+        }
+
+        if (!Hash::check($request->admin_password, $user->password)) {
+            throw ValidationException::withMessages([
+                'admin_password' => 'La contraseña del administrador no es correcta.',
+            ]);
+        }
+    }
+
+    private function orderBelongsToCashRegister(CashRegister $cashRegister, Order $order): bool
+    {
+        $start = $cashRegister->opened_at;
+        $end = $cashRegister->closed_at ?? now();
+
+        return $order->created_at >= $start && $order->created_at <= $end;
+    }
+
+    private function recalculateCashRegisterTotals(CashRegister $cashRegister): void
+    {
+        $start = $cashRegister->opened_at;
+        $end = $cashRegister->closed_at ?? now();
+
+        $salesCash = Order::where('status', 'completado')
+            ->where('payment_method', 'efectivo')
+            ->where('created_at', '>=', $start)
+            ->where('created_at', '<=', $end)
+            ->sum('total');
+
+        $totalExpenses = Expense::where('cash_register_id', $cashRegister->id)
+            ->where('status', 'activo')
+            ->sum('amount');
+
+        $expectedAmount = $cashRegister->opening_amount + $salesCash - $totalExpenses;
+
+        $differenceAmount = $cashRegister->actual_amount !== null
+            ? $cashRegister->actual_amount - $expectedAmount
+            : null;
+
+        $cashRegister->update([
+            'expected_amount' => $expectedAmount,
+            'difference_amount' => $differenceAmount,
+        ]);
+    }
+
+    private function returnOrderInventory(Order $order, string $reason): void
+    {
+        $order->loadMissing(['items.product.ingredients']);
+
+        foreach ($order->items as $item) {
+            $product = $item->product;
+            $quantity = $item->quantity;
+
+            if (!$product) {
+                continue;
+            }
+
+            if ($product->use_dynamic_stock) {
+                foreach ($product->ingredients as $ingredient) {
+                    $needed = $ingredient->pivot->quantity * $quantity;
+
+                    if ($needed > 0) {
+                        $ingredient->increment('current_quantity', $needed);
+
+                        InventoryMovement::create([
+                            'ingredient_id' => $ingredient->id,
+                            'user_id' => Auth::id(),
+                            'type' => 'entrada',
+                            'quantity' => $needed,
+                            'reason' => $reason,
+                        ]);
+                    }
+                }
+            } else {
+                $product->increment('stock', $quantity);
+            }
+
+            if (!empty($item->extras)) {
+                foreach ($item->extras as $extraData) {
+                    $extraModel = Extra::with('ingredients')->find($extraData['id'] ?? null);
+
+                    if (!$extraModel) {
+                        continue;
+                    }
+
+                    foreach ($extraModel->ingredients as $extraIng) {
+                        $needed = $extraIng->pivot->quantity * $quantity;
+
+                        if ($needed > 0) {
+                            $extraIng->increment('current_quantity', $needed);
+
+                            InventoryMovement::create([
+                                'ingredient_id' => $extraIng->id,
+                                'user_id' => Auth::id(),
+                                'type' => 'entrada',
+                                'quantity' => $needed,
+                                'reason' => $reason,
+                            ]);
+                        }
+                    }
+                }
+            }
+
+            if ($product->use_dynamic_stock) {
+                $product->refresh();
+
+                if ($product->calculated_stock !== null) {
+                    $product->update(['stock' => $product->calculated_stock]);
+                }
+            }
+        }
+    }
+
+    private function consumeOrderInventoryAgain(Order $order, string $reason): void
+    {
+        $order->loadMissing(['items.product.ingredients']);
+
+        foreach ($order->items as $item) {
+            $product = $item->product;
+            $quantity = $item->quantity;
+
+            if (!$product) {
+                continue;
+            }
+
+            if ($product->use_dynamic_stock) {
+                foreach ($product->ingredients as $ingredient) {
+                    $needed = $ingredient->pivot->quantity * $quantity;
+
+                    if ($needed > 0 && $ingredient->current_quantity < $needed) {
+                        throw new \Exception("No hay suficiente inventario de {$ingredient->name} para habilitar nuevamente el ticket.");
+                    }
+                }
+
+                foreach ($product->ingredients as $ingredient) {
+                    $needed = $ingredient->pivot->quantity * $quantity;
+
+                    if ($needed > 0) {
+                        $ingredient->decrement('current_quantity', $needed);
+
+                        InventoryMovement::create([
+                            'ingredient_id' => $ingredient->id,
+                            'user_id' => Auth::id(),
+                            'type' => 'venta',
+                            'quantity' => $needed,
+                            'reason' => $reason,
+                        ]);
+                    }
+                }
+            } else {
+                if ($product->stock < $quantity) {
+                    throw new \Exception("No hay stock suficiente de {$product->name} para habilitar nuevamente el ticket.");
+                }
+
+                $product->decrement('stock', $quantity);
+            }
+
+            if (!empty($item->extras)) {
+                foreach ($item->extras as $extraData) {
+                    $extraModel = Extra::with('ingredients')->find($extraData['id'] ?? null);
+
+                    if (!$extraModel) {
+                        continue;
+                    }
+
+                    foreach ($extraModel->ingredients as $extraIng) {
+                        $needed = $extraIng->pivot->quantity * $quantity;
+
+                        if ($needed > 0 && $extraIng->current_quantity < $needed) {
+                            throw new \Exception("No hay suficiente inventario de {$extraIng->name} para habilitar nuevamente el extra {$extraModel->name}.");
+                        }
+                    }
+
+                    foreach ($extraModel->ingredients as $extraIng) {
+                        $needed = $extraIng->pivot->quantity * $quantity;
+
+                        if ($needed > 0) {
+                            $extraIng->decrement('current_quantity', $needed);
+
+                            InventoryMovement::create([
+                                'ingredient_id' => $extraIng->id,
+                                'user_id' => Auth::id(),
+                                'type' => 'venta',
+                                'quantity' => $needed,
+                                'reason' => $reason,
+                            ]);
+                        }
+                    }
+                }
+            }
+
+            if ($product->use_dynamic_stock) {
+                $product->refresh();
+
+                if ($product->calculated_stock !== null) {
+                    $product->update(['stock' => $product->calculated_stock]);
+                }
+            }
+        }
+    }
+
+    public function cancelOrderFromCut(Request $request, CashRegister $cashRegister, Order $order)
+    {
+        $request->validate([
+            'action_type' => 'required|in:devolver,merma',
+        ], [
+            'action_type.required' => 'Debes indicar si los insumos se devuelven o se registran como merma.',
+        ]);
+
+        try {
+            $this->validateAdminPassword($request, 'cancellation_reason');
+        } catch (ValidationException $e) {
+            return back()->withErrors($e->errors())->withInput();
+        }
+
+        if (!$this->orderBelongsToCashRegister($cashRegister, $order)) {
+            return back()->with('error', 'Este ticket no pertenece al corte seleccionado.');
+        }
+
+        if ($order->status === 'cancelado') {
+            return back()->with('error', 'Este ticket ya está cancelado.');
+        }
+
+        DB::beginTransaction();
+
+        try {
+            $oldStatus = $order->status;
+
+            $order->update([
+                'status' => 'cancelado',
+                'cancellation_reason' => $request->cancellation_reason,
+                'cancellation_action' => $request->action_type,
+                'cancelled_by' => Auth::id(),
+                'cancelled_at' => now(),
+            ]);
+
+            if ($request->action_type === 'devolver') {
+                $this->returnOrderInventory(
+                    $order,
+                    "Devolución administrativa por cancelación de Ticket #{$order->id}"
+                );
+            } else {
+                $order->loadMissing(['items.product.ingredients']);
+
+                foreach ($order->items as $item) {
+                    $product = $item->product;
+
+                    if (!$product || !$product->use_dynamic_stock) {
+                        continue;
+                    }
+
+                    foreach ($product->ingredients as $ingredient) {
+                        $needed = $ingredient->pivot->quantity * $item->quantity;
+
+                        if ($needed > 0) {
+                            InventoryMovement::create([
+                                'ingredient_id' => $ingredient->id,
+                                'user_id' => Auth::id(),
+                                'type' => 'merma',
+                                'quantity' => $needed,
+                                'reason' => "Merma administrativa por cancelación de Ticket #{$order->id}: {$request->cancellation_reason}",
+                            ]);
+                        }
+                    }
+                }
+            }
+
+            $this->recalculateCashRegisterTotals($cashRegister);
+
+            CashRegisterAdjustment::create([
+                'cash_register_id' => $cashRegister->id,
+                'user_id' => Auth::id(),
+                'field_name' => 'Ticket cancelado',
+                'old_value' => "Ticket #{$order->id} | Estado: {$oldStatus} | Total: $" . number_format($order->total, 2),
+                'new_value' => "Cancelado | Acción: {$request->action_type}",
+                'reason' => $request->cancellation_reason,
+            ]);
+
+            DB::commit();
+
+            return redirect()
+                ->route('cash_registers.show', $cashRegister)
+                ->with('success', 'Ticket cancelado correctamente y corte recalculado.');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return back()->with('error', 'No se pudo cancelar el ticket: ' . $e->getMessage());
+        }
+    }
+
+    public function restoreOrderFromCut(Request $request, CashRegister $cashRegister, Order $order)
+    {
+        try {
+            $this->validateAdminPassword($request, 'restore_reason');
+        } catch (ValidationException $e) {
+            return back()->withErrors($e->errors())->withInput();
+        }
+
+        if (!$this->orderBelongsToCashRegister($cashRegister, $order)) {
+            return back()->with('error', 'Este ticket no pertenece al corte seleccionado.');
+        }
+
+        if ($order->status === 'completado') {
+            return back()->with('error', 'Este ticket ya está habilitado.');
+        }
+
+        DB::beginTransaction();
+
+        try {
+            $oldValue = "Ticket #{$order->id} cancelado | Acción anterior: {$order->cancellation_action}";
+
+            if ($order->cancellation_action === 'devolver') {
+                $this->consumeOrderInventoryAgain(
+                    $order,
+                    "Reactivación administrativa de Ticket #{$order->id}"
+                );
+            }
+
+            $order->update([
+                'status' => 'completado',
+                'cancellation_reason' => null,
+                'cancellation_action' => null,
+                'cancelled_by' => null,
+                'cancelled_at' => null,
+            ]);
+
+            $this->recalculateCashRegisterTotals($cashRegister);
+
+            CashRegisterAdjustment::create([
+                'cash_register_id' => $cashRegister->id,
+                'user_id' => Auth::id(),
+                'field_name' => 'Ticket habilitado',
+                'old_value' => $oldValue,
+                'new_value' => "Ticket #{$order->id} completado nuevamente | Total: $" . number_format($order->total, 2),
+                'reason' => $request->restore_reason,
+            ]);
+
+            DB::commit();
+
+            return redirect()
+                ->route('cash_registers.show', $cashRegister)
+                ->with('success', 'Ticket habilitado correctamente y corte recalculado.');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return back()->with('error', 'No se pudo habilitar el ticket: ' . $e->getMessage());
+        }
+    }
+
+    public function cancelExpenseFromCut(Request $request, CashRegister $cashRegister, Expense $expense)
+    {
+        try {
+            $this->validateAdminPassword($request, 'cancellation_reason');
+        } catch (ValidationException $e) {
+            return back()->withErrors($e->errors())->withInput();
+        }
+
+        if ($expense->cash_register_id !== $cashRegister->id) {
+            return back()->with('error', 'Este gasto no pertenece al corte seleccionado.');
+        }
+
+        if ($expense->status === 'cancelado') {
+            return back()->with('error', 'Este gasto ya está cancelado.');
+        }
+
+        DB::beginTransaction();
+
+        try {
+            $expense->update([
+                'status' => 'cancelado',
+                'cancelled_by' => Auth::id(),
+                'cancellation_reason' => $request->cancellation_reason,
+                'cancelled_at' => now(),
+            ]);
+
+            $this->recalculateCashRegisterTotals($cashRegister);
+
+            CashRegisterAdjustment::create([
+                'cash_register_id' => $cashRegister->id,
+                'user_id' => Auth::id(),
+                'field_name' => 'Gasto cancelado',
+                'old_value' => "Activo | {$expense->description} | $" . number_format($expense->amount, 2),
+                'new_value' => "Cancelado",
+                'reason' => $request->cancellation_reason,
+            ]);
+
+            DB::commit();
+
+            return redirect()
+                ->route('cash_registers.show', $cashRegister)
+                ->with('success', 'Gasto cancelado correctamente y corte recalculado.');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return back()->with('error', 'No se pudo cancelar el gasto: ' . $e->getMessage());
+        }
+    }
+
+    public function restoreExpenseFromCut(Request $request, CashRegister $cashRegister, Expense $expense)
+    {
+        try {
+            $this->validateAdminPassword($request, 'restore_reason');
+        } catch (ValidationException $e) {
+            return back()->withErrors($e->errors())->withInput();
+        }
+
+        if ($expense->cash_register_id !== $cashRegister->id) {
+            return back()->with('error', 'Este gasto no pertenece al corte seleccionado.');
+        }
+
+        if ($expense->status === 'activo') {
+            return back()->with('error', 'Este gasto ya está habilitado.');
+        }
+
+        DB::beginTransaction();
+
+        try {
+            $expense->update([
+                'status' => 'activo',
+                'cancelled_by' => null,
+                'cancellation_reason' => null,
+                'cancelled_at' => null,
+            ]);
+
+            $this->recalculateCashRegisterTotals($cashRegister);
+
+            CashRegisterAdjustment::create([
+                'cash_register_id' => $cashRegister->id,
+                'user_id' => Auth::id(),
+                'field_name' => 'Gasto habilitado',
+                'old_value' => "Cancelado | {$expense->description} | $" . number_format($expense->amount, 2),
+                'new_value' => "Activo",
+                'reason' => $request->restore_reason,
+            ]);
+
+            DB::commit();
+
+            return redirect()
+                ->route('cash_registers.show', $cashRegister)
+                ->with('success', 'Gasto habilitado correctamente y corte recalculado.');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return back()->with('error', 'No se pudo habilitar el gasto: ' . $e->getMessage());
         }
     }
 }

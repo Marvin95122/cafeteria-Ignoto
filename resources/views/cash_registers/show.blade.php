@@ -34,6 +34,37 @@
         </div>
     </div>
 
+    {{-- AVISOS Y ERRORES --}}
+    @if ($errors->any())
+        <div class="bg-red-50 border-l-4 border-red-500 text-red-800 rounded-r-2xl p-4 shadow-sm">
+            <p class="font-black mb-2">
+                No se pudo realizar la acción:
+            </p>
+
+            <ul class="list-disc list-inside text-sm space-y-1">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
+    @if(session('error'))
+        <div class="bg-red-50 border-l-4 border-red-500 text-red-800 rounded-r-2xl p-4 shadow-sm">
+            <p class="font-black">
+                {{ session('error') }}
+            </p>
+        </div>
+    @endif
+
+    @if(session('info'))
+        <div class="bg-blue-50 border-l-4 border-blue-500 text-blue-800 rounded-r-2xl p-4 shadow-sm">
+            <p class="font-black">
+                {{ session('info') }}
+            </p>
+        </div>
+    @endif
+
     {{-- ESTADO DEL CORTE --}}
     <div class="bg-white rounded-2xl shadow-sm border border-stone-200 overflow-hidden">
         <div class="p-5 flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4">
@@ -213,6 +244,9 @@
                             <th class="px-4 py-3">Descripción</th>
                             <th class="px-4 py-3">Categoría</th>
                             <th class="px-4 py-3 text-right">Monto</th>
+                            @if(auth()->user()->role === 'admin')
+                                <th class="px-4 py-3 text-center">Acción</th>
+                            @endif
                         </tr>
                     </thead>
 

@@ -54,6 +54,12 @@ Route::middleware(['auth', 'role:admin,gerente'])->group(function () {
     Route::resource('ingredients', IngredientController::class);
     
     // RUTAS DEL CORTE DE CAJA
+    Route::post('/caja/{cashRegister}/venta/{order}/cancelar', [App\Http\Controllers\CashRegisterController::class, 'cancelOrderFromCut'])->name('cash_registers.cut.cancel_order');
+    Route::patch('/caja/{cashRegister}/venta/{order}/habilitar', [App\Http\Controllers\CashRegisterController::class, 'restoreOrderFromCut'])->name('cash_registers.cut.restore_order');
+
+    Route::delete('/caja/{cashRegister}/gasto/{expense}/cancelar', [App\Http\Controllers\CashRegisterController::class, 'cancelExpenseFromCut'])->name('cash_registers.cut.cancel_expense');
+    Route::patch('/caja/{cashRegister}/gasto/{expense}/habilitar', [App\Http\Controllers\CashRegisterController::class, 'restoreExpenseFromCut'])->name('cash_registers.cut.restore_expense');
+    
     Route::get('/caja', [App\Http\Controllers\CashRegisterController::class, 'index'])->name('cash_registers.index');
     Route::get('/caja/{cashRegister}', [App\Http\Controllers\CashRegisterController::class, 'show'])->name('cash_registers.show');
     Route::patch('/caja/{cashRegister}/ajustar', [App\Http\Controllers\CashRegisterController::class, 'adjust'])->name('cash_registers.adjust');
