@@ -500,37 +500,116 @@
         </div>
     @endif
 
-    {{-- HISTORIAL DE CORTES PASADOS (Siempre visible para el Gerente) --}}
+    {{-- HISTORIAL COMPLETO DE CORTES --}}
     <div class="bg-white rounded-2xl shadow-sm border border-stone-200 overflow-hidden mt-8">
-        <div class="bg-stone-800 px-6 py-4 flex justify-between items-center">
-            <h3 class="font-bold text-white text-lg flex items-center gap-2">
-                <span>📂</span> Historial de Cortes de Caja (Últimos 10)
-            </h3>
+        <div class="bg-stone-800 px-6 py-4 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            <div>
+                <h3 class="font-bold text-white text-lg flex items-center gap-2">
+                    <span>📂</span> Historial completo de Cortes de Caja
+                </h3>
+
+                <p class="text-stone-300 text-xs mt-1">
+                    Consulta cortes anteriores, filtra por fecha y revisa el detalle completo de cada turno.
+                </p>
+            </div>
+
+            <span class="px-3 py-1 rounded-full bg-white/10 text-white text-xs font-bold border border-white/10">
+                {{ $history->total() }} resultado(s)
+            </span>
         </div>
+
+        {{-- FILTROS --}}
+        <form method="GET" action="{{ route('cash_registers.index') }}" class="p-5 bg-stone-50 border-b border-stone-200">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div>
+                    <label class="block text-xs font-black text-stone-500 uppercase tracking-wide mb-1">
+                        Desde
+                    </label>
+
+                    <input type="date"
+                        name="from"
+                        value="{{ $from }}"
+                        class="w-full rounded-xl border-stone-300 focus:border-amber-500 focus:ring-amber-500">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-black text-stone-500 uppercase tracking-wide mb-1">
+                        Hasta
+                    </label>
+
+                    <input type="date"
+                        name="to"
+                        value="{{ $to }}"
+                        class="w-full rounded-xl border-stone-300 focus:border-amber-500 focus:ring-amber-500">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-black text-stone-500 uppercase tracking-wide mb-1">
+                        Estado
+                    </label>
+
+                    <select name="status"
+                            class="w-full rounded-xl border-stone-300 focus:border-amber-500 focus:ring-amber-500">
+                        <option value="cerrada" {{ $statusFilter === 'cerrada' ? 'selected' : '' }}>
+                            Solo cerradas
+                        </option>
+
+                        <option value="abierta" {{ $statusFilter === 'abierta' ? 'selected' : '' }}>
+                            Solo abiertas
+                        </option>
+
+                        <option value="todos" {{ $statusFilter === 'todos' ? 'selected' : '' }}>
+                            Todas
+                        </option>
+                    </select>
+                </div>
+
+                <div class="flex items-end gap-2">
+                    <button type="submit"
+                            class="flex-1 bg-amber-800 hover:bg-amber-900 text-white font-bold py-2.5 px-4 rounded-xl transition">
+                        Buscar
+                    </button>
+
+                    <a href="{{ route('cash_registers.index') }}"
+                    class="bg-white border border-stone-300 hover:bg-stone-100 text-stone-700 font-bold py-2.5 px-4 rounded-xl transition">
+                        Limpiar
+                    </a>
+                </div>
+            </div>
+        </form>
 
         <div class="overflow-x-auto">
             <table class="w-full text-left text-sm text-stone-600">
-                <thead class="bg-stone-100 text-stone-600 uppercase text-xs">
+                <thead class="bg-white text-stone-500 uppercase text-xs border-b border-stone-200">
                     <tr>
                         <th class="px-6 py-4">Fecha / Responsables</th>
-                        <th class="px-6 py-4">Fondo Inicial</th>
-                        <th class="px-6 py-4">Esperado</th>
-                        <th class="px-6 py-4">Físico</th>
-                        <th class="px-6 py-4">Diferencia</th>
-                        <th class="px-6 py-4">Notas</th>
+                        <th class="px-6 py-4">Estado</th>
+                        <th class="px-6 py-4 text-right">Fondo Inicial</th>
+                        <th class="px-6 py-4 text-right">Esperado</th>
+                        <th class="px-6 py-4 text-right">Físico</th>
+                        <th class="px-6 py-4 text-center">Diferencia</th>
+                        <th class="px-6 py-4 text-center">Acción</th>
                     </tr>
                 </thead>
 
                 <tbody class="divide-y divide-stone-200">
                     @forelse($history as $reg)
                         @php
-                            $diferencia = $reg->difference_amount ?? ($reg->actual_amount - $reg->expected_amount);
+                            $diferencia = $reg->difference_amount;
+
+                            if ($diferencia === null && $reg->actual_amount !== null && $reg->expected_amount !== null) {
+                                $diferencia = $reg->actual_amount - $reg->expected_amount;
+                            }
                         @endphp
 
-                        <tr class="hover:bg-stone-50">
+                        <tr class="hover:bg-stone-50 transition">
                             <td class="px-6 py-4">
                                 <span class="block font-bold text-stone-800">
-                                    {{ $reg->opened_at->format('d M, Y') }}
+                                    Corte #{{ str_pad($reg->id, 5, '0', STR_PAD_LEFT) }}
+                                </span>
+
+                                <span class="block text-xs text-stone-500 mt-1">
+                                    📅 {{ $reg->opened_at->format('d/m/Y') }}
                                 </span>
 
                                 <span class="block text-xs text-stone-500">
@@ -544,26 +623,46 @@
                                 <span class="block text-xs text-stone-400 mt-1">
                                     {{ $reg->opened_at->format('h:i A') }}
                                     -
-                                    {{ $reg->closed_at ? $reg->closed_at->format('h:i A') : 'Sin cierre' }}
+                                    {{ $reg->closed_at ? $reg->closed_at->format('h:i A') : 'Caja abierta' }}
                                 </span>
                             </td>
 
-                            <td class="px-6 py-4 text-stone-500">
+                            <td class="px-6 py-4">
+                                @if($reg->status === 'abierta')
+                                    <span class="px-3 py-1 rounded-full bg-green-100 text-green-700 text-xs font-black border border-green-200">
+                                        Abierta
+                                    </span>
+                                @else
+                                    <span class="px-3 py-1 rounded-full bg-stone-100 text-stone-700 text-xs font-black border border-stone-200">
+                                        Cerrada
+                                    </span>
+                                @endif
+                            </td>
+
+                            <td class="px-6 py-4 text-right text-stone-600">
                                 ${{ number_format($reg->opening_amount, 2) }}
                             </td>
 
-                            <td class="px-6 py-4 font-bold text-stone-800">
-                                ${{ number_format($reg->expected_amount, 2) }}
+                            <td class="px-6 py-4 text-right font-bold text-stone-800">
+                                ${{ number_format($reg->expected_amount ?? 0, 2) }}
                             </td>
 
-                            <td class="px-6 py-4 font-bold text-blue-700">
-                                ${{ number_format($reg->actual_amount, 2) }}
+                            <td class="px-6 py-4 text-right font-bold text-blue-700">
+                                {{ $reg->actual_amount !== null ? '$' . number_format($reg->actual_amount, 2) : 'Pendiente' }}
                             </td>
 
-                            <td class="px-6 py-4">
-                                @if($diferencia == 0)
+                            <td class="px-6 py-4 text-center">
+                                @if($reg->status === 'abierta')
                                     <span class="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-bold">
-                                        Cuadró Exacto
+                                        En turno
+                                    </span>
+                                @elseif($diferencia === null)
+                                    <span class="bg-stone-100 text-stone-600 px-2 py-1 rounded text-xs font-bold">
+                                        Sin dato
+                                    </span>
+                                @elseif($diferencia == 0)
+                                    <span class="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-bold">
+                                        Cuadró exacto
                                     </span>
                                 @elseif($diferencia > 0)
                                     <span class="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs font-bold">
@@ -576,20 +675,29 @@
                                 @endif
                             </td>
 
-                            <td class="px-6 py-4 text-xs italic text-stone-500 max-w-xs">
-                                {{ $reg->notes ?? 'Sin novedades' }}
+                            <td class="px-6 py-4 text-center">
+                                <a href="{{ route('cash_registers.show', $reg) }}"
+                                class="inline-flex items-center justify-center px-4 py-2 rounded-xl bg-amber-50 text-amber-800 text-xs font-black border border-amber-100 hover:bg-amber-100 transition">
+                                    Ver detalle
+                                </a>
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="px-6 py-8 text-center text-stone-400 italic">
-                                No hay historial de cajas cerradas todavía.
+                            <td colspan="7" class="px-6 py-10 text-center text-stone-400 italic">
+                                No se encontraron cortes con los filtros seleccionados.
                             </td>
                         </tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
+
+        @if($history->hasPages())
+            <div class="px-6 py-4 border-t border-stone-100 bg-stone-50">
+                {{ $history->links() }}
+            </div>
+        @endif
     </div>
 
     {{-- MODAL CANCELAR TICKET --}}

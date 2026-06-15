@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Hash;
 
 class CashRegisterController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $activeRegister = CashRegister::with('user')
             ->where('status', 'abierta')
@@ -38,7 +38,7 @@ class CashRegisterController extends Controller
 
             $totalExpenses = $activeExpenses->sum('amount');
 
-            $orders = Order::with(['user', 'canceller', 'items.product'])
+            $orders = Order::with(['user', 'canceller', 'items.product', 'customer'])
                 ->where('created_at', '>=', $activeRegister->opened_at)
                 ->latest()
                 ->get();
@@ -68,11 +68,33 @@ class CashRegisterController extends Controller
             ];
         }
 
-        $history = CashRegister::with(['user', 'closedBy'])
-            ->where('status', 'cerrada')
-            ->latest()
-            ->take(10)
-            ->get();
+        /*
+        |--------------------------------------------------------------------------
+        | Historial completo con filtros
+        |--------------------------------------------------------------------------
+        */
+        $statusFilter = $request->input('status', 'cerrada');
+        $from = $request->input('from');
+        $to = $request->input('to');
+
+        $historyQuery = CashRegister::with(['user', 'closedBy'])
+            ->orderByDesc('opened_at');
+
+        if (in_array($statusFilter, ['abierta', 'cerrada'])) {
+            $historyQuery->where('status', $statusFilter);
+        }
+
+        if ($from) {
+            $historyQuery->whereDate('opened_at', '>=', $from);
+        }
+
+        if ($to) {
+            $historyQuery->whereDate('opened_at', '<=', $to);
+        }
+
+        $history = $historyQuery
+            ->paginate(10)
+            ->withQueryString();
 
         return view('cash_registers.index', compact(
             'activeRegister',
@@ -80,7 +102,78 @@ class CashRegisterController extends Controller
             'expenses',
             'history',
             'orders',
-            'salesPoints'
+            'salesPoints',
+            'statusFilter',
+            'from',
+            'to'
+        ));
+    }
+
+    public function show(CashRegister $cashRegister)
+    {
+        $cashRegister->load(['user', 'closedBy']);
+
+        $start = $cashRegister->opened_at;
+        $end = $cashRegister->closed_at ?? now();
+
+        $expenses = Expense::with(['user', 'canceller'])
+            ->where('cash_register_id', $cashRegister->id)
+            ->latest()
+            ->get();
+
+        $activeExpenses = $expenses->where('status', 'activo');
+        $cancelledExpenses = $expenses->where('status', 'cancelado');
+
+        $orders = Order::with(['user', 'canceller', 'items.product', 'customer'])
+            ->where('created_at', '>=', $start)
+            ->where('created_at', '<=', $end)
+            ->latest()
+            ->get();
+
+        $completedOrders = $orders->where('status', 'completado');
+        $cancelledOrders = $orders->where('status', 'cancelado');
+
+        $salesCash = $completedOrders->where('payment_method', 'efectivo')->sum('total');
+        $salesCard = $completedOrders->where('payment_method', 'tarjeta')->sum('total');
+        $salesPoints = $completedOrders->where('payment_method', 'puntos')->sum('total');
+
+        $totalExpenses = $activeExpenses->sum('amount');
+        $totalSales = $salesCash + $salesCard;
+
+        $calculatedExpectedCash = $cashRegister->opening_amount + $salesCash - $totalExpenses;
+
+        $expectedCash = $cashRegister->expected_amount ?? $calculatedExpectedCash;
+        $actualCash = $cashRegister->actual_amount;
+        $difference = $cashRegister->difference_amount;
+
+        if ($difference === null && $actualCash !== null) {
+            $difference = $actualCash - $expectedCash;
+        }
+
+        $stats = [
+            'sales_cash' => $salesCash,
+            'sales_card' => $salesCard,
+            'sales_points' => $salesPoints,
+            'total_sales' => $totalSales,
+            'total_expenses' => $totalExpenses,
+            'expected_cash' => $expectedCash,
+            'calculated_expected_cash' => $calculatedExpectedCash,
+            'actual_cash' => $actualCash,
+            'difference' => $difference,
+            'orders_count' => $completedOrders->count(),
+            'cancelled_orders_count' => $cancelledOrders->count(),
+            'expenses_count' => $activeExpenses->count(),
+            'cancelled_expenses_count' => $cancelledExpenses->count(),
+            'total_tickets' => $orders->count(),
+        ];
+
+        return view('cash_registers.show', compact(
+            'cashRegister',
+            'expenses',
+            'orders',
+            'stats',
+            'start',
+            'end'
         ));
     }
 

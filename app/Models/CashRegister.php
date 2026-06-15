@@ -41,4 +41,9 @@ class CashRegister extends Model
     {
         return $this->hasMany(Expense::class);
     }
+
+    public function adjustments()
+    {
+        return $this->hasMany(CashRegisterAdjustment::class);
+    }
 }
