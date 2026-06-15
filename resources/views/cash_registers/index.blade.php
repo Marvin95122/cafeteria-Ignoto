@@ -395,8 +395,20 @@
                                         @endif
                                     </td>
                                     <td class="px-4 py-3 text-right">
-                                        <span class="block font-bold text-stone-800">${{ number_format($order->total, 2) }}</span>
-                                        <span class="text-[10px] font-bold uppercase {{ $order->payment_method == 'efectivo' ? 'text-green-600' : 'text-blue-600' }}">{{ $order->payment_method }}</span>
+                                        <span class="block font-bold text-stone-800">
+                                            ${{ number_format($order->total, 2) }}
+                                        </span>
+
+                                        <span class="text-[10px] font-bold uppercase {{ $order->payment_method == 'efectivo' ? 'text-green-600' : 'text-blue-600' }}">
+                                            {{ $order->payment_method }}
+                                        </span>
+
+                                        @if($order->payment_method === 'efectivo')
+                                            <div class="text-[10px] text-stone-400 mt-1 leading-tight">
+                                                Recibido: ${{ number_format($order->cash_received ?? $order->total, 2) }}<br>
+                                                Cambio: ${{ number_format($order->cash_change ?? 0, 2) }}
+                                            </div>
+                                        @endif
                                     </td>
                                     <td class="px-4 py-3 text-center">
                                         <div class="flex flex-col sm:flex-row justify-center items-center gap-2">

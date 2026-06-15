@@ -68,10 +68,12 @@ class PosController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'payment_method' => 'required|string',
-            'total' => 'required|numeric',
+            'payment_method' => 'required|string|in:efectivo,tarjeta,puntos',
+            'total' => 'required|numeric|min:0',
             'items' => 'required|array',
-            'customer_id' => 'nullable|exists:customers,id'
+            'customer_id' => 'nullable|exists:customers,id',
+            'cash_received' => 'nullable|numeric|min:0',
+            'cash_change' => 'nullable|numeric|min:0',
         ]);
 
         try {
@@ -82,9 +84,25 @@ class PosController extends Controller
             $customerId = $request->customer_id;
             $paymentMethod = $request->payment_method;
 
+            $cashReceived = $paymentMethod === 'efectivo'
+                ? floatval($request->cash_received)
+                : null;
+
+            $cashChange = $paymentMethod === 'efectivo'
+                ? floatval($request->cash_change)
+                : 0;
+
+            if ($paymentMethod === 'efectivo' && $cashReceived < $total) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'El efectivo recibido no cubre el total de la venta.'
+                ], 400);
+            }
+
             // LÓGICA DE PUNTOS VIP
             $customer = $customerId ? Customer::lockForUpdate()->find($customerId) : null;
             $pointsEarned = 0;
+            $pointsUsed = 0;
 
             if ($customer && !$customer->active) {
                 return response()->json([
@@ -105,6 +123,8 @@ class PosController extends Controller
                     if ($customer->points < $pointsNeeded) {
                         return response()->json(['success' => false, 'message' => 'Saldo de puntos insuficiente.'], 400);
                     }
+
+                    $pointsUsed = $pointsNeeded;
                     $customer->decrement('points', $pointsNeeded);
                 } elseif (in_array($paymentMethod, ['efectivo', 'tarjeta'])) {
                     // Dinero gastado / Dinero requerido para 1 punto
@@ -121,6 +141,10 @@ class PosController extends Controller
                 'customer_id' => $customerId,
                 'total' => $total,
                 'payment_method' => $paymentMethod,
+                'cash_received' => $cashReceived,
+                'cash_change' => $cashChange,
+                'points_earned' => $pointsEarned,
+                'points_used' => $pointsUsed,
                 'status' => 'completado',
             ]);
 
@@ -200,7 +224,10 @@ class PosController extends Controller
                 'success' => true, 
                 'message' => 'Venta procesada con éxito',
                 'order_id' => $order->id,
-                'points_earned' => $pointsEarned
+                'points_earned' => $pointsEarned,
+                'points_used' => $pointsUsed,
+                'cash_received' => $cashReceived,
+                'cash_change' => $cashChange,
             ]);
 
         } catch (\Exception $e) {
@@ -216,18 +243,26 @@ class PosController extends Controller
     {
         $order->load(['items.product', 'user', 'customer']);
 
-        $received = (float) $request->query('received', $order->total);
-        $change = (float) $request->query('change', 0);
-        $pointsEarned = (int) $request->query('points_earned', 0);
-        $isReprint = $request->boolean('reprint');
+        $received = $request->has('received')
+            ? (float) $request->query('received')
+            : (float) ($order->cash_received ?? $order->total);
 
-        $pointValue = (float) \App\Models\Setting::where('key', 'vip_point_value')->value('value') ?: 1;
+        $change = $request->has('change')
+            ? (float) $request->query('change')
+            : (float) ($order->cash_change ?? 0);
 
-        $pointsUsed = 0;
+        $pointsEarned = $request->has('points_earned')
+            ? (int) $request->query('points_earned')
+            : (int) ($order->points_earned ?? 0);
 
-        if ($order->payment_method === 'puntos') {
+        $pointsUsed = (int) ($order->points_used ?? 0);
+
+        if ($pointsUsed <= 0 && $order->payment_method === 'puntos') {
+            $pointValue = (float) \App\Models\Setting::where('key', 'vip_point_value')->value('value') ?: 1;
             $pointsUsed = (int) ceil($order->total / $pointValue);
         }
+
+        $isReprint = $request->boolean('reprint');
 
         return view('pos.ticket', compact(
             'order',

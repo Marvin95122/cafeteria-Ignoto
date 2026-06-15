@@ -931,10 +931,17 @@
         }
 
         const payload = {
-            payment_method: currentPaymentMethod, 
+            payment_method: currentPaymentMethod,
             total: globalCartTotal,
             customer_id: currentSelectedCustomer ? currentSelectedCustomer.id : null,
-            items: cart.map(item => ({ product_id: item.product.id, quantity: item.quantity, unit_price: item.unitPrice, extras: item.extras }))
+            cash_received: currentPaymentMethod === 'efectivo' ? exactReceived : null,
+            cash_change: currentPaymentMethod === 'efectivo' ? exactChange : 0,
+            items: cart.map(item => ({
+                product_id: item.product.id,
+                quantity: item.quantity,
+                unit_price: item.unitPrice,
+                extras: item.extras
+            }))
         };
 
         try {
@@ -947,7 +954,7 @@
 
             if (data.success) {
                 window.open(
-                    `/pos/ticket/${data.order_id}?received=${exactReceived}&change=${exactChange}&points_earned=${data.points_earned ?? 0}`,
+                    `/pos/ticket/${data.order_id}`,
                     'Ticket',
                     'width=420,height=650'
                 );

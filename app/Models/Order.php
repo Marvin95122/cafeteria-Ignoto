@@ -12,6 +12,10 @@ class Order extends Model
         'customer_name', 
         'total', 
         'payment_method', 
+        'cash_received',
+        'cash_change',
+        'points_earned',
+        'points_used',
         'status',
         'cancellation_reason',
         'cancellation_action',
@@ -21,6 +25,10 @@ class Order extends Model
 
     protected $casts = [
         'cancelled_at' => 'datetime',
+        'cash_received' => 'decimal:2',
+        'cash_change' => 'decimal:2',
+        'points_earned' => 'integer',
+        'points_used' => 'integer',
     ];
 
     // Relación con el cajero
