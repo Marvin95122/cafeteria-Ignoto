@@ -71,7 +71,10 @@ Route::middleware(['auth', 'role:admin,gerente'])->group(function () {
     Route::delete('/caja/gasto/{expense}', [App\Http\Controllers\CashRegisterController::class, 'destroyExpense'])->name('cash_registers.expense.destroy');
 
     // RUTAS DE REPORTES
+    Route::get('/reportes', [ReportController::class, 'index'])->name('reports.index');
     Route::get('/reportes/ventas', [ReportController::class, 'sales'])->name('reports.sales');
+    Route::get('/reportes/ventas/excel', [ReportController::class, 'salesExcel'])->name('reports.sales.excel');
+    Route::get('/reportes/ventas/pdf', [ReportController::class, 'salesPdf'])->name('reports.sales.pdf');
 
     // RUTAS DE INVENTARIO
     Route::get('/inventario/movimientos/carga-masiva', [App\Http\Controllers\InventoryMovementController::class, 'createBulk'])->name('inventory_movements.create_bulk');
