@@ -399,13 +399,24 @@
                                         <span class="text-[10px] font-bold uppercase {{ $order->payment_method == 'efectivo' ? 'text-green-600' : 'text-blue-600' }}">{{ $order->payment_method }}</span>
                                     </td>
                                     <td class="px-4 py-3 text-center">
-                                        @if($order->status === 'completado')
-                                            <button onclick="openCancelModal({{ $order->id }})" class="text-xs bg-red-50 text-red-600 hover:bg-red-600 hover:text-white font-bold py-1 px-3 rounded transition border border-red-200 hover:border-red-600">
-                                                Cancelar
-                                            </button>
-                                        @else
-                                            <span class="text-xs font-bold text-red-500">CANCELADO ❌</span>
-                                        @endif
+                                        <div class="flex flex-col sm:flex-row justify-center items-center gap-2">
+                                            <a href="{{ route('pos.ticket', $order) }}?reprint=1"
+                                            target="_blank"
+                                            class="text-xs bg-amber-50 text-amber-700 hover:bg-amber-100 font-bold py-1 px-3 rounded transition border border-amber-200">
+                                                Reimprimir
+                                            </a>
+
+                                            @if($order->status === 'completado')
+                                                <button onclick="openCancelModal({{ $order->id }})"
+                                                        class="text-xs bg-red-50 text-red-600 hover:bg-red-600 hover:text-white font-bold py-1 px-3 rounded transition border border-red-200 hover:border-red-600">
+                                                    Cancelar
+                                                </button>
+                                            @else
+                                                <span class="text-xs font-bold text-red-500">
+                                                    CANCELADO ❌
+                                                </span>
+                                            @endif
+                                        </div>
                                     </td>
                                 </tr>
                             @empty

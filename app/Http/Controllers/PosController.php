@@ -219,6 +219,7 @@ class PosController extends Controller
         $received = (float) $request->query('received', $order->total);
         $change = (float) $request->query('change', 0);
         $pointsEarned = (int) $request->query('points_earned', 0);
+        $isReprint = $request->boolean('reprint');
 
         $pointValue = (float) \App\Models\Setting::where('key', 'vip_point_value')->value('value') ?: 1;
 
@@ -233,7 +234,8 @@ class PosController extends Controller
             'received',
             'change',
             'pointsEarned',
-            'pointsUsed'
+            'pointsUsed',
+            'isReprint'
         ));
     }
 }

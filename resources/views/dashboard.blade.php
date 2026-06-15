@@ -365,19 +365,25 @@
             </div>
         </div>
 
-        {{-- VENTAS RECIENTES --}}
+        {{-- TICKETS DEL DÍA --}}
         <div class="bg-white rounded-2xl shadow-sm border border-stone-200 overflow-hidden">
-            <div class="bg-stone-50 px-6 py-4 border-b border-stone-100">
-                <h3 class="font-bold text-stone-800 flex items-center gap-2">
-                    🧾 Ventas recientes
-                </h3>
-                <p class="text-xs text-stone-500 mt-1">
-                    Últimos tickets registrados en el sistema.
-                </p>
+            <div class="bg-stone-50 px-6 py-4 border-b border-stone-100 flex items-center justify-between gap-3">
+                <div>
+                    <h3 class="font-bold text-stone-800 flex items-center gap-2">
+                        🧾 Tickets del día
+                    </h3>
+                    <p class="text-xs text-stone-500 mt-1">
+                        Todos los tickets registrados hoy. Puedes reimprimirlos si es necesario.
+                    </p>
+                </div>
+
+                <span class="px-3 py-1 rounded-full bg-white border border-stone-200 text-stone-700 text-xs font-bold">
+                    {{ $todayTicketsCount }} ticket(s)
+                </span>
             </div>
 
-            <div class="divide-y divide-stone-100">
-                @forelse($recentOrders as $order)
+            <div class="max-h-[520px] overflow-y-auto divide-y divide-stone-100 custom-scrollbar">
+                @forelse($todayOrders as $order)
                     <div class="p-4 flex items-center justify-between gap-4 hover:bg-stone-50 transition">
                         <div>
                             <p class="font-bold text-stone-800">
@@ -385,8 +391,9 @@
                             </p>
 
                             <p class="text-xs text-stone-400">
-                                {{ $order->created_at->format('d/m/Y h:i A') }}
+                                {{ $order->created_at->format('h:i A') }}
                                 · {{ $order->user->name ?? 'Caja' }}
+                                · {{ strtoupper($order->payment_method) }}
                             </p>
 
                             @if($order->customer)
@@ -396,20 +403,28 @@
                             @endif
                         </div>
 
-                        <div class="text-right">
+                        <div class="text-right shrink-0">
                             <p class="font-black {{ $order->status === 'completado' ? 'text-green-600' : 'text-red-600' }}">
                                 ${{ number_format($order->total, 2) }}
                             </p>
 
-                            <span class="text-[10px] px-2 py-1 rounded-full font-bold
-                                {{ $order->status === 'completado' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' }}">
-                                {{ ucfirst($order->status) }}
-                            </span>
+                            <div class="flex flex-col sm:flex-row gap-2 items-end sm:items-center mt-2">
+                                <span class="text-[10px] px-2 py-1 rounded-full font-bold
+                                    {{ $order->status === 'completado' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' }}">
+                                    {{ ucfirst($order->status) }}
+                                </span>
+
+                                <a href="{{ route('pos.ticket', $order) }}?reprint=1"
+                                target="_blank"
+                                class="inline-flex items-center justify-center px-3 py-1.5 rounded-lg bg-amber-50 text-amber-700 text-xs font-bold hover:bg-amber-100 border border-amber-100 transition">
+                                    Reimprimir
+                                </a>
+                            </div>
                         </div>
                     </div>
                 @empty
                     <div class="p-8 text-center text-stone-400">
-                        No hay ventas recientes.
+                        No hay tickets registrados hoy.
                     </div>
                 @endforelse
             </div>

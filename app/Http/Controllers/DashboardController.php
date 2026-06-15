@@ -150,13 +150,15 @@ class DashboardController extends Controller
 
         /*
         |--------------------------------------------------------------------------
-        | Ventas recientes
+        | Tickets del día
         |--------------------------------------------------------------------------
         */
-        $recentOrders = Order::with(['user', 'customer'])
+        $todayOrders = Order::with(['user', 'customer'])
+            ->whereDate('created_at', $today)
             ->latest()
-            ->take(6)
             ->get();
+
+        $todayTicketsCount = $todayOrders->count();
 
         /*
         |--------------------------------------------------------------------------
@@ -205,7 +207,8 @@ class DashboardController extends Controller
             'lowStockIngredients',
             'totalInventoryAlerts',
             'topProducts',
-            'recentOrders',
+            'todayOrders',
+            'todayTicketsCount',
             'totalCustomers',
             'totalVipPoints',
             'chartDates',

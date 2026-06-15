@@ -138,6 +138,16 @@
             font-size: 10px;
         }
 
+        .reprint-box {
+        border: 1px solid #111;
+        padding: 4px;
+        margin: 6px 0;
+        text-align: center;
+        font-size: 10px;
+        font-weight: bold;
+        letter-spacing: .5px;
+    }
+
         .thanks {
             margin: 6px 0 2px;
             font-size: 12px;
@@ -220,6 +230,12 @@
         </div>
 
         <div class="divider"></div>
+
+        @if($isReprint)
+            <div class="reprint-box">
+                REIMPRESIÓN DE TICKET
+            </div>
+        @endif
 
         {{-- DATOS DEL TICKET --}}
         <table class="ticket-meta">
