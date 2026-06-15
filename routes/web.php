@@ -8,6 +8,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\IngredientController;
 use App\Http\Controllers\PosController;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\ReportController;
 
 Route::get('/', function () {
     return redirect()->route('login');
@@ -68,6 +69,9 @@ Route::middleware(['auth', 'role:admin,gerente'])->group(function () {
     Route::post('/caja/gasto', [App\Http\Controllers\CashRegisterController::class, 'storeExpense'])->name('cash_registers.expense');
     Route::post('/caja/venta/{order}/cancelar', [App\Http\Controllers\CashRegisterController::class, 'cancelOrder'])->name('cash_registers.cancel_order');
     Route::delete('/caja/gasto/{expense}', [App\Http\Controllers\CashRegisterController::class, 'destroyExpense'])->name('cash_registers.expense.destroy');
+
+    // RUTAS DE REPORTES
+    Route::get('/reportes/ventas', [ReportController::class, 'sales'])->name('reports.sales');
 
     // RUTAS DE INVENTARIO
     Route::get('/inventario/movimientos/carga-masiva', [App\Http\Controllers\InventoryMovementController::class, 'createBulk'])->name('inventory_movements.create_bulk');
