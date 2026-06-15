@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Hash;
+use App\Models\CashRegisterAdjustment;
 
 class CashRegisterController extends Controller
 {
@@ -111,7 +112,7 @@ class CashRegisterController extends Controller
 
     public function show(CashRegister $cashRegister)
     {
-        $cashRegister->load(['user', 'closedBy']);
+        $cashRegister->load(['user', 'closedBy', 'adjustments.user']);
 
         $start = $cashRegister->opened_at;
         $end = $cashRegister->closed_at ?? now();
@@ -166,6 +167,11 @@ class CashRegisterController extends Controller
             'cancelled_expenses_count' => $cancelledExpenses->count(),
             'total_tickets' => $orders->count(),
         ];
+        
+        $adjustments = $cashRegister->adjustments()
+        ->with('user')
+        ->latest()
+        ->get();
 
         return view('cash_registers.show', compact(
             'cashRegister',
@@ -173,7 +179,8 @@ class CashRegisterController extends Controller
             'orders',
             'stats',
             'start',
-            'end'
+            'end',
+            'adjustments'
         ));
     }
 
@@ -397,6 +404,122 @@ class CashRegisterController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->with('error', 'Hubo un error al anular el gasto: ' . $e->getMessage());
+        }
+    }
+
+    public function adjust(Request $request, CashRegister $cashRegister)
+    {
+        $user = Auth::user();
+
+        if (!$user || $user->role !== 'admin') {
+            return back()->with('error', 'Solo un administrador puede realizar correcciones en cortes de caja.');
+        }
+
+        $request->validate([
+            'opening_amount' => 'required|numeric|min:0',
+            'actual_amount' => 'nullable|numeric|min:0',
+            'notes' => 'nullable|string|max:1000',
+            'admin_password' => 'required|string',
+            'adjustment_reason' => 'required|string|min:5|max:1000',
+        ]);
+
+        if (!Hash::check($request->admin_password, $user->password)) {
+            return back()->with('error', 'La contraseña del administrador no es correcta.');
+        }
+
+        DB::beginTransaction();
+
+        try {
+            $oldValues = [
+                'opening_amount' => $cashRegister->opening_amount,
+                'expected_amount' => $cashRegister->expected_amount,
+                'actual_amount' => $cashRegister->actual_amount,
+                'difference_amount' => $cashRegister->difference_amount,
+                'notes' => $cashRegister->notes,
+            ];
+
+            $start = $cashRegister->opened_at;
+            $end = $cashRegister->closed_at ?? now();
+
+            $completedOrders = Order::where('status', 'completado')
+                ->where('created_at', '>=', $start)
+                ->where('created_at', '<=', $end)
+                ->get();
+
+            $salesCash = $completedOrders
+                ->where('payment_method', 'efectivo')
+                ->sum('total');
+
+            $totalExpenses = Expense::where('cash_register_id', $cashRegister->id)
+                ->where('status', 'activo')
+                ->sum('amount');
+
+            $newOpeningAmount = (float) $request->opening_amount;
+
+            $newExpectedAmount = $newOpeningAmount + $salesCash - $totalExpenses;
+
+            $newActualAmount = $request->actual_amount !== null && $request->actual_amount !== ''
+                ? (float) $request->actual_amount
+                : null;
+
+            $newDifferenceAmount = $newActualAmount !== null
+                ? $newActualAmount - $newExpectedAmount
+                : null;
+
+            $newValues = [
+                'opening_amount' => $newOpeningAmount,
+                'expected_amount' => $newExpectedAmount,
+                'actual_amount' => $newActualAmount,
+                'difference_amount' => $newDifferenceAmount,
+                'notes' => $request->notes,
+            ];
+
+            $labels = [
+                'opening_amount' => 'Fondo inicial',
+                'expected_amount' => 'Efectivo esperado',
+                'actual_amount' => 'Efectivo contado',
+                'difference_amount' => 'Diferencia',
+                'notes' => 'Notas del cierre',
+            ];
+
+            $changes = 0;
+
+            foreach ($newValues as $field => $newValue) {
+                $oldValue = $oldValues[$field];
+
+                $oldComparable = is_numeric($oldValue) ? number_format((float) $oldValue, 2, '.', '') : trim((string) $oldValue);
+                $newComparable = is_numeric($newValue) ? number_format((float) $newValue, 2, '.', '') : trim((string) $newValue);
+
+                if ($oldComparable !== $newComparable) {
+                    CashRegisterAdjustment::create([
+                        'cash_register_id' => $cashRegister->id,
+                        'user_id' => $user->id,
+                        'field_name' => $labels[$field] ?? $field,
+                        'old_value' => $oldValue,
+                        'new_value' => $newValue,
+                        'reason' => $request->adjustment_reason,
+                    ]);
+
+                    $changes++;
+                }
+            }
+
+            if ($changes === 0) {
+                DB::rollBack();
+
+                return back()->with('info', 'No se detectaron cambios para guardar.');
+            }
+
+            $cashRegister->update($newValues);
+
+            DB::commit();
+
+            return back()->with('success', 'Corrección administrativa guardada correctamente. La auditoría fue registrada.');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return back()->with('error', 'No se pudo guardar la corrección: ' . $e->getMessage());
         }
     }
 }

@@ -56,6 +56,7 @@ Route::middleware(['auth', 'role:admin,gerente'])->group(function () {
     // RUTAS DEL CORTE DE CAJA
     Route::get('/caja', [App\Http\Controllers\CashRegisterController::class, 'index'])->name('cash_registers.index');
     Route::get('/caja/{cashRegister}', [App\Http\Controllers\CashRegisterController::class, 'show'])->name('cash_registers.show');
+    Route::patch('/caja/{cashRegister}/ajustar', [App\Http\Controllers\CashRegisterController::class, 'adjust'])->name('cash_registers.adjust');
     Route::post('/caja/abrir', [App\Http\Controllers\CashRegisterController::class, 'open'])->name('cash_registers.open');
     Route::post('/caja/cerrar', [App\Http\Controllers\CashRegisterController::class, 'close'])->name('cash_registers.close');
     Route::post('/caja/gasto', [App\Http\Controllers\CashRegisterController::class, 'storeExpense'])->name('cash_registers.expense');

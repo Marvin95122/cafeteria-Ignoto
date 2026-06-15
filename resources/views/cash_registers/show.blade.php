@@ -420,16 +420,182 @@
         </div>
     </div>
 
-    {{-- AVISO ADMIN --}}
+    {{-- CORRECCIONES ADMINISTRATIVAS --}}
     @if(auth()->user()->role === 'admin')
-        <div class="bg-blue-50 border border-blue-100 rounded-2xl p-5 text-blue-800">
-            <p class="font-black mb-1">
-                Correcciones administrativas
-            </p>
+        <div class="bg-white rounded-2xl shadow-sm border border-stone-200 overflow-hidden">
+            <div class="bg-blue-50 px-6 py-4 border-b border-blue-100">
+                <h3 class="font-black text-blue-900 flex items-center gap-2">
+                    🛠️ Corrección administrativa
+                </h3>
 
-            <p class="text-sm">
-                Esta vista ya permite auditar el corte completo. En la siguiente etapa podemos agregar edición segura para administradores, guardando motivo, usuario, fecha, valor anterior y valor nuevo de cada cambio.
-            </p>
+                <p class="text-xs text-blue-700 mt-1">
+                    Solo administradores pueden modificar estos datos. Cada cambio queda guardado en auditoría.
+                </p>
+            </div>
+
+            <form method="POST" action="{{ route('cash_registers.adjust', $cashRegister) }}" class="p-6 space-y-5">
+                @csrf
+                @method('PATCH')
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-xs font-black text-stone-500 uppercase tracking-wide mb-1">
+                            Fondo inicial
+                        </label>
+
+                        <input type="number"
+                            step="0.01"
+                            min="0"
+                            name="opening_amount"
+                            value="{{ old('opening_amount', $cashRegister->opening_amount) }}"
+                            class="w-full rounded-xl border-stone-300 focus:border-amber-500 focus:ring-amber-500"
+                            required>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-black text-stone-500 uppercase tracking-wide mb-1">
+                            Efectivo contado
+                        </label>
+
+                        <input type="number"
+                            step="0.01"
+                            min="0"
+                            name="actual_amount"
+                            value="{{ old('actual_amount', $cashRegister->actual_amount) }}"
+                            class="w-full rounded-xl border-stone-300 focus:border-amber-500 focus:ring-amber-500"
+                            placeholder="Pendiente">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-black text-stone-500 uppercase tracking-wide mb-1">
+                            Contraseña administrador
+                        </label>
+
+                        <input type="password"
+                            name="admin_password"
+                            class="w-full rounded-xl border-stone-300 focus:border-red-500 focus:ring-red-500"
+                            required
+                            placeholder="Confirma tu contraseña">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-black text-stone-500 uppercase tracking-wide mb-1">
+                        Notas del cierre
+                    </label>
+
+                    <textarea name="notes"
+                            rows="3"
+                            class="w-full rounded-xl border-stone-300 focus:border-amber-500 focus:ring-amber-500"
+                            placeholder="Notas, observaciones o comentarios del cierre">{{ old('notes', $cashRegister->notes) }}</textarea>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-black text-stone-500 uppercase tracking-wide mb-1">
+                        Motivo de la corrección
+                    </label>
+
+                    <textarea name="adjustment_reason"
+                            rows="3"
+                            class="w-full rounded-xl border-stone-300 focus:border-red-500 focus:ring-red-500"
+                            required
+                            placeholder="Explica por qué se realiza este ajuste administrativo">{{ old('adjustment_reason') }}</textarea>
+
+                    <p class="text-xs text-stone-400 mt-1">
+                        Este motivo quedará registrado en la auditoría del corte.
+                    </p>
+                </div>
+
+                <div class="bg-amber-50 border border-amber-100 rounded-2xl p-4 text-sm text-amber-800">
+                    <p class="font-black mb-1">
+                        Importante
+                    </p>
+
+                    <p>
+                        Al cambiar el fondo inicial, el sistema recalculará automáticamente el efectivo esperado y la diferencia usando las ventas en efectivo y los gastos activos de este corte.
+                    </p>
+                </div>
+
+                <div class="flex justify-end">
+                    <button type="submit"
+                            onclick="return confirm('¿Confirmas guardar esta corrección administrativa? El cambio quedará auditado.')"
+                            class="inline-flex items-center justify-center gap-2 bg-blue-700 hover:bg-blue-800 text-white font-black px-6 py-3 rounded-xl shadow-md transition">
+                        Guardar corrección
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        {{-- HISTORIAL DE AUDITORÍA --}}
+        <div class="bg-white rounded-2xl shadow-sm border border-stone-200 overflow-hidden">
+            <div class="bg-stone-900 px-6 py-4 border-b border-stone-800 flex items-center justify-between gap-3">
+                <div>
+                    <h3 class="font-black text-white flex items-center gap-2">
+                        🧾 Auditoría de correcciones
+                    </h3>
+
+                    <p class="text-xs text-stone-300 mt-1">
+                        Registro de cambios realizados por administradores en este corte.
+                    </p>
+                </div>
+
+                <span class="px-3 py-1 rounded-full bg-white/10 text-white text-xs font-bold border border-white/10">
+                    {{ $adjustments->count() }} cambio(s)
+                </span>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm">
+                    <thead class="bg-stone-50 border-b border-stone-200">
+                        <tr class="text-xs text-stone-500 uppercase tracking-wider">
+                            <th class="px-5 py-3">Fecha</th>
+                            <th class="px-5 py-3">Administrador</th>
+                            <th class="px-5 py-3">Campo</th>
+                            <th class="px-5 py-3">Valor anterior</th>
+                            <th class="px-5 py-3">Valor nuevo</th>
+                            <th class="px-5 py-3">Motivo</th>
+                        </tr>
+                    </thead>
+
+                    <tbody class="divide-y divide-stone-100">
+                        @forelse($adjustments as $adjustment)
+                            <tr class="hover:bg-stone-50 transition">
+                                <td class="px-5 py-4 text-stone-500 whitespace-nowrap">
+                                    {{ $adjustment->created_at->format('d/m/Y h:i A') }}
+                                </td>
+
+                                <td class="px-5 py-4 font-bold text-stone-800">
+                                    {{ $adjustment->user->name ?? 'Usuario no disponible' }}
+                                </td>
+
+                                <td class="px-5 py-4">
+                                    <span class="px-2 py-1 rounded-full bg-blue-100 text-blue-700 text-xs font-black">
+                                        {{ $adjustment->field_name }}
+                                    </span>
+                                </td>
+
+                                <td class="px-5 py-4 text-red-700 text-xs">
+                                    {{ $adjustment->old_value !== null && $adjustment->old_value !== '' ? $adjustment->old_value : 'Sin dato' }}
+                                </td>
+
+                                <td class="px-5 py-4 text-green-700 text-xs font-bold">
+                                    {{ $adjustment->new_value !== null && $adjustment->new_value !== '' ? $adjustment->new_value : 'Sin dato' }}
+                                </td>
+
+                                <td class="px-5 py-4 text-stone-600 text-xs max-w-xs">
+                                    {{ $adjustment->reason }}
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="6" class="px-5 py-10 text-center text-stone-400 italic">
+                                    Este corte aún no tiene correcciones administrativas.
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
         </div>
     @endif
 
