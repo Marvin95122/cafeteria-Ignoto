@@ -43,12 +43,25 @@
         .xs { font-size: 9px; }
         .muted { color: #555; }
 
-        .logo {
-            max-width: 70px;
-            max-height: 70px;
-            object-fit: contain;
+        .logo-circle {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            overflow: hidden;
+            background: #fff;
+            border: 1px solid #ddd;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 7px auto;
+        }
+
+        .logo-circle img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center;
             display: block;
-            margin: 0 auto 6px auto;
             filter: grayscale(100%) contrast(115%);
         }
 
@@ -216,10 +229,11 @@
     <div class="ticket">
 
         {{-- LOGO --}}
-        <img src="{{ asset('images/logo-cafeteria.png') }}"
-             alt="Logo"
-             class="logo"
-             onerror="this.style.display='none'">
+        <div class="logo-circle">
+            <img src="{{ asset('img/logo-cafeteria.png') }}"
+                alt="Logo Ignoto Café"
+                onerror="this.src='{{ asset('images/logo-cafeteria.png') }}'">
+        </div>
 
         {{-- ENCABEZADO --}}
         <div class="text-center">

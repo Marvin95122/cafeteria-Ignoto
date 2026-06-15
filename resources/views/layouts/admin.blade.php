@@ -34,10 +34,16 @@
         <aside id="sidebar" class="w-64 bg-amber-900 text-amber-50 shadow-2xl flex flex-col transition-all duration-300 z-20 shrink-0">
             
             <div class="p-6 flex items-center gap-3 border-b border-amber-800 cursor-pointer hover:bg-amber-800 transition-colors" onclick="toggleSidebar()" title="Colapsar/Expandir Menú">
-                <div class="bg-white p-1 rounded-full h-10 w-10 flex items-center justify-center shrink-0">
-                    <img src="{{ asset('img/logo-cafeteria.png') }}" class="h-8 w-8 object-contain" alt="Logo" onerror="this.src='{{ asset('images/logo-cafeteria.png') }}'">
+                <div class="h-12 w-12 rounded-full overflow-hidden bg-white shadow-md border border-white/30 flex items-center justify-center shrink-0">
+                    <img src="{{ asset('img/logo-cafeteria.png') }}"
+                        class="w-full h-full object-cover object-center"
+                        alt="Logo Ignoto Café"
+                        onerror="this.src='{{ asset('images/logo-cafeteria.png') }}'">
                 </div>
-                <span class="font-serif font-bold text-xl tracking-wide text-white sidebar-text whitespace-nowrap overflow-hidden transition-opacity duration-200">Ignoto Café</span>
+
+                <span class="font-serif font-bold text-xl tracking-wide text-white sidebar-text whitespace-nowrap overflow-hidden transition-opacity duration-200">
+                    Ignoto Café
+                </span>
             </div>
 
             <nav class="flex-1 py-4 space-y-5 overflow-y-auto overflow-x-hidden">

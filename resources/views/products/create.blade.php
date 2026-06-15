@@ -244,8 +244,8 @@
                 {{-- Fotografía --}}
                 <div>
                     <label class="block font-bold text-stone-700 mb-2">Fotografía</label>
-                    <div class="flex justify-center px-6 pt-5 pb-6 border-2 border-stone-300 border-dashed rounded-xl bg-stone-50 hover:bg-stone-100 transition relative overflow-hidden group">
-                        <img id="image-preview" src="#" alt="Vista previa" class="hidden absolute inset-0 w-full h-full object-cover rounded-xl">
+                    <div class="min-h-[220px] flex items-center justify-center px-6 pt-5 pb-6 border-2 border-stone-300 border-dashed rounded-xl bg-stone-50 hover:bg-stone-100 transition relative overflow-hidden group">
+                        <img id="image-preview" src="#" alt="Vista previa" class="hidden absolute inset-0 w-full h-full object-contain object-center p-3 rounded-xl bg-white">
                         <div class="space-y-1 text-center relative z-10" id="upload-placeholder">
                             <svg class="mx-auto h-12 w-12 text-stone-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
                                 <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />

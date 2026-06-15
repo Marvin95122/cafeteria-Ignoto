@@ -264,12 +264,12 @@
                 {{-- Fotografía --}}
                 <div>
                     <label class="block font-bold text-stone-700 mb-2">Fotografía</label>
-                    <div class="flex justify-center px-6 pt-5 pb-6 border-2 border-stone-300 border-dashed rounded-xl bg-stone-50 hover:bg-stone-100 transition relative overflow-hidden group">
-                        
+                    <div class="min-h-[220px] flex items-center justify-center px-6 pt-5 pb-6 border-2 border-stone-300 border-dashed rounded-xl bg-stone-50 hover:bg-stone-100 transition relative overflow-hidden group">
+    
                         {{-- Imagen Existente o Previsualización --}}
                         <img id="image-preview" src="{{ $product->image ? asset('storage/' . $product->image) : '#' }}" 
-                             alt="Vista previa" 
-                             class="{{ $product->image ? '' : 'hidden' }} absolute inset-0 w-full h-full object-cover rounded-xl">
+                            alt="Vista previa" 
+                            class="{{ $product->image ? '' : 'hidden' }} absolute inset-0 w-full h-full object-contain object-center p-3 rounded-xl bg-white">
                         
                         <div class="space-y-1 text-center relative z-10 {{ $product->image ? 'opacity-0 hover:opacity-100 transition-opacity bg-white/80 p-2 rounded' : '' }}" id="upload-placeholder">
                             <svg class="mx-auto h-12 w-12 text-stone-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">

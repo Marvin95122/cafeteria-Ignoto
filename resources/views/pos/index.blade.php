@@ -108,16 +108,20 @@
                             data-category="{{ $product->category_id }}"
                             class="product-card bg-white p-3 rounded-2xl shadow-sm border border-stone-100 hover:border-amber-300 hover:shadow-md transition text-left flex flex-col h-full relative group overflow-hidden">
                         
-                        <div class="relative w-full h-28 bg-stone-100 rounded-xl mb-3 overflow-hidden flex items-center justify-center">
+                        <div class="relative w-full h-32 bg-stone-50 rounded-xl mb-3 overflow-hidden flex items-center justify-center border border-stone-100">
                             @if($product->image)
                                 <img src="{{ asset('storage/' . $product->image) }}"
-                                    class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
+                                    alt="{{ $product->name }}"
+                                    class="w-full h-full object-contain object-center p-2 group-hover:scale-[1.03] transition duration-300">
                             @else
-                                <span class="text-5xl drop-shadow-sm">☕</span>
+                                <div class="w-full h-full flex flex-col items-center justify-center text-stone-300">
+                                    <span class="text-4xl drop-shadow-sm">☕</span>
+                                    <span class="text-[10px] font-bold mt-1">Sin imagen</span>
+                                </div>
                             @endif
 
                             @if($product->extras->count() > 0)
-                                <span class="absolute top-2 right-2 bg-white/90 text-amber-800 text-[10px] font-black px-2 py-1 rounded-full shadow-sm">
+                                <span class="absolute top-2 right-2 bg-white/95 text-amber-800 text-[10px] font-black px-2 py-1 rounded-full shadow-sm border border-amber-100">
                                     + Extras
                                 </span>
                             @endif
@@ -395,15 +399,16 @@
             {{-- IMAGEN Y PRECIO --}}
             <div class="grid grid-cols-1 sm:grid-cols-[150px_1fr] gap-4 items-stretch">
 
-                <div class="h-36 sm:h-full bg-stone-100 rounded-2xl overflow-hidden flex items-center justify-center border border-stone-100">
+                <div class="h-40 sm:h-full bg-stone-50 rounded-2xl overflow-hidden flex items-center justify-center border border-stone-100">
                     <img id="modal-product-image"
-                         src=""
-                         alt="Producto"
-                         class="w-full h-full object-cover hidden">
+                        src=""
+                        alt="Producto"
+                        class="w-full h-full object-contain object-center p-3 hidden">
 
                     <div id="modal-product-placeholder"
-                         class="text-5xl text-stone-300">
-                        ☕
+                        class="flex flex-col items-center justify-center text-stone-300">
+                        <span class="text-5xl">☕</span>
+                        <span class="text-xs font-bold mt-2">Sin imagen</span>
                     </div>
                 </div>
 
