@@ -297,10 +297,48 @@
                                 <td class="px-4 py-3 text-right font-bold {{ $expense->status === 'cancelado' ? 'text-stone-400 line-through' : 'text-red-600' }}">
                                     ${{ number_format($expense->amount, 2) }}
                                 </td>
+
+                                @if(auth()->user()->role === 'admin')
+                                    <td class="px-4 py-3 text-center">
+                                        @if($expense->status === 'activo')
+                                            <form method="POST"
+                                                action="{{ route('cash_registers.cut.cancel_expense', [$cashRegister, $expense]) }}"
+                                                class="inline-block">
+                                                @csrf
+                                                @method('DELETE')
+
+                                                <input type="hidden" name="admin_password">
+                                                <input type="hidden" name="cancellation_reason">
+
+                                                <button type="button"
+                                                        onclick="confirmCancelExpenseFromCut(this.form)"
+                                                        class="px-3 py-1.5 rounded-lg bg-red-50 text-red-700 text-xs font-bold border border-red-200 hover:bg-red-100 transition">
+                                                    Cancelar
+                                                </button>
+                                            </form>
+                                        @else
+                                            <form method="POST"
+                                                action="{{ route('cash_registers.cut.restore_expense', [$cashRegister, $expense]) }}"
+                                                class="inline-block">
+                                                @csrf
+                                                @method('PATCH')
+
+                                                <input type="hidden" name="admin_password">
+                                                <input type="hidden" name="restore_reason">
+
+                                                <button type="button"
+                                                        onclick="confirmRestoreExpenseFromCut(this.form)"
+                                                        class="px-3 py-1.5 rounded-lg bg-green-50 text-green-700 text-xs font-bold border border-green-200 hover:bg-green-100 transition">
+                                                    Habilitar
+                                                </button>
+                                            </form>
+                                        @endif
+                                    </td>
+                                @endif
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="4" class="px-4 py-8 text-center text-stone-400 italic">
+                                <td colspan="{{ auth()->user()->role === 'admin' ? 5 : 4 }}" class="px-4 py-8 text-center text-stone-400 italic">
                                     No hubo gastos en este corte.
                                 </td>
                             </tr>
@@ -423,10 +461,48 @@
 
                                 <td class="px-4 py-3 text-center">
                                     <a href="{{ route('pos.ticket', $order) }}?reprint=1"
-                                       target="_blank"
-                                       class="inline-flex items-center justify-center px-3 py-1.5 rounded-lg bg-amber-50 text-amber-700 text-xs font-bold hover:bg-amber-100 border border-amber-100 transition">
+                                    target="_blank"
+                                    class="inline-flex items-center justify-center px-3 py-1.5 rounded-lg bg-amber-50 text-amber-700 text-xs font-bold hover:bg-amber-100 border border-amber-100 transition">
                                         Reimprimir
                                     </a>
+
+                                    @if(auth()->user()->role === 'admin')
+                                        <div class="mt-2">
+                                            @if($order->status === 'completado')
+                                                <form method="POST"
+                                                    action="{{ route('cash_registers.cut.cancel_order', [$cashRegister, $order]) }}"
+                                                    class="inline-block">
+                                                    @csrf
+
+                                                    <input type="hidden" name="admin_password">
+                                                    <input type="hidden" name="cancellation_reason">
+                                                    <input type="hidden" name="action_type">
+
+                                                    <button type="button"
+                                                            onclick="confirmCancelOrderFromCut(this.form)"
+                                                            class="px-3 py-1.5 rounded-lg bg-red-50 text-red-700 text-xs font-bold border border-red-200 hover:bg-red-100 transition">
+                                                        Cancelar
+                                                    </button>
+                                                </form>
+                                            @else
+                                                <form method="POST"
+                                                    action="{{ route('cash_registers.cut.restore_order', [$cashRegister, $order]) }}"
+                                                    class="inline-block">
+                                                    @csrf
+                                                    @method('PATCH')
+
+                                                    <input type="hidden" name="admin_password">
+                                                    <input type="hidden" name="restore_reason">
+
+                                                    <button type="button"
+                                                            onclick="confirmRestoreOrderFromCut(this.form)"
+                                                            class="px-3 py-1.5 rounded-lg bg-green-50 text-green-700 text-xs font-bold border border-green-200 hover:bg-green-100 transition">
+                                                        Habilitar
+                                                    </button>
+                                                </form>
+                                            @endif
+                                        </div>
+                                    @endif
 
                                     <div class="mt-2">
                                         @if($order->status === 'completado')
@@ -467,7 +543,11 @@
                 </p>
             </div>
 
-            <form method="POST" action="{{ route('cash_registers.adjust', $cashRegister) }}" class="p-6 space-y-5">
+            <form method="POST"
+                    action="{{ route('cash_registers.adjust', $cashRegister) }}"
+                    class="p-6 space-y-5"
+                    onsubmit="return validateAdminCorrectionForm(event)"
+                    novalidate>
                 @csrf
                 @method('PATCH')
 
@@ -552,7 +632,6 @@
 
                 <div class="flex justify-end">
                     <button type="submit"
-                            onclick="return confirm('¿Confirmas guardar esta corrección administrativa? El cambio quedará auditado.')"
                             class="inline-flex items-center justify-center gap-2 bg-blue-700 hover:bg-blue-800 text-white font-black px-6 py-3 rounded-xl shadow-md transition">
                         Guardar corrección
                     </button>
@@ -634,5 +713,241 @@
     @endif
 
 </div>
+
+<script>
+    function validateAdminCorrectionForm(event) {
+        const form = event.target;
+        const password = form.querySelector('input[name="admin_password"]').value.trim();
+        const reason = form.querySelector('textarea[name="adjustment_reason"]').value.trim();
+
+        if (!password) {
+            event.preventDefault();
+
+            Swal.fire({
+                icon: 'warning',
+                title: 'Contraseña requerida',
+                text: 'Debes escribir tu contraseña de administrador para guardar la corrección.',
+                confirmButtonColor: '#b45309'
+            });
+
+            return false;
+        }
+
+        if (!reason || reason.length < 5) {
+            event.preventDefault();
+
+            Swal.fire({
+                icon: 'warning',
+                title: 'Motivo requerido',
+                text: 'Debes escribir un motivo válido para guardar la corrección.',
+                confirmButtonColor: '#b45309'
+            });
+
+            return false;
+        }
+
+        event.preventDefault();
+
+        Swal.fire({
+            icon: 'question',
+            title: 'Confirmar corrección',
+            text: '¿Confirmas guardar esta corrección administrativa? El cambio quedará auditado.',
+            showCancelButton: true,
+            confirmButtonText: 'Sí, guardar',
+            cancelButtonText: 'Cancelar',
+            confirmButtonColor: '#1d4ed8'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                form.submit();
+            }
+        });
+
+        return false;
+    }
+
+    function fillAdminFields(form, password, reason, reasonFieldName) {
+        form.querySelector('input[name="admin_password"]').value = password;
+        form.querySelector(`input[name="${reasonFieldName}"]`).value = reason;
+    }
+
+    function confirmCancelExpenseFromCut(form) {
+        Swal.fire({
+            title: 'Cancelar gasto',
+            html: `
+                <p class="text-sm text-stone-500 mb-3">
+                    Esta acción hará que el gasto deje de contar en el corte anterior.
+                </p>
+
+                <input type="password" id="admin-password" class="swal2-input" placeholder="Contraseña de administrador">
+
+                <textarea id="admin-reason" class="swal2-textarea" placeholder="Motivo de la cancelación"></textarea>
+            `,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Cancelar gasto',
+            cancelButtonText: 'Volver',
+            confirmButtonColor: '#dc2626',
+            preConfirm: () => {
+                const password = document.getElementById('admin-password').value.trim();
+                const reason = document.getElementById('admin-reason').value.trim();
+
+                if (!password) {
+                    Swal.showValidationMessage('Debes escribir tu contraseña de administrador.');
+                    return false;
+                }
+
+                if (!reason || reason.length < 5) {
+                    Swal.showValidationMessage('Debes escribir un motivo válido.');
+                    return false;
+                }
+
+                return { password, reason };
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fillAdminFields(form, result.value.password, result.value.reason, 'cancellation_reason');
+                form.submit();
+            }
+        });
+    }
+
+    function confirmRestoreExpenseFromCut(form) {
+        Swal.fire({
+            title: 'Habilitar gasto',
+            html: `
+                <p class="text-sm text-stone-500 mb-3">
+                    Esta acción hará que el gasto vuelva a contar en el corte anterior.
+                </p>
+
+                <input type="password" id="admin-password" class="swal2-input" placeholder="Contraseña de administrador">
+
+                <textarea id="admin-reason" class="swal2-textarea" placeholder="Motivo para habilitar el gasto"></textarea>
+            `,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Habilitar gasto',
+            cancelButtonText: 'Volver',
+            confirmButtonColor: '#16a34a',
+            preConfirm: () => {
+                const password = document.getElementById('admin-password').value.trim();
+                const reason = document.getElementById('admin-reason').value.trim();
+
+                if (!password) {
+                    Swal.showValidationMessage('Debes escribir tu contraseña de administrador.');
+                    return false;
+                }
+
+                if (!reason || reason.length < 5) {
+                    Swal.showValidationMessage('Debes escribir un motivo válido.');
+                    return false;
+                }
+
+                return { password, reason };
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fillAdminFields(form, result.value.password, result.value.reason, 'restore_reason');
+                form.submit();
+            }
+        });
+    }
+
+    function confirmCancelOrderFromCut(form) {
+        Swal.fire({
+            title: 'Cancelar ticket',
+            html: `
+                <p class="text-sm text-stone-500 mb-3">
+                    La venta dejará de contar en el corte anterior. Selecciona qué pasará con los insumos.
+                </p>
+
+                <select id="admin-action-type" class="swal2-select">
+                    <option value="">Selecciona una acción</option>
+                    <option value="devolver">Devolver insumos al inventario</option>
+                    <option value="merma">Registrar como merma</option>
+                </select>
+
+                <input type="password" id="admin-password" class="swal2-input" placeholder="Contraseña de administrador">
+
+                <textarea id="admin-reason" class="swal2-textarea" placeholder="Motivo de la cancelación"></textarea>
+            `,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Cancelar ticket',
+            cancelButtonText: 'Volver',
+            confirmButtonColor: '#dc2626',
+            preConfirm: () => {
+                const actionType = document.getElementById('admin-action-type').value;
+                const password = document.getElementById('admin-password').value.trim();
+                const reason = document.getElementById('admin-reason').value.trim();
+
+                if (!actionType) {
+                    Swal.showValidationMessage('Debes seleccionar si los insumos se devuelven o se registran como merma.');
+                    return false;
+                }
+
+                if (!password) {
+                    Swal.showValidationMessage('Debes escribir tu contraseña de administrador.');
+                    return false;
+                }
+
+                if (!reason || reason.length < 5) {
+                    Swal.showValidationMessage('Debes escribir un motivo válido.');
+                    return false;
+                }
+
+                return { actionType, password, reason };
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                form.querySelector('input[name="admin_password"]').value = result.value.password;
+                form.querySelector('input[name="cancellation_reason"]').value = result.value.reason;
+                form.querySelector('input[name="action_type"]').value = result.value.actionType;
+
+                form.submit();
+            }
+        });
+    }
+
+    function confirmRestoreOrderFromCut(form) {
+        Swal.fire({
+            title: 'Habilitar ticket',
+            html: `
+                <p class="text-sm text-stone-500 mb-3">
+                    Esta acción hará que el ticket vuelva a contar en el corte anterior.
+                </p>
+
+                <input type="password" id="admin-password" class="swal2-input" placeholder="Contraseña de administrador">
+
+                <textarea id="admin-reason" class="swal2-textarea" placeholder="Motivo para habilitar el ticket"></textarea>
+            `,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Habilitar ticket',
+            cancelButtonText: 'Volver',
+            confirmButtonColor: '#16a34a',
+            preConfirm: () => {
+                const password = document.getElementById('admin-password').value.trim();
+                const reason = document.getElementById('admin-reason').value.trim();
+
+                if (!password) {
+                    Swal.showValidationMessage('Debes escribir tu contraseña de administrador.');
+                    return false;
+                }
+
+                if (!reason || reason.length < 5) {
+                    Swal.showValidationMessage('Debes escribir un motivo válido.');
+                    return false;
+                }
+
+                return { password, reason };
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fillAdminFields(form, result.value.password, result.value.reason, 'restore_reason');
+                form.submit();
+            }
+        });
+    }
+</script>
 
 @endsection

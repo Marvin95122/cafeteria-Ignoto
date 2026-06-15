@@ -144,13 +144,12 @@ class CashRegisterController extends Controller
 
         $calculatedExpectedCash = $cashRegister->opening_amount + $salesCash - $totalExpenses;
 
-        $expectedCash = $cashRegister->expected_amount ?? $calculatedExpectedCash;
+        $expectedCash = $calculatedExpectedCash;
         $actualCash = $cashRegister->actual_amount;
-        $difference = $cashRegister->difference_amount;
 
-        if ($difference === null && $actualCash !== null) {
-            $difference = $actualCash - $expectedCash;
-        }
+        $difference = $actualCash !== null
+            ? $actualCash - $expectedCash
+            : null;
 
         $stats = [
             'sales_cash' => $salesCash,
