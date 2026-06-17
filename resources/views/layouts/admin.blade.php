@@ -145,17 +145,19 @@
                     </div>
 
                     {{-- REPORTES --}}
-                    <div class="px-3">
-                        <p class="sidebar-text px-3 mb-2 text-[11px] uppercase tracking-widest text-amber-400 font-bold">
+                    @if(auth()->user()->role === 'admin')
+                        <div class="px-3">
+                            <p class="sidebar-text px-3 mb-2 text-[11px] uppercase tracking-widest text-amber-400 font-bold">
                             Reportes
-                        </p>
-                        <a href="{{ route('reports.index') }}"
-                        class="flex items-center gap-3 px-4 py-3 rounded-xl transition-colors duration-200
-                        {{ request()->routeIs('reports.*') ? 'bg-amber-800 text-white shadow-md' : 'text-amber-200 hover:bg-amber-800 hover:text-white' }}">
-                            <span class="text-xl shrink-0 flex justify-center w-8">📑</span>
-                            <span class="font-medium sidebar-text whitespace-nowrap">Reportes</span>
-                        </a>
-                    </div>
+                            </p>
+                            <a href="{{ route('reports.index') }}"
+                            class="flex items-center gap-3 px-4 py-3 rounded-xl transition-colors duration-200
+                            {{ request()->routeIs('reports.*') ? 'bg-amber-800 text-white shadow-md' : 'text-amber-200 hover:bg-amber-800 hover:text-white' }}">
+                                <span class="text-xl shrink-0 flex justify-center w-8">📑</span>
+                                <span class="font-medium sidebar-text whitespace-nowrap">Reportes</span>
+                            </a>
+                        </div>
+                    @endif
                 @endif
             </nav>
 

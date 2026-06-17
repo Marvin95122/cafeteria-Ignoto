@@ -43,23 +43,24 @@
             </div>
         </a>
 
-        <div class="bg-white/70 rounded-2xl shadow-sm border border-stone-200 p-6 opacity-75">
-            <div class="w-14 h-14 rounded-2xl bg-stone-100 text-stone-500 flex items-center justify-center text-3xl mb-4">
+        <a href="{{ route('reports.cash') }}"
+            class="group bg-white rounded-2xl shadow-sm border border-stone-200 p-6 hover:shadow-lg hover:border-amber-200 transition">
+            <div class="w-14 h-14 rounded-2xl bg-amber-100 text-amber-800 flex items-center justify-center text-3xl mb-4 group-hover:scale-105 transition">
                 💰
             </div>
 
-            <h2 class="font-serif text-2xl font-black text-stone-700">
+            <h2 class="font-serif text-2xl font-black text-amber-900">
                 Reporte de caja
             </h2>
 
             <p class="text-sm text-stone-500 mt-2">
-                Resumen de cortes, diferencias, gastos, efectivo esperado y auditoría.
+                Analiza cortes, efectivo esperado, efectivo contado, diferencias, gastos, ventas en efectivo y auditoría.
             </p>
 
-            <span class="mt-5 inline-flex px-3 py-1 rounded-full bg-stone-100 text-stone-500 text-xs font-black">
-                Próximamente
-            </span>
-        </div>
+            <div class="mt-5 inline-flex items-center gap-2 text-amber-800 font-black text-sm">
+                Abrir reporte →
+            </div>
+        </a>
 
         <div class="bg-white/70 rounded-2xl shadow-sm border border-stone-200 p-6 opacity-75">
             <div class="w-14 h-14 rounded-2xl bg-stone-100 text-stone-500 flex items-center justify-center text-3xl mb-4">

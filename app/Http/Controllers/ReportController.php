@@ -10,6 +10,9 @@ use Illuminate\Support\Facades\DB;
 use App\Exports\SalesReportExport;
 use Maatwebsite\Excel\Facades\Excel;
 use Barryvdh\DomPDF\Facade\Pdf;
+use App\Models\CashRegister;
+use App\Models\CashRegisterAdjustment;
+use App\Exports\CashReportExport;
 
 class ReportController extends Controller
 {
@@ -56,6 +59,367 @@ class ReportController extends Controller
             ->setPaper('a4', 'landscape');
 
         return $pdf->download($filename);
+    }
+
+    public function cash(Request $request)
+    {
+        $filters = $this->resolveCashFilters($request);
+        $data = $this->buildCashReportData($request, $filters, true);
+
+        return view('reports.cash', $data);
+    }
+
+    public function cashExcel(Request $request)
+    {
+        $filters = $this->resolveCashFilters($request);
+
+        $data = $this->buildCashReportData($request, $filters, false);
+
+        $data['generatedBy'] = auth()->user()->name ?? 'Sistema';
+        $data['generatedAt'] = now()->format('d/m/Y H:i');
+
+        $filename = 'Reporte_Caja_' . $filters['from'] . '_' . $filters['to'] . '.xlsx';
+
+        return Excel::download(new CashReportExport($data), $filename);
+    }
+
+    private function resolveCashFilters(Request $request): array
+    {
+        $period = $request->input('period', 'mes');
+        $groupBy = $request->input('group_by', 'dia');
+        $statusFilter = $request->input('status', 'todas');
+        $search = trim($request->input('search', ''));
+
+        $allowedPeriods = ['hoy', 'semana', 'mes', 'bimestre', 'trimestre', 'semestre', 'anio', 'personalizado'];
+        $allowedGroups = ['dia', 'semana', 'mes', 'bimestre', 'trimestre', 'semestre', 'anio'];
+        $allowedStatuses = ['todas', 'abierta', 'cerrada'];
+
+        if (!in_array($period, $allowedPeriods, true)) {
+            $period = 'mes';
+        }
+
+        if (!in_array($groupBy, $allowedGroups, true)) {
+            $groupBy = 'dia';
+        }
+
+        if (!in_array($statusFilter, $allowedStatuses, true)) {
+            $statusFilter = 'todas';
+        }
+
+        $today = Carbon::today();
+
+        if ($period === 'personalizado') {
+            $from = $request->input('from', $today->copy()->startOfMonth()->toDateString());
+            $to = $request->input('to', $today->toDateString());
+
+            $startDate = Carbon::parse($from)->startOfDay();
+            $endDate = Carbon::parse($to)->endOfDay();
+        } else {
+            [$startDate, $endDate] = $this->datesForQuickPeriod($period, $today);
+        }
+
+        if ($startDate->gt($endDate)) {
+            $endDate = $startDate->copy()->endOfDay();
+        }
+
+        return [
+            'period' => $period,
+            'groupBy' => $groupBy,
+            'statusFilter' => $statusFilter,
+            'search' => $search,
+            'startDate' => $startDate,
+            'endDate' => $endDate,
+            'from' => $startDate->toDateString(),
+            'to' => $endDate->toDateString(),
+        ];
+    }
+
+    private function buildCashReportData(Request $request, array $filters, bool $paginate = true): array
+    {
+        $startDate = $filters['startDate'];
+        $endDate = $filters['endDate'];
+        $statusFilter = $filters['statusFilter'];
+        $search = $filters['search'];
+        $groupBy = $filters['groupBy'];
+
+        $cashRegistersQuery = CashRegister::with(['user', 'closedBy', 'expenses', 'adjustments.user'])
+            ->whereBetween('opened_at', [$startDate, $endDate])
+            ->orderByDesc('opened_at');
+
+        if ($statusFilter !== 'todas') {
+            $cashRegistersQuery->where('status', $statusFilter);
+        }
+
+        if ($search !== '') {
+            $this->applyCashSearch($cashRegistersQuery, $search);
+        }
+
+        $cashRegisters = $paginate
+            ? (clone $cashRegistersQuery)->paginate(10)->withQueryString()
+            : (clone $cashRegistersQuery)->get();
+
+        $allCashRegisters = (clone $cashRegistersQuery)->get();
+
+        $cutRows = $allCashRegisters->map(function ($cashRegister) {
+            return $this->cashRegisterReportRow($cashRegister);
+        });
+
+        $paginatedCutRows = collect($cashRegisters->items())->map(function ($cashRegister) {
+            return $this->cashRegisterReportRow($cashRegister);
+        });
+
+        $totalCuts = $cutRows->count();
+        $openCuts = $cutRows->where('status', 'abierta')->count();
+        $closedCuts = $cutRows->where('status', 'cerrada')->count();
+
+        $openingTotal = (float) $cutRows->sum('opening_amount');
+        $expectedTotal = (float) $cutRows->sum('expected_cash');
+        $actualTotal = (float) $cutRows->sum('actual_cash');
+        $differenceTotal = (float) $cutRows->sum('difference');
+
+        $salesCashTotal = (float) $cutRows->sum('sales_cash');
+        $salesCardTotal = (float) $cutRows->sum('sales_card');
+        $salesPointsTotal = (float) $cutRows->sum('sales_points');
+        $expensesTotal = (float) $cutRows->sum('expenses_total');
+
+        $completedOrdersCount = (int) $cutRows->sum('completed_orders_count');
+        $cancelledOrdersCount = (int) $cutRows->sum('cancelled_orders_count');
+        $adjustmentsCount = (int) $cutRows->sum('adjustments_count');
+
+        $cutsWithPositiveDifference = $cutRows->filter(fn ($row) => $row['difference'] > 0)->count();
+        $cutsWithNegativeDifference = $cutRows->filter(fn ($row) => $row['difference'] < 0)->count();
+        $cutsWithoutDifference = $cutRows->filter(fn ($row) => (float) $row['difference'] === 0.0)->count();
+
+        $cashFlow = $salesCashTotal - $expensesTotal;
+
+        $cashByPeriod = $this->cashByPeriod($cutRows, $groupBy, $startDate, $endDate);
+
+        $topDifferences = $cutRows
+            ->filter(fn ($row) => $row['actual_cash'] !== null)
+            ->sortByDesc(fn ($row) => abs($row['difference']))
+            ->take(8)
+            ->values();
+
+        $recentAdjustments = CashRegisterAdjustment::with(['cashRegister', 'user'])
+            ->whereIn('cash_register_id', $allCashRegisters->pluck('id'))
+            ->latest()
+            ->limit(12)
+            ->get();
+
+        $expensesByCategory = $this->cashExpensesByCategory($allCashRegisters, $expensesTotal);
+
+        $cashStatusBreakdown = [
+            [
+                'label' => 'Abiertas',
+                'count' => $openCuts,
+            ],
+            [
+                'label' => 'Cerradas',
+                'count' => $closedCuts,
+            ],
+        ];
+
+        $executiveSummary = $this->makeCashExecutiveSummary(
+            $totalCuts,
+            $closedCuts,
+            $expectedTotal,
+            $actualTotal,
+            $differenceTotal,
+            $salesCashTotal,
+            $expensesTotal,
+            $adjustmentsCount
+        );
+
+        $periodLabel = $startDate->format('d/m/Y') . ' - ' . $endDate->format('d/m/Y');
+
+        return array_merge($filters, [
+            'cashRegisters' => $cashRegisters,
+            'cutRows' => $cutRows,
+            'paginatedCutRows' => $paginatedCutRows,
+
+            'totalCuts' => $totalCuts,
+            'openCuts' => $openCuts,
+            'closedCuts' => $closedCuts,
+
+            'openingTotal' => $openingTotal,
+            'expectedTotal' => $expectedTotal,
+            'actualTotal' => $actualTotal,
+            'differenceTotal' => $differenceTotal,
+
+            'salesCashTotal' => $salesCashTotal,
+            'salesCardTotal' => $salesCardTotal,
+            'salesPointsTotal' => $salesPointsTotal,
+            'expensesTotal' => $expensesTotal,
+
+            'completedOrdersCount' => $completedOrdersCount,
+            'cancelledOrdersCount' => $cancelledOrdersCount,
+            'adjustmentsCount' => $adjustmentsCount,
+
+            'cutsWithPositiveDifference' => $cutsWithPositiveDifference,
+            'cutsWithNegativeDifference' => $cutsWithNegativeDifference,
+            'cutsWithoutDifference' => $cutsWithoutDifference,
+
+            'cashFlow' => $cashFlow,
+            'cashByPeriod' => $cashByPeriod,
+            'topDifferences' => $topDifferences,
+            'recentAdjustments' => $recentAdjustments,
+            'expensesByCategory' => $expensesByCategory,
+            'cashStatusBreakdown' => $cashStatusBreakdown,
+            'executiveSummary' => $executiveSummary,
+            'periodLabel' => $periodLabel,
+        ]);
+    }
+
+    private function cashRegisterReportRow(CashRegister $cashRegister): array
+    {
+        $start = $cashRegister->opened_at;
+        $end = $cashRegister->closed_at ?? now();
+
+        $orders = Order::where('created_at', '>=', $start)
+            ->where('created_at', '<=', $end)
+            ->get();
+
+        $completedOrders = $orders->where('status', 'completado');
+        $cancelledOrders = $orders->where('status', 'cancelado');
+
+        $salesCash = (float) $completedOrders->where('payment_method', 'efectivo')->sum('total');
+        $salesCard = (float) $completedOrders->where('payment_method', 'tarjeta')->sum('total');
+        $salesPoints = (float) $completedOrders->where('payment_method', 'puntos')->sum('total');
+
+        $activeExpenses = $cashRegister->expenses->where('status', 'activo');
+        $cancelledExpenses = $cashRegister->expenses->where('status', 'cancelado');
+
+        $expensesTotal = (float) $activeExpenses->sum('amount');
+
+        $expectedCash = (float) $cashRegister->opening_amount + $salesCash - $expensesTotal;
+
+        $actualCash = $cashRegister->actual_amount !== null
+            ? (float) $cashRegister->actual_amount
+            : null;
+
+        $difference = $actualCash !== null
+            ? $actualCash - $expectedCash
+            : 0;
+
+        return [
+            'id' => $cashRegister->id,
+            'status' => $cashRegister->status,
+            'opened_at' => $cashRegister->opened_at,
+            'closed_at' => $cashRegister->closed_at,
+            'opened_by' => $cashRegister->user->name ?? 'Usuario no disponible',
+            'closed_by' => $cashRegister->closedBy->name ?? 'Sin cierre',
+            'opening_amount' => (float) $cashRegister->opening_amount,
+            'expected_cash' => $expectedCash,
+            'actual_cash' => $actualCash,
+            'difference' => $difference,
+            'sales_cash' => $salesCash,
+            'sales_card' => $salesCard,
+            'sales_points' => $salesPoints,
+            'expenses_total' => $expensesTotal,
+            'completed_orders_count' => $completedOrders->count(),
+            'cancelled_orders_count' => $cancelledOrders->count(),
+            'active_expenses_count' => $activeExpenses->count(),
+            'cancelled_expenses_count' => $cancelledExpenses->count(),
+            'adjustments_count' => $cashRegister->adjustments->count(),
+            'notes' => $cashRegister->notes,
+        ];
+    }
+
+    private function cashByPeriod($cutRows, string $groupBy, Carbon $startDate, Carbon $endDate)
+    {
+        $buckets = [];
+
+        foreach ($this->periodBuckets($startDate, $endDate, $groupBy) as $key => $label) {
+            $buckets[$key] = [
+                'label' => $label,
+                'expected' => 0,
+                'actual' => 0,
+                'difference' => 0,
+                'cuts' => 0,
+            ];
+        }
+
+        foreach ($cutRows as $row) {
+            $openedAt = Carbon::parse($row['opened_at']);
+            $key = $this->groupKey($openedAt, $groupBy);
+
+            if (!isset($buckets[$key])) {
+                $buckets[$key] = [
+                    'label' => $this->groupLabel($openedAt, $groupBy),
+                    'expected' => 0,
+                    'actual' => 0,
+                    'difference' => 0,
+                    'cuts' => 0,
+                ];
+            }
+
+            $buckets[$key]['expected'] += (float) $row['expected_cash'];
+            $buckets[$key]['actual'] += (float) ($row['actual_cash'] ?? 0);
+            $buckets[$key]['difference'] += (float) $row['difference'];
+            $buckets[$key]['cuts']++;
+        }
+
+        return collect($buckets)->values();
+    }
+
+    private function cashExpensesByCategory($cashRegisters, float $expensesTotal)
+    {
+        return $cashRegisters
+            ->flatMap(fn ($cashRegister) => $cashRegister->expenses)
+            ->where('status', 'activo')
+            ->groupBy(fn ($expense) => $expense->category ?: 'Sin categoría')
+            ->map(function ($items, $category) use ($expensesTotal) {
+                $amount = (float) $items->sum('amount');
+
+                return [
+                    'category' => $category,
+                    'amount' => $amount,
+                    'count' => $items->count(),
+                    'percentage' => $expensesTotal > 0 ? ($amount / $expensesTotal) * 100 : 0,
+                ];
+            })
+            ->sortByDesc('amount')
+            ->values();
+    }
+
+    private function makeCashExecutiveSummary(
+        int $totalCuts,
+        int $closedCuts,
+        float $expectedTotal,
+        float $actualTotal,
+        float $differenceTotal,
+        float $salesCashTotal,
+        float $expensesTotal,
+        int $adjustmentsCount
+    ): string {
+        $differenceText = $differenceTotal > 0
+            ? 'sobrante'
+            : ($differenceTotal < 0 ? 'faltante' : 'sin diferencia acumulada');
+
+        return "Durante el periodo seleccionado se registraron {$totalCuts} corte(s) de caja, de los cuales {$closedCuts} están cerrados. " .
+            "El efectivo esperado acumulado fue de $" . number_format($expectedTotal, 2) .
+            " y el efectivo contado acumulado fue de $" . number_format($actualTotal, 2) .
+            ". La diferencia acumulada fue de $" . number_format($differenceTotal, 2) .
+            " ({$differenceText}). Las ventas en efectivo sumaron $" . number_format($salesCashTotal, 2) .
+            " y los gastos activos sumaron $" . number_format($expensesTotal, 2) .
+            ". Se registraron {$adjustmentsCount} corrección(es) administrativa(s) en los cortes consultados.";
+    }
+
+    private function applyCashSearch($query, string $search): void
+    {
+        $query->where(function ($subQuery) use ($search) {
+            if (is_numeric($search)) {
+                $subQuery->orWhere('id', (int) $search);
+            }
+
+            $subQuery->orWhere('notes', 'like', '%' . $search . '%')
+                ->orWhereHas('user', function ($userQuery) use ($search) {
+                    $userQuery->where('name', 'like', '%' . $search . '%');
+                })
+                ->orWhereHas('closedBy', function ($userQuery) use ($search) {
+                    $userQuery->where('name', 'like', '%' . $search . '%');
+                });
+        });
     }
 
     private function resolveSalesFilters(Request $request): array
