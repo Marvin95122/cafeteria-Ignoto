@@ -83,6 +83,24 @@ class ReportController extends Controller
         return Excel::download(new CashReportExport($data), $filename);
     }
 
+    public function cashPdf(Request $request)
+    {
+        $filters = $this->resolveCashFilters($request);
+
+        $data = $this->buildCashReportData($request, $filters, false);
+
+        $data['generatedBy'] = auth()->user()->name ?? 'Sistema';
+        $data['generatedAt'] = now()->format('d/m/Y H:i');
+        $data['logoBase64'] = $this->reportLogoBase64();
+
+        $filename = 'Reporte_Caja_' . $filters['from'] . '_' . $filters['to'] . '.pdf';
+
+        $pdf = Pdf::loadView('reports.cash_pdf', $data)
+            ->setPaper('a4', 'landscape');
+
+        return $pdf->download($filename);
+    }
+
     private function resolveCashFilters(Request $request): array
     {
         $period = $request->input('period', 'mes');
@@ -164,7 +182,11 @@ class ReportController extends Controller
             return $this->cashRegisterReportRow($cashRegister);
         });
 
-        $paginatedCutRows = collect($cashRegisters->items())->map(function ($cashRegister) {
+        $cashRegistersForTable = $paginate
+            ? collect($cashRegisters->items())
+            : $cashRegisters;
+
+        $paginatedCutRows = $cashRegistersForTable->map(function ($cashRegister) {
             return $this->cashRegisterReportRow($cashRegister);
         });
 

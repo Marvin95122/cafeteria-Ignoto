@@ -108,6 +108,7 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
 
     Route::get('/reportes/caja', [ReportController::class, 'cash'])->name('reports.cash');
     Route::get('/reportes/caja/excel', [ReportController::class, 'cashExcel'])->name('reports.cash.excel');
+    Route::get('/reportes/caja/pdf', [ReportController::class, 'cashPdf'])->name('reports.cash.pdf');
 });
 
 require __DIR__.'/auth.php';

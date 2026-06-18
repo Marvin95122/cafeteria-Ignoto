@@ -34,11 +34,10 @@
                 📊 Exportar Excel
             </a>
 
-            <button type="button"
-                    disabled
-                    class="inline-flex justify-center items-center px-5 py-3 rounded-xl bg-red-100 text-red-700 font-bold opacity-60 cursor-not-allowed">
-                PDF próximamente
-            </button>
+            <a href="{{ route('reports.cash.pdf', request()->query()) }}"
+                class="inline-flex justify-center items-center px-5 py-3 rounded-xl bg-red-700 text-white font-bold hover:bg-red-800 transition">
+                📄 Exportar PDF
+            </a>
         </div>
     </div>
 
