@@ -18,9 +18,9 @@ RUN composer install --no-dev --no-interaction --optimize-autoloader
 RUN npm ci || npm install
 RUN npm run build
 
-RUN touch database/database.sqlite \
+RUN if [ ! -f database/database.sqlite ]; then touch database/database.sqlite; fi \
     && php artisan migrate --force \
-    && php artisan db:seed --force \
-    && (php artisan storage:link || true)
+    && (php artisan storage:link || true) \
+    && php artisan optimize:clear
 
 RUN chown -R application:application /app/storage /app/bootstrap/cache /app/database /app/public
