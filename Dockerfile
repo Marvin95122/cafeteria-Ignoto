@@ -20,7 +20,10 @@ RUN npm run build
 
 RUN if [ ! -f database/database.sqlite ]; then touch database/database.sqlite; fi \
     && php artisan migrate --force \
-    && (php artisan storage:link || true) \
+    && mkdir -p storage/app/public/products \
+    && rm -rf public/storage \
+    && php artisan storage:link \
     && php artisan optimize:clear
 
-RUN chown -R application:application /app/storage /app/bootstrap/cache /app/database /app/public
+RUN chown -R application:application /app/storage /app/bootstrap/cache /app/database /app/public \
+    && chmod -R ug+rwX /app/storage /app/bootstrap/cache /app/database /app/public
