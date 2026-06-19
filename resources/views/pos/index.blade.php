@@ -33,33 +33,34 @@
 
 <meta name="csrf-token" content="{{ csrf_token() }}">
 
-<div class="flex flex-col lg:flex-row lg:items-start gap-5 lg:h-[calc(100vh-140px)] pt-4 min-h-0">
+<div class="flex flex-col lg:flex-row lg:items-start gap-4 lg:h-[calc(100vh-120px)] pt-3 min-h-0">
     
     {{-- SECCIÓN IZQUIERDA: CATÁLOGO DE PRODUCTOS --}}
     <div class="w-full lg:flex-1 flex flex-col lg:h-full min-h-0">
         
-        <div class="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-5 mb-5 bg-white p-5 rounded-2xl shadow-sm border border-stone-100">
-            <div>
-                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-100 text-amber-800 text-[11px] font-bold mb-2">
-                    🧾 Punto de venta activo
+        {{-- FILTROS COMPACTOS DEL POS --}}
+        <div class="bg-white rounded-2xl shadow-sm border border-stone-100 px-4 py-3 mb-4">
+            <div class="flex flex-col xl:flex-row xl:items-center gap-3">
+
+                {{-- CATEGORÍAS --}}
+                <div class="flex-1 overflow-x-auto scrollbar-hide" id="category-filters">
+                    <div class="flex items-center gap-2 min-w-max pb-1">
+                        <button onclick="filterByCategory('all', event)"
+                                class="cat-btn active-cat px-4 py-2 bg-amber-800 text-white text-sm font-bold rounded-full shadow-sm whitespace-nowrap transition">
+                            Todos
+                        </button>
+
+                        @foreach($categories as $category)
+                            <button onclick="filterByCategory({{ $category->id }}, event)"
+                                    class="cat-btn px-4 py-2 bg-white text-stone-600 hover:bg-amber-50 text-sm font-bold rounded-full border border-stone-200 shadow-sm whitespace-nowrap transition">
+                                {{ $category->name }}
+                            </button>
+                        @endforeach
+                    </div>
                 </div>
 
-                <h1 class="font-serif text-2xl md:text-3xl font-bold text-amber-900">
-                    Selecciona productos para cobrar
-                </h1>
-
-                <p class="text-sm text-stone-500 mt-1">
-                    Busca por nombre o filtra por categoría para armar el ticket de venta.
-                </p>
-            </div>
-
-            <div class="flex flex-col sm:flex-row gap-3 xl:items-center">
-                <div class="bg-stone-50 border border-stone-200 rounded-xl px-4 py-2 text-sm text-stone-600">
-                    <span class="font-bold text-amber-800">{{ $products->count() }}</span>
-                    producto(s) disponible(s)
-                </div>
-
-                <div class="relative w-full sm:w-80">
+                {{-- BUSCADOR --}}
+                <div class="relative w-full xl:w-[360px]">
                     <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-stone-400">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -72,7 +73,7 @@
                         id="posSearch"
                         placeholder="Buscar producto..."
                         onkeyup="filterProducts()"
-                        class="w-full pl-10 pr-10 border-stone-200 rounded-xl text-sm focus:border-amber-500 focus:ring-amber-200 py-3 bg-stone-50">
+                        class="w-full pl-10 pr-10 border-stone-200 rounded-xl text-sm focus:border-amber-500 focus:ring-amber-200 py-2.5 bg-stone-50">
 
                     <button type="button"
                             onclick="clearProductSearch()"
@@ -81,22 +82,6 @@
                         ✕
                     </button>
                 </div>
-            </div>
-        </div>
-
-        <div class="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-5 mb-5 bg-white p-5 rounded-2xl shadow-sm border border-stone-100">
-            <div class="flex gap-2 overflow-x-auto pb-1 scrollbar-hide" id="category-filters">
-                <button onclick="filterByCategory('all', event)"
-                        class="cat-btn active-cat px-4 py-2 bg-amber-800 text-white text-sm font-bold rounded-full shadow-sm whitespace-nowrap transition">
-                    Todos
-                </button>
-
-                @foreach($categories as $category)
-                    <button onclick="filterByCategory({{ $category->id }}, event)"
-                            class="cat-btn px-4 py-2 bg-white text-stone-600 hover:bg-amber-50 text-sm font-bold rounded-full border border-stone-200 shadow-sm whitespace-nowrap transition">
-                        {{ $category->name }}
-                    </button>
-                @endforeach
             </div>
         </div>
 
