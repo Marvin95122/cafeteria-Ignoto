@@ -29,22 +29,22 @@
     </div>
 @endif
 
-<div class="flex flex-col min-h-[calc(100vh-theme(spacing.16))] bg-stone-100">
+<div class="h-[calc(100vh-105px)] bg-stone-100 overflow-hidden">
 
 <meta name="csrf-token" content="{{ csrf_token() }}">
 
-<div class="flex flex-col lg:flex-row lg:items-start gap-4 lg:h-[calc(100vh-120px)] pt-3 min-h-0">
+<div class="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_340px] 2xl:grid-cols-[minmax(0,1fr)_355px] gap-3 h-full min-h-0 pt-2">
     
     {{-- SECCIÓN IZQUIERDA: CATÁLOGO DE PRODUCTOS --}}
-    <div class="w-full lg:flex-1 flex flex-col lg:h-full min-h-0">
+    <div class="w-full min-w-0 flex flex-col h-full min-h-0">
         
         {{-- FILTROS COMPACTOS DEL POS --}}
-        <div class="bg-white rounded-2xl shadow-sm border border-stone-100 px-4 py-3 mb-4">
-            <div class="flex flex-col xl:flex-row xl:items-center gap-3">
+        <div class="bg-white rounded-2xl shadow-sm border border-stone-100 px-3 py-2.5 mb-3 flex-none overflow-hidden">
+            <div class="flex items-center gap-2 min-w-0">
 
                 {{-- CATEGORÍAS --}}
-                <div class="flex-1 overflow-x-auto scrollbar-hide" id="category-filters">
-                    <div class="flex items-center gap-2 min-w-max pb-1">
+                <div class="flex-1 min-w-0 overflow-x-auto scrollbar-hide" id="category-filters">
+                    <div class="flex items-center gap-2 w-max pb-0.5">
                         <button onclick="filterByCategory('all', event)"
                                 class="cat-btn active-cat px-4 py-2 bg-amber-800 text-white text-sm font-bold rounded-full shadow-sm whitespace-nowrap transition">
                             Todos
@@ -60,7 +60,7 @@
                 </div>
 
                 {{-- BUSCADOR --}}
-                <div class="relative w-full xl:w-[360px]">
+                <div class="relative w-[230px] 2xl:w-[280px] shrink-0">
                     <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-stone-400">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -73,7 +73,7 @@
                         id="posSearch"
                         placeholder="Buscar producto..."
                         onkeyup="filterProducts()"
-                        class="w-full pl-10 pr-10 border-stone-200 rounded-xl text-sm focus:border-amber-500 focus:ring-amber-200 py-2.5 bg-stone-50">
+                        class="w-full pl-10 pr-9 border-stone-200 rounded-xl text-sm focus:border-amber-500 focus:ring-amber-200 py-2 bg-stone-50">
 
                     <button type="button"
                             onclick="clearProductSearch()"
@@ -85,8 +85,8 @@
             </div>
         </div>
 
-        <div class="lg:flex-1 lg:overflow-y-auto pr-0 lg:pr-2 custom-scrollbar">
-            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4" id="products-grid">
+        <div class="flex-1 min-h-0 overflow-y-auto pr-1 custom-scrollbar">
+            <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-3 pb-4" id="products-grid">
                 @foreach($products as $product)
                     <button onclick="openProductModal({{ $product->id }})"
                             data-id="{{ $product->id }}"
@@ -140,28 +140,53 @@
     </div>
 
     {{-- SECCIÓN DERECHA: EL TICKET / CARRITO --}}
-    <div class="w-full lg:w-[340px] xl:w-[360px] 2xl:w-[380px] lg:shrink-0 lg:self-start bg-white rounded-2xl shadow-lg border border-stone-200 flex flex-col overflow-hidden lg:sticky lg:top-4 lg:h-[calc(100vh-145px)] lg:max-h-[720px] relative z-20">
+    <div class="w-full h-full min-h-0 bg-white rounded-2xl shadow-lg border border-stone-200 flex flex-col overflow-hidden relative z-20">
 
         {{-- HEADER TICKET --}}
-        <div class="flex-none bg-stone-50 px-4 py-3 border-b border-stone-200 flex justify-between items-center rounded-t-2xl">
-            <div>
-                <h2 class="font-bold text-stone-800 flex items-center gap-2 text-sm">
-                    🧾 Ticket de venta
-                </h2>
+        <div class="flex-none bg-stone-50 px-3 py-2.5 border-b border-stone-200 rounded-t-2xl">
+            <div class="flex justify-between items-center gap-2">
+                <div class="min-w-0 flex-1">
+                    <h2 class="font-bold text-stone-800 flex items-center gap-2 text-sm leading-tight">
+                        🧾 Ticket de venta
+                    </h2>
 
-                <p class="text-[11px] text-stone-400 mt-1">
-                    <span id="cart-count">0</span> producto(s) en carrito
-                </p>
+                    <p class="text-[11px] text-stone-400 mt-0.5">
+                        <span id="cart-count">0</span> producto(s) en carrito
+                    </p>
+                </div>
+
+                <div class="flex items-center gap-1.5 shrink-0">
+                    <button type="button"
+                            id="vip-customer-btn"
+                            onclick="openVipCustomerModal()"
+                            class="h-9 min-w-9 max-w-[145px] rounded-full bg-white border border-amber-200 text-amber-700 hover:bg-amber-100 hover:text-amber-900 font-black flex items-center justify-center gap-1.5 px-2 transition shadow-sm overflow-hidden"
+                            title="Cliente VIP">
+                        <span class="shrink-0">👑</span>
+
+                        <span id="vip-mini-info" class="hidden text-left leading-tight min-w-0">
+                            <span id="vip-mini-name" class="block text-[10px] font-black truncate max-w-[92px]"></span>
+                            <span id="vip-mini-points" class="block text-[9px] font-bold text-amber-700 truncate">0 puntos</span>
+                        </span>
+                    </button>
+
+                    <button type="button"
+                            id="vip-remove-btn"
+                            onclick="removeVipCustomer()"
+                            class="hidden w-8 h-8 rounded-full bg-white text-stone-400 hover:text-red-500 hover:bg-red-50 border border-stone-200 flex items-center justify-center transition"
+                            title="Quitar cliente VIP">
+                        ✕
+                    </button>
+
+                    <button onclick="clearCart()"
+                            class="text-[11px] text-red-500 hover:text-red-700 font-bold transition flex items-center gap-1 bg-red-50 hover:bg-red-100 px-2.5 py-2 rounded-lg">
+                        🗑 Vaciar
+                    </button>
+                </div>
             </div>
-
-            <button onclick="clearCart()"
-                    class="text-[11px] text-red-500 hover:text-red-700 font-bold transition flex items-center gap-1 bg-red-50 hover:bg-red-100 px-3 py-2 rounded-lg">
-                🗑 Vaciar
-            </button>
         </div>
 
         {{-- LISTA DEL CARRITO --}}
-        <div class="h-[220px] lg:h-auto lg:flex-1 lg:min-h-0 bg-stone-50/40 border-b border-stone-100 relative overflow-hidden">
+        <div class="flex-1 min-h-[190px] bg-stone-50/40 border-b border-stone-100 relative overflow-hidden">
 
             <div id="empty-cart-msg"
                 class="absolute inset-0 flex flex-col items-center justify-center text-stone-400 text-xs italic text-center px-4">
@@ -179,66 +204,8 @@
             </div>
         </div>
 
-        {{-- CLIENTE VIP --}}
-        <div class="flex-none p-2.5 space-y-2">
-
-            <div class="bg-amber-50/70 border border-amber-100 rounded-xl p-2">
-                <div class="flex justify-between items-start gap-2 mb-2">
-                    <div>
-                        <label class="text-[10px] font-black text-amber-900 flex items-center gap-1 uppercase tracking-wide">
-                            👑 Cliente VIP / Lealtad
-                        </label>
-
-                        <p class="text-[10px] text-amber-700 mt-0.5 leading-tight hidden xl:block">
-                            Acumula o paga con puntos.
-                        </p>
-                    </div>
-
-                    @if(Auth::user()->role !== 'empleado')
-                        <button onclick="createNewCustomer()"
-                                class="text-[10px] text-amber-800 hover:text-amber-900 font-black bg-white border border-amber-100 px-2.5 py-1 rounded-lg transition">
-                            + Nuevo VIP
-                        </button>
-                    @endif
-                </div>
-
-                <div id="vip-search-box" class="relative">
-                    <input type="text"
-                        id="vipSearchInput"
-                        oninput="searchVipCustomer()"
-                        placeholder="Buscar cliente..."
-                        autocomplete="off"
-                        class="w-full border-amber-200 rounded-xl text-xs pl-3 pr-9 py-2 focus:border-amber-500 focus:ring-amber-200 bg-white">
-
-                    <span class="absolute inset-y-0 right-0 pr-3 flex items-center text-stone-400 pointer-events-none">
-                        🔍
-                    </span>
-
-                    <div id="vip-results"
-                        class="absolute left-0 right-0 mt-1 bg-white border border-stone-200 rounded-xl shadow-xl max-h-40 overflow-y-auto hidden z-50 divide-y divide-stone-100 text-xs">
-                    </div>
-                </div>
-
-                <div id="selected-vip-card"
-                    class="hidden bg-white border border-amber-200 rounded-xl p-2.5 flex justify-between items-center mt-2 shadow-sm">
-                    <div>
-                        <div class="font-black text-stone-800 text-xs flex items-center gap-1">
-                            👤 <span id="vip-display-name"></span>
-                        </div>
-
-                        <div class="text-[11px] text-amber-800 mt-1">
-                            Saldo:
-                            <strong id="vip-display-points">0</strong>
-                            puntos
-                        </div>
-                    </div>
-
-                    <button onclick="removeVipCustomer()"
-                            class="text-stone-400 hover:text-red-500 font-bold px-2 py-1 text-xs bg-stone-50 hover:bg-red-50 rounded-lg transition">
-                        ✖
-                    </button>
-                </div>
-            </div>
+        {{-- ACCIONES DE COBRO --}}
+        <div class="flex-none p-2 space-y-1.5">
 
             {{-- TOTAL --}}
             <div class="bg-stone-900 rounded-xl px-4 py-2 text-white shadow-md">
@@ -336,7 +303,7 @@
         </div>
 
         {{-- BOTÓN COBRAR FIJO ABAJO --}}
-        <div class="flex-none bg-white border-t border-stone-200 p-2.5 rounded-b-2xl">
+        <div class="flex-none bg-white border-t border-stone-200 p-2 rounded-b-2xl">
             <button id="checkout-btn"
                     onclick="processCheckout()"
                     disabled
@@ -512,6 +479,7 @@
     const ingredientsDB = {!! isset($ingredients) ? json_encode($ingredients) : '[]' !!};
 
     let customersDB = {!! isset($customers) ? json_encode($customers) : '[]' !!};
+    const canCreateVipCustomer = @json(Auth::user()->role !== 'empleado');
     let currentSelectedCustomer = null;
     
     let cart = []; 
@@ -962,58 +930,178 @@
     }
 
     // --- LÓGICA DE CLIENTES VIP ---
-    function searchVipCustomer() {
-        const query = document.getElementById('vipSearchInput').value.toLowerCase().trim();
-        const resultsContainer = document.getElementById('vip-results');
-        resultsContainer.innerHTML = '';
+    function escapeHtml(value) {
+        return String(value ?? '')
+            .replaceAll('&', '&amp;')
+            .replaceAll('<', '&lt;')
+            .replaceAll('>', '&gt;')
+            .replaceAll('"', '&quot;')
+            .replaceAll("'", '&#039;');
+    }
 
-        if (query.length < 2) {
-            resultsContainer.classList.add('hidden');
-            return;
-        }
+    function openVipCustomerModal() {
+        Swal.fire({
+            title: '👑 Cliente VIP',
+            html: `
+                <div class="text-left space-y-3">
+                    <p class="text-sm text-stone-500">
+                        Busca un cliente registrado para acumular o pagar con puntos.
+                    </p>
 
-        const filtered = customersDB.filter(c => c.phone.includes(query) || c.name.toLowerCase().includes(query)).slice(0, 5);
+                    <div class="flex gap-2">
+                        <input id="swal-vip-search"
+                            class="swal2-input !mx-0 !my-0 !w-full"
+                            placeholder="Buscar por nombre o teléfono..."
+                            autocomplete="off">
 
-        if (filtered.length > 0) {
-            resultsContainer.classList.remove('hidden');
-            filtered.forEach(c => {
-                const item = document.createElement('div');
-                item.className = 'p-2.5 hover:bg-amber-50 cursor-pointer flex justify-between items-center';
-                item.innerHTML = `
-                    <span class="font-bold text-stone-800">${c.name}</span>
-                    <span class="text-stone-500 font-mono">${c.phone}</span>
-                `;
-                item.onclick = () => selectVipCustomer(c);
-                resultsContainer.appendChild(item);
-            });
-        } else {
-            resultsContainer.classList.add('hidden');
-        }
+                        ${canCreateVipCustomer ? `
+                            <button type="button"
+                                    id="swal-new-vip-btn"
+                                    class="px-3 rounded-lg bg-amber-800 text-white text-xs font-black hover:bg-amber-900 transition whitespace-nowrap">
+                                + Nuevo
+                            </button>
+                        ` : ''}
+                    </div>
+
+                    <div id="swal-vip-results"
+                        class="border border-stone-200 rounded-xl max-h-64 overflow-y-auto divide-y divide-stone-100">
+                    </div>
+                </div>
+            `,
+            showConfirmButton: false,
+            showCloseButton: true,
+            width: 560,
+            didOpen: () => {
+                const input = document.getElementById('swal-vip-search');
+                const results = document.getElementById('swal-vip-results');
+                const newButton = document.getElementById('swal-new-vip-btn');
+
+                const renderResults = () => {
+                    const query = input.value.toLowerCase().trim();
+
+                    const filtered = customersDB
+                        .filter(customer => {
+                            const name = (customer.name || '').toLowerCase();
+                            const phone = (customer.phone || '').toString();
+
+                            if (query.length === 0) {
+                                return true;
+                            }
+
+                            return name.includes(query) || phone.includes(query);
+                        })
+                        .slice(0, 8);
+
+                    if (filtered.length === 0) {
+                        results.innerHTML = `
+                            <div class="p-4 text-center text-stone-400 text-sm">
+                                No se encontraron clientes.
+                            </div>
+                        `;
+                        return;
+                    }
+
+                    results.innerHTML = filtered.map(customer => `
+                        <button type="button"
+                                class="vip-result-btn w-full text-left p-3 hover:bg-amber-50 transition flex items-center justify-between gap-3"
+                                data-customer-id="${customer.id}">
+                            <div class="min-w-0">
+                                <p class="font-black text-stone-800 text-sm truncate">
+                                    ${escapeHtml(customer.name)}
+                                </p>
+
+                                <p class="text-xs text-stone-400">
+                                    ${escapeHtml(customer.phone || 'Sin teléfono')}
+                                </p>
+                            </div>
+
+                            <div class="text-right shrink-0">
+                                <p class="text-xs font-black text-amber-700">
+                                    ${Number(customer.points || 0).toLocaleString('es-MX')} puntos
+                                </p>
+
+                                <p class="text-[10px] text-stone-400">
+                                    Seleccionar
+                                </p>
+                            </div>
+                        </button>
+                    `).join('');
+
+                    document.querySelectorAll('.vip-result-btn').forEach(button => {
+                        button.addEventListener('click', () => {
+                            const customerId = parseInt(button.dataset.customerId);
+                            const customer = customersDB.find(item => item.id === customerId);
+
+                            if (customer) {
+                                selectVipCustomer(customer);
+                                Swal.close();
+                            }
+                        });
+                    });
+                };
+
+                input.addEventListener('input', renderResults);
+
+                if (newButton) {
+                    newButton.addEventListener('click', () => {
+                        Swal.close();
+
+                        setTimeout(() => {
+                            createNewCustomer();
+                        }, 150);
+                    });
+                }
+
+                renderResults();
+
+                setTimeout(() => {
+                    input.focus();
+                }, 100);
+            }
+        });
     }
 
     function selectVipCustomer(customer) {
         currentSelectedCustomer = customer;
-        document.getElementById('vip-search-box').classList.add('hidden');
-        document.getElementById('vip-results').classList.add('hidden');
-        document.getElementById('vipSearchInput').value = '';
 
-        document.getElementById('vip-display-name').innerText = customer.name;
-        document.getElementById('vip-display-points').innerText = customer.points;
-        document.getElementById('selected-vip-card').classList.remove('hidden');
+        document.getElementById('vip-mini-name').innerText = customer.name;
+        document.getElementById('vip-mini-points').innerText = Number(customer.points || 0).toLocaleString('es-MX') + ' puntos';
+
+        document.getElementById('vip-mini-info').classList.remove('hidden');
+        document.getElementById('vip-remove-btn').classList.remove('hidden');
+
+        const vipButton = document.getElementById('vip-customer-btn');
+
+        vipButton.classList.remove('bg-white', 'text-amber-700');
+        vipButton.classList.add('bg-amber-100', 'text-amber-900', 'border-amber-400');
 
         evaluatePointsPayment();
     }
 
     function removeVipCustomer() {
         currentSelectedCustomer = null;
-        document.getElementById('selected-vip-card').classList.add('hidden');
-        document.getElementById('vip-search-box').classList.remove('hidden');
-        if (currentPaymentMethod === 'puntos') setPaymentMethod('efectivo');
+
+        document.getElementById('vip-mini-name').innerText = '';
+        document.getElementById('vip-mini-points').innerText = '0 puntos';
+
+        document.getElementById('vip-mini-info').classList.add('hidden');
+        document.getElementById('vip-remove-btn').classList.add('hidden');
+
+        const vipButton = document.getElementById('vip-customer-btn');
+
+        vipButton.classList.add('bg-white', 'text-amber-700');
+        vipButton.classList.remove('bg-amber-100', 'text-amber-900', 'border-amber-400');
+
+        if (currentPaymentMethod === 'puntos') {
+            setPaymentMethod('efectivo');
+        }
+
         evaluatePointsPayment();
     }
 
     function evaluatePointsPayment() {
         const btnPuntos = document.getElementById('btn-puntos');
+
         if (currentSelectedCustomer && parseFloat(currentSelectedCustomer.points) >= globalCartTotal && globalCartTotal > 0) {
             btnPuntos.disabled = false;
             btnPuntos.classList.remove('text-stone-300', 'cursor-not-allowed');
@@ -1024,7 +1112,10 @@
             btnPuntos.classList.add('text-stone-300', 'cursor-not-allowed');
             btnPuntos.classList.remove('text-amber-700', 'hover:border-amber-400');
             btnPuntos.title = "Saldo insuficiente para cubrir el total";
-            if (currentPaymentMethod === 'puntos') setPaymentMethod('efectivo');
+
+            if (currentPaymentMethod === 'puntos') {
+                setPaymentMethod('efectivo');
+            }
         }
     }
 
