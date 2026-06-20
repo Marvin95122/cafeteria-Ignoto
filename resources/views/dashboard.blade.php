@@ -4,7 +4,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-<div class="w-full max-w-7xl mx-auto space-y-4 sm:space-y-6">
+<div class="w-full max-w-[1500px] mx-auto space-y-4 sm:space-y-6">
 
     {{-- ENCABEZADO --}}
     <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 sm:gap-4">

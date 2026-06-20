@@ -295,7 +295,7 @@
 
             {{-- ÁREA DE CONTENIDO SCROLLABLE --}}
             <div class="flex-1 p-2 sm:p-4 overflow-y-auto overflow-x-hidden relative z-0">
-                <div class="w-full max-w-[1600px] mx-auto min-w-0">
+                <div class="w-full max-w-[1800px] mx-auto min-w-0">
                     @yield('content')
                 </div>
             </div>
