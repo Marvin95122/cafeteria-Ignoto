@@ -25,6 +25,54 @@
         ::-webkit-scrollbar-thumb { background: #d6d3d1; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #a8a29e; }
 
+        :root {
+            --app-height: 100vh;
+        }
+
+        /* Si el navegador soporta dvh, usamos el alto dinámico real */
+        @supports (height: 100dvh) {
+            :root {
+                --app-height: 100dvh;
+            }
+        }
+
+        .app-shell,
+        .app-main,
+        #sidebar {
+            height: var(--app-height);
+            max-height: var(--app-height);
+        }
+
+        /* Ajuste para que en móvil no se pierda contenido abajo */
+        #app-content {
+            padding-bottom: calc(2rem + env(safe-area-inset-bottom, 0px));
+        }
+
+        @media (min-width: 640px) {
+            #app-content {
+                padding-bottom: 1rem;
+            }
+        }
+
+        /* En móvil, el menú debe usar el alto real disponible */
+        @media (max-width: 1023px) {
+            #sidebar {
+                height: var(--app-height);
+                max-height: var(--app-height);
+            }
+
+            #sidebar nav {
+                min-height: 0;
+                overflow-y: auto;
+                padding-bottom: 1rem;
+            }
+
+            #sidebar > div:last-child {
+                flex-shrink: 0;
+                padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+            }
+        }
+
         /* Sidebar compacto para laptops pequeñas */
         @media (min-width: 1024px) {
             #sidebar.w-20 nav {
@@ -78,11 +126,11 @@
 
 <body class="bg-stone-50 text-stone-800 overflow-hidden">
 
-    <div class="flex h-screen overflow-hidden bg-stone-100">
+    <div id="app-shell" class="app-shell flex overflow-hidden bg-stone-100">
 
         {{-- MENÚ LATERAL (SIDEBAR) --}}
         <aside id="sidebar"
-                class="fixed inset-y-0 left-0 -translate-x-full lg:translate-x-0 lg:sticky lg:top-0 w-64 h-screen max-h-screen bg-amber-900 text-amber-50 shadow-2xl flex flex-col overflow-hidden transition-all duration-300 z-50 shrink-0">
+               class="fixed inset-y-0 left-0 -translate-x-full lg:translate-x-0 lg:sticky lg:top-0 w-64 bg-amber-900 text-amber-50 shadow-2xl flex flex-col overflow-hidden transition-all duration-300 z-50 shrink-0">
             
             <div class="p-6 flex items-center gap-3 border-b border-amber-800 cursor-pointer hover:bg-amber-800 transition-colors" onclick="toggleSidebar()" title="Colapsar/Expandir Menú">
                 <div class="h-12 w-12 rounded-full overflow-hidden bg-white shadow-md border border-white/30 flex items-center justify-center shrink-0">
@@ -223,7 +271,7 @@
         </div>
 
         {{-- CONTENIDO PRINCIPAL --}}
-        <main class="flex-1 min-w-0 flex flex-col h-screen overflow-hidden bg-stone-100">
+        <main id="app-main" class="app-main flex-1 min-w-0 flex flex-col overflow-hidden bg-stone-100">
             
             {{-- HEADER SUPERIOR --}}
             <header class="flex justify-between items-center bg-white px-3 py-3 sm:p-4 m-2 sm:m-4 mb-0 rounded-xl shadow-sm border border-stone-200 shrink-0">
@@ -294,7 +342,7 @@
             </header>
 
             {{-- ÁREA DE CONTENIDO SCROLLABLE --}}
-            <div class="flex-1 p-2 sm:p-4 overflow-y-auto overflow-x-hidden relative z-0">
+            <div id="app-content" class="flex-1 p-2 sm:p-4 pb-8 sm:pb-4 overflow-y-auto overflow-x-hidden relative z-0">
                 <div class="w-full max-w-[1800px] mx-auto min-w-0">
                     @yield('content')
                 </div>
@@ -361,6 +409,17 @@
         
         // 2. Apagar autocompletado del navegador
         document.addEventListener('DOMContentLoaded', function() {
+
+            function setRealAppHeight() {
+                document.documentElement.style.setProperty('--app-height', `${window.innerHeight}px`);
+            }
+
+            setRealAppHeight();
+
+            window.addEventListener('resize', setRealAppHeight);
+            window.addEventListener('orientationchange', function () {
+                setTimeout(setRealAppHeight, 300);
+            });
             
             // RESTAURAR EL MENÚ ANTES DE QUE EL USUARIO LO VEA
             const savedState = localStorage.getItem('sidebarState');

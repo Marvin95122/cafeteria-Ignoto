@@ -285,7 +285,7 @@
         @endforeach
     </div>
 
-    <div class="mt-5 sm:mt-8 overflow-x-auto">
+    <div class="mt-5 sm:mt-8 overflow-x-auto pb-6 sm:pb-0">
         {{ $products->links() }}
     </div>
 
