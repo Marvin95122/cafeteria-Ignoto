@@ -52,15 +52,15 @@
     </div>
 @endif
 
-<div class="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-stone-100 max-w-6xl mx-auto">
+<div class="bg-white p-3 sm:p-5 md:p-8 rounded-2xl shadow-sm border border-stone-100 w-full max-w-6xl mx-auto overflow-hidden">
 
     <form method="POST" action="{{ route('products.update', $product) }}" enctype="multipart/form-data">
         @csrf
         @method('PUT')
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div class="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6 xl:gap-8">
 
-            <div class="lg:col-span-2 space-y-6">
+            <div class="xl:col-span-2 space-y-4 sm:space-y-6 min-w-0">
 
                 {{-- INFORMACIÓN BÁSICA --}}
                 <div class="bg-white border border-stone-200 rounded-2xl p-5 shadow-sm">
@@ -130,10 +130,10 @@
                 {{-- Separación visual --}}
 
                 {{-- SECCIÓN DE INVENTARIO / RECETA --}}
-                <div class="bg-amber-50/60 p-5 rounded-2xl border border-amber-100 shadow-sm" 
+                <div class="bg-amber-50/60 p-4 sm:p-5 rounded-2xl border border-amber-100 shadow-sm" 
                     x-data="{ dynamicStock: {{ $product->use_dynamic_stock ? 'true' : 'false' }} }">
                     
-                    <div class="flex items-center justify-between mb-4">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
                         <h3 class="font-bold text-amber-900 flex items-center gap-2">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
                             Control de Inventario
@@ -198,7 +198,7 @@
                         </div>
 
                         {{-- Tabla de la Receta --}}
-                        <div class="bg-white rounded-lg border border-stone-200 overflow-hidden">
+                        <div class="bg-white rounded-lg border border-stone-200 overflow-x-auto">
                             <table class="w-full text-sm text-left">
                                 <thead class="bg-stone-50 text-stone-500 font-bold">
                                     <tr>
@@ -260,7 +260,7 @@
                 </div>
             </div>
 
-            <div class="lg:col-span-1 space-y-6">
+            <div class="xl:col-span-1 space-y-4 sm:space-y-6 min-w-0">
                 {{-- Fotografía --}}
                 <div>
                     <label class="block font-bold text-stone-700 mb-2">Fotografía</label>
@@ -301,29 +301,79 @@
                                 $currentQty = $currentIngredient ? $currentIngredient->pivot->quantity : '';
                             @endphp
 
-                            <div class="bg-stone-50 p-3 rounded-lg border border-stone-200 mb-3 relative group">
-                                
-                                {{-- Fila 1: Nombre y Precio --}}
-                                <div class="flex gap-3 mb-2">
-                                    <div class="flex-1">
-                                        <label class="text-xs font-bold text-stone-500 mb-1 block">Nombre del Extra</label>
-                                        <input type="hidden" name="extras[{{ $extra->id }}][id]" value="{{ $extra->id }}">
-                                        <input type="text" name="extras[{{ $extra->id }}][name]" value="{{ $extra->name }}"
-                                            class="w-full border-stone-300 rounded px-2 py-1 text-sm focus:ring-amber-500" required>
+                            <div id="extra-card-{{ $extra->id }}"
+                                class="bg-white p-3 rounded-xl border mb-3 relative transition {{ $extra->active ? 'border-stone-200' : 'border-red-100 opacity-70 bg-red-50/40' }}">
+
+                                <input type="hidden" name="extras[{{ $extra->id }}][id]" value="{{ $extra->id }}">
+
+                                <div class="flex items-start justify-between gap-3 mb-3">
+                                    <div class="min-w-0">
+                                        <p class="text-[10px] uppercase tracking-wide text-stone-400 font-black">
+                                            Extra existente
+                                        </p>
+
+                                        <span id="extra-status-{{ $extra->id }}"
+                                            class="inline-flex mt-1 px-2 py-0.5 rounded-full text-[10px] font-black {{ $extra->active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' }}">
+                                            {{ $extra->active ? 'Activo' : 'Inactivo' }}
+                                        </span>
                                     </div>
-                                    <div class="w-24">
-                                        <label class="text-xs font-bold text-stone-500 mb-1 block">Precio ($)</label>
-                                        <input type="number" step="0.01" name="extras[{{ $extra->id }}][price]" value="{{ $extra->price }}"
-                                            class="w-full border-stone-300 rounded px-2 py-1 text-sm focus:ring-amber-500" required>
+
+                                    <div class="shrink-0">
+                                        <input type="checkbox"
+                                            id="extra-active-{{ $extra->id }}"
+                                            name="extras[{{ $extra->id }}][active]"
+                                            value="1"
+                                            {{ $extra->active ? 'checked' : '' }}
+                                            class="sr-only">
+
+                                        <button type="button"
+                                                id="extra-toggle-{{ $extra->id }}"
+                                                onclick="toggleExistingExtra({{ $extra->id }})"
+                                                class="text-[11px] px-3 py-1.5 rounded-lg font-black border transition {{ $extra->active ? 'bg-red-50 text-red-600 border-red-100 hover:bg-red-100' : 'bg-green-50 text-green-700 border-green-100 hover:bg-green-100' }}">
+                                            {{ $extra->active ? 'Quitar de venta' : 'Reactivar' }}
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {{-- Fila 1: Nombre y Precio --}}
+                                <div class="grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_7rem] gap-3 mb-3">
+                                    <div class="min-w-0">
+                                        <label class="text-xs font-bold text-stone-500 mb-1 block">
+                                            Nombre del Extra
+                                        </label>
+
+                                        <input type="text"
+                                            name="extras[{{ $extra->id }}][name]"
+                                            value="{{ $extra->name }}"
+                                            class="w-full border-stone-300 rounded-lg px-3 py-2 text-sm focus:ring-amber-500 focus:border-amber-500"
+                                            required>
+                                    </div>
+
+                                    <div>
+                                        <label class="text-xs font-bold text-stone-500 mb-1 block">
+                                            Precio ($)
+                                        </label>
+
+                                        <input type="number"
+                                            step="0.01"
+                                            name="extras[{{ $extra->id }}][price]"
+                                            value="{{ $extra->price }}"
+                                            class="w-full border-stone-300 rounded-lg px-3 py-2 text-sm focus:ring-amber-500 focus:border-amber-500"
+                                            required>
                                     </div>
                                 </div>
 
                                 {{-- Fila 2: Vinculación con Inventario --}}
-                                <div class="flex gap-3 items-end bg-white p-2 rounded border border-stone-100">
-                                    <div class="flex-1">
-                                        <label class="text-xs text-stone-400 block">Descontar del Inventario (Opcional)</label>
-                                        <select name="extras[{{ $extra->id }}][ingredient_id]" class="w-full border-stone-200 rounded text-xs py-1 text-stone-600">
+                                <div class="grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_6rem] gap-3 bg-stone-50 p-3 rounded-xl border border-stone-100">
+                                    <div class="min-w-0">
+                                        <label class="text-xs text-stone-400 block mb-1">
+                                            Descontar del Inventario
+                                        </label>
+
+                                        <select name="extras[{{ $extra->id }}][ingredient_id]"
+                                                class="w-full border-stone-200 rounded-lg text-xs py-2 text-stone-600">
                                             <option value="">- Sin ingrediente -</option>
+
                                             @foreach($ingredients as $ing)
                                                 <option value="{{ $ing->id }}" {{ $currentIngId == $ing->id ? 'selected' : '' }}>
                                                     {{ $ing->name }} ({{ $ing->unit }})
@@ -331,19 +381,24 @@
                                             @endforeach
                                         </select>
                                     </div>
-                                    <div class="w-24">
-                                        <label class="text-xs text-stone-400 block">Cantidad</label>
-                                        <input type="number" step="0.01" name="extras[{{ $extra->id }}][ingredient_qty]" value="{{ $currentQty }}" placeholder="0" 
-                                            class="w-full border-stone-200 rounded text-xs py-1">
+
+                                    <div>
+                                        <label class="text-xs text-stone-400 block mb-1">
+                                            Cantidad
+                                        </label>
+
+                                        <input type="number"
+                                            step="0.01"
+                                            name="extras[{{ $extra->id }}][ingredient_qty]"
+                                            value="{{ $currentQty }}"
+                                            placeholder="0"
+                                            class="w-full border-stone-200 rounded-lg text-xs py-2">
                                     </div>
                                 </div>
 
-                                {{-- Checkbox Activo --}}
-                                <div class="absolute top-2 right-2 flex items-center bg-white rounded-full px-2 py-1 border border-stone-100 shadow-sm">
-                                    <label class="text-xs text-stone-400 mr-1">Activo</label>
-                                    <input type="checkbox" name="extras[{{ $extra->id }}][active]" value="1" {{ $extra->active ? 'checked' : '' }}
-                                        class="w-4 h-4 text-green-600 rounded focus:ring-green-500 border-stone-300">
-                                </div>
+                                <p class="text-[10px] text-stone-400 mt-2 leading-snug">
+                                    Quitar de venta no elimina el extra; solo evita que aparezca en nuevas ventas.
+                                </p>
                             </div>
                         @endforeach
                     </div>
@@ -360,10 +415,16 @@
         </div>
 
         {{-- BOTONES --}}
-        <div class="flex justify-end gap-4 mt-10 pt-6 border-t border-stone-100">
-            <a href="{{ route('products.index') }}" class="px-6 py-3 rounded-lg text-stone-600 font-medium hover:bg-stone-100 transition">Cancelar</a>
-            <button class="bg-amber-800 text-white px-8 py-3 rounded-lg shadow-lg hover:bg-amber-900 font-bold flex items-center gap-2">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+        <div class="flex flex-col sm:flex-row sm:justify-end gap-3 sm:gap-4 mt-8 sm:mt-10 pt-5 sm:pt-6 border-t border-stone-100">
+            <a href="{{ route('products.index') }}"
+            class="w-full sm:w-auto px-6 py-3 rounded-lg text-stone-600 font-medium hover:bg-stone-100 transition text-center">
+                Cancelar
+            </a>
+
+            <button class="w-full sm:w-auto justify-center bg-amber-800 text-white px-8 py-3 rounded-lg shadow-lg hover:bg-amber-900 font-bold flex items-center gap-2">
+                <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
                 Actualizar Producto
             </button>
         </div>
@@ -463,6 +524,35 @@
         }
     }
 
+    function toggleExistingExtra(id) {
+        const checkbox = document.getElementById(`extra-active-${id}`);
+        const card = document.getElementById(`extra-card-${id}`);
+        const badge = document.getElementById(`extra-status-${id}`);
+        const button = document.getElementById(`extra-toggle-${id}`);
+
+        if (!checkbox || !card || !badge || !button) {
+            return;
+        }
+
+        checkbox.checked = !checkbox.checked;
+
+        if (checkbox.checked) {
+            card.className = 'bg-white p-3 rounded-xl border mb-3 relative transition border-stone-200';
+            badge.className = 'inline-flex mt-1 px-2 py-0.5 rounded-full text-[10px] font-black bg-green-100 text-green-700';
+            badge.innerText = 'Activo';
+
+            button.className = 'text-[11px] px-3 py-1.5 rounded-lg font-black border transition bg-red-50 text-red-600 border-red-100 hover:bg-red-100';
+            button.innerText = 'Quitar de venta';
+        } else {
+            card.className = 'bg-white p-3 rounded-xl border mb-3 relative transition border-red-100 opacity-70 bg-red-50/40';
+            badge.className = 'inline-flex mt-1 px-2 py-0.5 rounded-full text-[10px] font-black bg-red-100 text-red-700';
+            badge.innerText = 'Inactivo';
+
+            button.className = 'text-[11px] px-3 py-1.5 rounded-lg font-black border transition bg-green-50 text-green-700 border-green-100 hover:bg-green-100';
+            button.innerText = 'Reactivar';
+        }
+    }
+
     //LÓGICA DE NUEVOS EXTRAS
     let newExtraIndex = 0;
     
@@ -478,16 +568,16 @@
         }
 
         const html = `
-            <div class="bg-stone-50 p-3 rounded-lg border border-stone-200 animate-fade-in-down mb-3 relative group">
+            <div class="bg-white p-3 rounded-xl border border-stone-200 animate-fade-in-down mb-3 relative group">
                 
                 {{-- Fila 1: Nombre y Precio --}}
-                <div class="flex gap-3 mb-2">
+                <div class="grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_7rem] gap-3 mb-3">
                     <div class="flex-1">
                         <label class="text-xs font-bold text-stone-500 mb-1 block">Nombre del Extra</label>
                         <input type="text" name="new_extras[${newExtraIndex}][name]" placeholder="Nombre (ej. Crema)" 
                                class="w-full border-stone-300 rounded px-2 py-1 text-sm focus:ring-amber-500" required>
                     </div>
-                    <div class="w-24">
+                    <div>
                         <label class="text-xs font-bold text-stone-500 mb-1 block">Precio ($)</label>
                         <input type="number" step="0.01" name="new_extras[${newExtraIndex}][price]" placeholder="0" 
                                class="w-full border-stone-300 rounded px-2 py-1 text-sm focus:ring-amber-500" required>
@@ -495,14 +585,14 @@
                 </div>
 
                 {{-- Fila 2: Vinculación con Inventario --}}
-                <div class="flex gap-3 items-end bg-white p-2 rounded border border-stone-100">
+                <div class="grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_6rem] gap-3 bg-stone-50 p-3 rounded-xl border border-stone-100">
                     <div class="flex-1">
                         <label class="text-xs text-stone-400 block">Descontar del Inventario (Opcional)</label>
                         <select name="new_extras[${newExtraIndex}][ingredient_id]" class="w-full border-stone-200 rounded text-xs py-1 text-stone-600">
                             ${optionsHtml}
                         </select>
                     </div>
-                    <div class="w-24">
+                    <div>
                         <label class="text-xs text-stone-400 block">Cantidad</label>
                         <input type="number" step="0.01" name="new_extras[${newExtraIndex}][ingredient_qty]" placeholder="0" 
                                class="w-full border-stone-200 rounded text-xs py-1">

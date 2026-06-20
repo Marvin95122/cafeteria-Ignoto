@@ -226,10 +226,22 @@ class ProductController extends Controller
         }
 
         $currentExtraIds = $product->extras()->pluck('extras.id')->toArray();
-        $idsToDelete = array_diff($currentExtraIds, $idsToKeep);
-        
-        if (!empty($idsToDelete)) {
-            Extra::whereIn('id', $idsToDelete)->delete();
+        $idsToDeactivate = array_diff($currentExtraIds, $idsToKeep);
+
+        if (!empty($idsToDeactivate)) {
+            foreach ($idsToDeactivate as $extraId) {
+                $product->extras()->updateExistingPivot($extraId, [
+                    'active' => false,
+                ]);
+
+                $extra = Extra::find($extraId);
+
+                if ($extra) {
+                    $extra->update([
+                        'active' => false,
+                    ]);
+                }
+            }
         }
 
         $ingredientsToSync = [];
