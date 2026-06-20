@@ -29,14 +29,14 @@
     </div>
 @endif
 
-<div class="h-[calc(100vh-105px)] bg-stone-100 overflow-hidden">
+<div id="pos-screen" class="pos-screen h-[calc(100vh-105px)] bg-stone-100 overflow-hidden">
 
 <meta name="csrf-token" content="{{ csrf_token() }}">
 
-<div class="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_340px] 2xl:grid-cols-[minmax(0,1fr)_355px] gap-3 h-full min-h-0 pt-2">
+<div id="pos-layout" class="pos-layout grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_340px] 2xl:grid-cols-[minmax(0,1fr)_355px] gap-3 h-full min-h-0 pt-2">
     
     {{-- SECCIÓN IZQUIERDA: CATÁLOGO DE PRODUCTOS --}}
-    <div class="w-full min-w-0 flex flex-col h-full min-h-0">
+    <div class="pos-catalog w-full min-w-0 flex flex-col h-full min-h-0">
         
         {{-- FILTROS COMPACTOS DEL POS --}}
         <div class="bg-white rounded-2xl shadow-sm border border-stone-100 px-3 py-2.5 mb-3 flex-none overflow-hidden">
@@ -86,21 +86,21 @@
         </div>
 
         <div class="flex-1 min-h-0 overflow-y-auto pr-1 custom-scrollbar">
-            <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-3 pb-4" id="products-grid">
+            <div class="grid grid-cols-2 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-2.5 sm:gap-3 pb-20 lg:pb-4" id="products-grid">
                 @foreach($products as $product)
                     <button onclick="openProductModal({{ $product->id }})"
                             data-id="{{ $product->id }}"
                             data-category="{{ $product->category_id }}"
-                            class="product-card bg-white p-3 rounded-2xl shadow-sm border border-stone-100 hover:border-amber-300 hover:shadow-md transition text-left flex flex-col h-full relative group overflow-hidden">
+                            class="product-card bg-white p-2.5 sm:p-3 rounded-2xl shadow-sm border border-stone-100 hover:border-amber-300 hover:shadow-md transition text-left flex flex-col h-full relative group overflow-hidden">
                         
-                        <div class="relative w-full h-32 bg-stone-50 rounded-xl mb-3 overflow-hidden flex items-center justify-center border border-stone-100">
+                        <div class="relative w-full h-24 sm:h-32 bg-stone-50 rounded-xl mb-2 sm:mb-3 overflow-hidden flex items-center justify-center border border-stone-100">
                             @if($product->image)
                                 <img src="{{ asset('storage/' . $product->image) }}"
                                     alt="{{ $product->name }}"
                                     class="w-full h-full object-contain object-center p-2 group-hover:scale-[1.03] transition duration-300">
                             @else
                                 <div class="w-full h-full flex flex-col items-center justify-center text-stone-300">
-                                    <span class="text-4xl drop-shadow-sm">☕</span>
+                                    <span class="text-2xl sm:text-4xl drop-shadow-sm">☕</span>
                                     <span class="text-[10px] font-bold mt-1">Sin imagen</span>
                                 </div>
                             @endif
@@ -118,17 +118,17 @@
                                     {{ $product->category->name ?? 'Sin categoría' }}
                                 </p>
 
-                                <h3 class="product-name font-bold text-stone-800 text-sm leading-tight mb-2 group-hover:text-amber-800 transition">
+                                <h3 class="product-name font-bold text-stone-800 text-xs sm:text-sm leading-tight mb-1.5 sm:mb-2 group-hover:text-amber-800 transition">
                                     {{ $product->name }}
                                 </h3>
                             </div>
 
                             <div class="flex justify-between items-end gap-2 mt-2">
-                                <span class="text-amber-700 font-black text-lg">
+                                <span class="text-amber-700 font-black text-base sm:text-lg">
                                     ${{ number_format($product->price, 2) }}
                                 </span>
 
-                                <span class="stock-badge text-xs font-bold {{ $product->calculated_stock > 0 ? 'text-stone-500 bg-stone-100' : 'text-red-500 bg-red-50' }} px-2 py-1 rounded-full whitespace-nowrap">
+                                <span class="stock-badge text-[10px] sm:text-xs font-bold {{ $product->calculated_stock > 0 ? 'text-stone-500 bg-stone-100' : 'text-red-500 bg-red-50' }} px-2 py-1 rounded-full whitespace-nowrap">
                                     {{ $product->calculated_stock }} disp.
                                 </span>
                             </div>
@@ -140,7 +140,7 @@
     </div>
 
     {{-- SECCIÓN DERECHA: EL TICKET / CARRITO --}}
-    <div class="w-full h-full min-h-0 bg-white rounded-2xl shadow-lg border border-stone-200 flex flex-col overflow-hidden relative z-20">
+    <div id="pos-ticket-panel" class="pos-ticket-panel w-full h-full min-h-0 bg-white rounded-2xl shadow-lg border border-stone-200 flex flex-col overflow-hidden relative z-20">
 
         {{-- HEADER TICKET --}}
         <div class="flex-none bg-stone-50 px-3 py-2.5 border-b border-stone-200 rounded-t-2xl">
@@ -156,6 +156,12 @@
                 </div>
 
                 <div class="flex items-center gap-1.5 shrink-0">
+                    <button type="button"
+                            onclick="closeMobileTicket()"
+                            class="lg:hidden w-8 h-8 rounded-full bg-white text-stone-400 hover:text-amber-800 hover:bg-amber-50 border border-stone-200 flex items-center justify-center transition"
+                            title="Cerrar ticket">
+                        ↓
+                    </button>
                     <button type="button"
                             id="vip-customer-btn"
                             onclick="openVipCustomerModal()"
@@ -313,6 +319,40 @@
             </button>
         </div>
     </div>
+</div>
+
+{{-- BARRA MÓVIL DEL TICKET --}}
+<div id="mobile-ticket-bar"
+     class="lg:hidden fixed left-3 right-3 bottom-3 z-40 bg-stone-900 text-white rounded-2xl shadow-2xl border border-stone-700 overflow-hidden">
+    <button type="button"
+            onclick="openMobileTicket()"
+            class="w-full px-4 py-3 flex items-center justify-between gap-3">
+        <div class="text-left">
+            <p class="text-[10px] uppercase tracking-widest text-amber-200 font-black">
+                Ticket
+            </p>
+
+            <p class="text-xs text-stone-300">
+                <span id="mobile-cart-count">0</span> producto(s)
+            </p>
+        </div>
+
+        <div class="text-right">
+            <p class="text-[10px] text-stone-300">
+                Total
+            </p>
+
+            <p id="mobile-cart-total" class="text-xl font-black text-amber-300">
+                $0.00
+            </p>
+        </div>
+    </button>
+</div>
+
+{{-- FONDO OSCURO DEL TICKET MÓVIL --}}
+<div id="mobile-ticket-overlay"
+     onclick="closeMobileTicket()"
+     class="lg:hidden fixed inset-0 bg-stone-900/50 backdrop-blur-sm z-40 hidden">
 </div>
 
 {{-- MODAL DE PRODUCTO --}}
@@ -488,6 +528,30 @@
     let currentPaymentMethod = 'efectivo'; 
     let globalCartTotal = 0;
     let currentCategoryFilter = 'all';
+
+    function openMobileTicket() {
+        const panel = document.getElementById('pos-ticket-panel');
+        const overlay = document.getElementById('mobile-ticket-overlay');
+
+        if (!panel || !overlay) {
+            return;
+        }
+
+        panel.classList.add('mobile-ticket-open');
+        overlay.classList.remove('hidden');
+    }
+
+    function closeMobileTicket() {
+        const panel = document.getElementById('pos-ticket-panel');
+        const overlay = document.getElementById('mobile-ticket-overlay');
+
+        if (!panel || !overlay) {
+            return;
+        }
+
+        panel.classList.remove('mobile-ticket-open');
+        overlay.classList.add('hidden');
+    }
 
     // --- Calculadora de Stock Compartido ---
     function getAvailableStock(product, ignoreCartItemId = null) {
@@ -786,6 +850,12 @@
 
         closeProductModal();
         renderCart();
+
+        if (window.innerWidth < 1024) {
+            setTimeout(() => {
+                openMobileTicket();
+            }, 250);
+        }
     }
 
     function renderCart() {
@@ -794,15 +864,26 @@
         globalCartTotal = 0; 
         container.innerHTML = '';
 
+        const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+
         const cartCount = document.getElementById('cart-count');
         if (cartCount) {
-            cartCount.innerText = cart.reduce((sum, item) => sum + item.quantity, 0);
+            cartCount.innerText = totalItems;
+        }
+
+        const mobileCartCount = document.getElementById('mobile-cart-count');
+        if (mobileCartCount) {
+            mobileCartCount.innerText = totalItems;
         }
 
         if (cart.length === 0) {
             emptyMsg.classList.remove('hidden');
             emptyMsg.style.display = 'flex';
             document.getElementById('cart-total').innerText = '$0.00';
+            const mobileTotalEmpty = document.getElementById('mobile-cart-total');
+            if (mobileTotalEmpty) {
+                mobileTotalEmpty.innerText = '$0.00';
+            }
         } else {
             emptyMsg.classList.add('hidden');
             emptyMsg.style.display = 'none';
@@ -827,6 +908,10 @@
                 container.insertAdjacentHTML('beforeend', html);
             });
             document.getElementById('cart-total').innerText = `$${globalCartTotal.toFixed(2)}`;
+            const mobileTotal = document.getElementById('mobile-cart-total');
+            if (mobileTotal) {
+                mobileTotal.innerText = `$${globalCartTotal.toFixed(2)}`;
+            }
         }
         calculateChange();
     evaluatePointsPayment();
@@ -1176,6 +1261,70 @@
     .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
     @keyframes fadeInDown { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
     .animate-fade-in-down { animation: fadeInDown 0.2s ease-out; }
+    @media (max-width: 1023px) {
+        .pos-screen {
+            height: auto !important;
+            min-height: calc(100vh - 90px);
+            overflow: visible !important;
+            padding-bottom: 5.5rem;
+        }
+
+        .pos-layout {
+            display: block !important;
+            height: auto !important;
+            min-height: 0 !important;
+        }
+
+        .pos-catalog {
+            height: auto !important;
+            min-height: 0 !important;
+        }
+
+        .pos-catalog > .flex-1 {
+            overflow: visible !important;
+            min-height: 0 !important;
+        }
+
+        .pos-ticket-panel {
+            position: fixed !important;
+            left: 0.75rem;
+            right: 0.75rem;
+            bottom: 0.75rem;
+            width: auto !important;
+            height: min(82vh, 690px) !important;
+            max-height: 82vh !important;
+            transform: translateY(calc(100% + 1rem));
+            transition: transform 0.25s ease;
+            z-index: 50 !important;
+            border-radius: 1.25rem !important;
+        }
+
+        .pos-ticket-panel.mobile-ticket-open {
+            transform: translateY(0);
+        }
+
+        #cart-items-container {
+            padding-bottom: 0.75rem;
+        }
+    }
+
+    @media (max-width: 420px) {
+        #products-grid {
+            gap: 0.55rem;
+        }
+
+        .product-card {
+            border-radius: 1rem;
+        }
+
+        .pos-ticket-panel {
+            left: 0.5rem;
+            right: 0.5rem;
+            bottom: 0.5rem;
+            height: 84vh !important;
+            max-height: 84vh !important;
+        }
+    }
 </style>
 </div>
 @endsection
