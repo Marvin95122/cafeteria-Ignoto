@@ -4,25 +4,25 @@
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-<div class="max-w-7xl mx-auto space-y-6">
+<div class="w-full max-w-7xl mx-auto space-y-4 sm:space-y-6">
 
     {{-- ENCABEZADO --}}
-    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-        <div>
-            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-100 text-amber-800 text-xs font-bold mb-3">
+    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 sm:gap-4">
+        <div class="min-w-0">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-100 text-amber-800 text-[11px] sm:text-xs font-bold mb-2 sm:mb-3">
                 📊 Panel general
             </div>
 
-            <h1 class="font-serif text-3xl md:text-4xl font-bold text-amber-900">
+            <h1 class="font-serif text-2xl sm:text-3xl lg:text-4xl font-bold text-amber-900 leading-tight">
                 Resumen Financiero y Operativo
             </h1>
 
-            <p class="text-stone-500 mt-1">
+            <p class="text-sm sm:text-base text-stone-500 mt-1 leading-snug">
                 Consulta ventas, caja, inventario, clientes VIP y actividad reciente del sistema.
             </p>
         </div>
 
-        <div class="bg-white border border-stone-200 rounded-2xl px-4 py-3 shadow-sm text-sm text-stone-600">
+        <div class="bg-white border border-stone-200 rounded-2xl px-3 sm:px-4 py-2.5 sm:py-3 shadow-sm text-xs sm:text-sm text-stone-600 w-full sm:w-fit">
             <span class="font-bold text-amber-800">Hoy:</span>
             {{ now()->format('d/m/Y h:i A') }}
         </div>
@@ -30,44 +30,44 @@
 
     {{-- ESTADO DE CAJA --}}
     <div class="bg-white rounded-2xl shadow-sm border border-stone-200 overflow-hidden">
-        <div class="p-5 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-            <div class="flex items-center gap-4">
-                <div class="w-14 h-14 rounded-2xl {{ $activeRegister ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' }} flex items-center justify-center text-2xl">
+        <div class="p-4 sm:p-5 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            <div class="flex items-start sm:items-center gap-3 sm:gap-4 min-w-0">
+                <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl {{ $activeRegister ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' }} flex items-center justify-center text-xl sm:text-2xl shrink-0">
                     {{ $activeRegister ? '💰' : '🔒' }}
                 </div>
 
-                <div>
-                    <h2 class="font-black text-stone-800 text-lg">
+                <div class="min-w-0">
+                    <h2 class="font-black text-stone-800 text-base sm:text-lg leading-tight">
                         {{ $activeRegister ? 'Caja abierta' : 'Caja cerrada' }}
                     </h2>
 
                     @if($activeRegister)
-                        <p class="text-sm text-stone-500">
+                        <p class="text-xs sm:text-sm text-stone-500 leading-snug">
                             Apertura por {{ $activeRegister->user->name ?? 'Usuario' }}
                             · {{ $activeRegister->opened_at->format('d/m/Y h:i A') }}
                         </p>
                     @else
-                        <p class="text-sm text-stone-500">
+                        <p class="text-xs sm:text-sm text-stone-500 leading-snug">
                             No hay turno de caja activo. Abre caja para registrar ventas.
                         </p>
                     @endif
                 </div>
             </div>
 
-            <div class="flex flex-col sm:flex-row gap-3">
+            <div class="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full lg:w-auto">
                 @if($activeRegister)
-                    <div class="bg-green-50 border border-green-100 rounded-2xl px-4 py-3">
-                        <p class="text-xs font-bold text-green-700 uppercase">
+                    <div class="bg-green-50 border border-green-100 rounded-2xl px-4 py-3 w-full sm:w-auto">
+                        <p class="text-[11px] sm:text-xs font-bold text-green-700 uppercase">
                             Efectivo esperado
                         </p>
-                        <p class="text-xl font-black text-green-800">
+                        <p class="text-lg sm:text-xl font-black text-green-800">
                             ${{ number_format($expectedCash, 2) }}
                         </p>
                     </div>
                 @endif
 
                 <a href="{{ route('cash_registers.index') }}"
-                   class="inline-flex justify-center items-center px-5 py-3 rounded-xl bg-amber-800 text-white font-bold hover:bg-amber-900 transition">
+                class="inline-flex justify-center items-center px-4 sm:px-5 py-3 rounded-xl bg-amber-800 text-white font-bold hover:bg-amber-900 transition w-full sm:w-auto">
                     Ir a Corte de Caja
                 </a>
             </div>
@@ -75,13 +75,13 @@
     </div>
 
     {{-- TARJETAS PRINCIPALES --}}
-    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
+    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4 xl:gap-5">
 
-        <div class="bg-white p-5 rounded-2xl shadow-sm border border-stone-200 hover:shadow-md transition">
+        <div class="bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-stone-200 hover:shadow-md transition">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-sm font-bold text-stone-500">Ventas de hoy</p>
-                    <h3 class="text-3xl font-black text-green-600 mt-1">
+                    <p class="text-xs sm:text-sm font-bold text-stone-500 leading-tight">Ventas de hoy</p>
+                    <h3 class="text-2xl sm:text-3xl font-black text-green-600 mt-1">
                         ${{ number_format($salesToday, 2) }}
                     </h3>
                     <p class="text-xs text-stone-400 mt-1">
@@ -95,11 +95,11 @@
             </div>
         </div>
 
-        <div class="bg-white p-5 rounded-2xl shadow-sm border border-stone-200 hover:shadow-md transition">
+        <div class="bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-stone-200 hover:shadow-md transition">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-sm font-bold text-stone-500">Ventas semana</p>
-                    <h3 class="text-3xl font-black text-blue-600 mt-1">
+                    <p class="text-xs sm:text-sm font-bold text-stone-500 leading-tight">Ventas semana</p>
+                    <h3 class="text-2xl sm:text-3xl font-black text-blue-600 mt-1">
                         ${{ number_format($salesWeek, 2) }}
                     </h3>
                     <p class="text-xs text-stone-400 mt-1">
@@ -113,11 +113,11 @@
             </div>
         </div>
 
-        <div class="bg-white p-5 rounded-2xl shadow-sm border border-stone-200 hover:shadow-md transition">
+        <div class="bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-stone-200 hover:shadow-md transition">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-sm font-bold text-stone-500">Gastos del mes</p>
-                    <h3 class="text-3xl font-black text-red-600 mt-1">
+                    <p class="text-xs sm:text-sm font-bold text-stone-500 leading-tight">Gastos del mes</p>
+                    <h3 class="text-2xl sm:text-3xl font-black text-red-600 mt-1">
                         ${{ number_format($expensesMonth, 2) }}
                     </h3>
                     <p class="text-xs text-stone-400 mt-1">
@@ -131,7 +131,7 @@
             </div>
         </div>
 
-        <div class="bg-gradient-to-br from-amber-900 to-stone-900 p-5 rounded-2xl shadow-md border border-amber-800 relative overflow-hidden text-white">
+        <div class="bg-gradient-to-br from-amber-900 to-stone-900 p-4 sm:p-5 rounded-2xl shadow-md border border-amber-800 relative overflow-hidden text-white">
             <div class="absolute right-[-6px] top-[-8px] text-6xl opacity-20">
                 📊
             </div>
@@ -140,7 +140,7 @@
                 Ganancia neta del mes
             </p>
 
-            <h3 class="text-3xl font-black mt-1">
+            <h3 class="text-2xl sm:text-3xl font-black mt-1">
                 ${{ number_format($netProfitMonth, 2) }}
             </h3>
 
@@ -151,38 +151,38 @@
     </div>
 
     {{-- TARJETAS SECUNDARIAS --}}
-    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
-        <div class="bg-white p-5 rounded-2xl shadow-sm border border-stone-200">
-            <p class="text-sm font-bold text-stone-500">Ventas canceladas hoy</p>
-            <h3 class="text-2xl font-black text-orange-600 mt-1">
+    <div class="grid grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4 xl:gap-5">
+        <div class="bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-stone-200">
+            <p class="text-xs sm:text-sm font-bold text-stone-500 leading-tight">Ventas canceladas hoy</p>
+            <h3 class="text-xl sm:text-2xl font-black text-orange-600 mt-1">
                 {{ $cancelledOrdersToday }}
             </h3>
         </div>
 
-        <div class="bg-white p-5 rounded-2xl shadow-sm border border-stone-200">
-            <p class="text-sm font-bold text-stone-500">Alertas de inventario</p>
-            <h3 class="text-2xl font-black {{ $totalInventoryAlerts > 0 ? 'text-red-600' : 'text-green-600' }} mt-1">
+        <div class="bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-stone-200">
+            <p class="text-xs sm:text-sm font-bold text-stone-500 leading-tight">Alertas de inventario</p>
+            <h3 class="text-xl sm:text-2xl font-black {{ $totalInventoryAlerts > 0 ? 'text-red-600' : 'text-green-600' }} mt-1">
                 {{ $totalInventoryAlerts }}
             </h3>
         </div>
 
-        <div class="bg-white p-5 rounded-2xl shadow-sm border border-stone-200">
-            <p class="text-sm font-bold text-stone-500">Clientes VIP</p>
-            <h3 class="text-2xl font-black text-amber-700 mt-1">
+        <div class="bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-stone-200">
+            <p class="text-xs sm:text-sm font-bold text-stone-500 leading-tight">Clientes VIP</p>
+            <h3 class="text-xl sm:text-2xl font-black text-amber-700 mt-1">
                 {{ $totalCustomers }}
             </h3>
         </div>
 
-        <div class="bg-white p-5 rounded-2xl shadow-sm border border-stone-200">
-            <p class="text-sm font-bold text-stone-500">Puntos VIP acumulados</p>
-            <h3 class="text-2xl font-black text-purple-600 mt-1">
+        <div class="bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-stone-200">
+            <p class="text-xs sm:text-sm font-bold text-stone-500 leading-tight">Puntos VIP acumulados</p>
+            <h3 class="text-xl sm:text-2xl font-black text-purple-600 mt-1">
                 {{ number_format($totalVipPoints) }}
             </h3>
         </div>
     </div>
 
     {{-- ACCESOS RÁPIDOS --}}
-    <div class="bg-white rounded-2xl shadow-sm border border-stone-200 p-5">
+    <div class="bg-white rounded-2xl shadow-sm border border-stone-200 p-4 sm:p-5">
         <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-4">
             <div>
                 <h2 class="font-bold text-stone-800 text-lg">
@@ -194,39 +194,39 @@
             </div>
         </div>
 
-        <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
+        <div class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-2.5 sm:gap-3">
             <a href="{{ route('pos.index') }}"
-               class="p-4 rounded-2xl bg-amber-50 text-amber-800 font-bold hover:bg-amber-100 transition text-center">
+               class="p-3 sm:p-4 rounded-2xl bg-amber-50 text-amber-800 font-bold hover:bg-amber-100 transition text-center">
                 🧾<br>
                 <span class="text-sm">POS</span>
             </a>
 
             <a href="{{ route('cash_registers.index') }}"
-               class="p-4 rounded-2xl bg-green-50 text-green-700 font-bold hover:bg-green-100 transition text-center">
+               class="p-3 sm:p-4 rounded-2xl bg-green-50 text-green-700 font-bold hover:bg-green-100 transition text-center">
                 💰<br>
                 <span class="text-sm">Caja</span>
             </a>
 
             <a href="{{ route('inventory_movements.index') }}"
-               class="p-4 rounded-2xl bg-blue-50 text-blue-700 font-bold hover:bg-blue-100 transition text-center">
+               class="p-3 sm:p-4 rounded-2xl bg-blue-50 text-blue-700 font-bold hover:bg-blue-100 transition text-center">
                 📋<br>
                 <span class="text-sm">Inventario</span>
             </a>
 
             <a href="{{ route('products.index') }}"
-               class="p-4 rounded-2xl bg-stone-50 text-stone-700 font-bold hover:bg-stone-100 transition text-center">
+               class="p-3 sm:p-4 rounded-2xl bg-stone-50 text-stone-700 font-bold hover:bg-stone-100 transition text-center">
                 ☕<br>
                 <span class="text-sm">Productos</span>
             </a>
 
             <a href="{{ route('ingredients.index') }}"
-               class="p-4 rounded-2xl bg-orange-50 text-orange-700 font-bold hover:bg-orange-100 transition text-center">
+               class="p-3 sm:p-4 rounded-2xl bg-orange-50 text-orange-700 font-bold hover:bg-orange-100 transition text-center">
                 📦<br>
                 <span class="text-sm">Materia Prima</span>
             </a>
 
             <a href="{{ route('vip.index') }}"
-               class="p-4 rounded-2xl bg-purple-50 text-purple-700 font-bold hover:bg-purple-100 transition text-center">
+               class="p-3 sm:p-4 rounded-2xl bg-purple-50 text-purple-700 font-bold hover:bg-purple-100 transition text-center">
                 👑<br>
                 <span class="text-sm">VIP</span>
             </a>
@@ -234,9 +234,9 @@
     </div>
 
     {{-- GRÁFICA Y TOP PRODUCTOS --}}
-    <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+    <div class="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6">
 
-        <div class="xl:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-stone-200">
+        <div class="xl:col-span-2 bg-white p-4 sm:p-6 rounded-2xl shadow-sm border border-stone-200">
             <div class="flex items-center justify-between gap-3 mb-4">
                 <div>
                     <h3 class="font-bold text-stone-800 text-lg">
@@ -248,12 +248,12 @@
                 </div>
             </div>
 
-            <div class="relative h-72 w-full">
+            <div class="relative h-64 sm:h-72 w-full">
                 <canvas id="salesChart"></canvas>
             </div>
         </div>
 
-        <div class="bg-white p-6 rounded-2xl shadow-sm border border-stone-200">
+        <div class="bg-white p-4 sm:p-6 rounded-2xl shadow-sm border border-stone-200">
             <h3 class="font-bold text-stone-800 mb-4 flex items-center gap-2">
                 🏆 Top 5 productos del mes
             </h3>
@@ -285,11 +285,11 @@
     </div>
 
     {{-- ALERTAS Y VENTAS RECIENTES --}}
-    <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+    <div class="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6">
 
         {{-- ALERTAS DE INVENTARIO --}}
         <div class="bg-white rounded-2xl shadow-sm border border-stone-200 overflow-hidden">
-            <div class="bg-red-50 px-6 py-4 border-b border-red-100 flex items-center justify-between gap-3">
+            <div class="bg-red-50 px-4 sm:px-6 py-4 border-b border-red-100 flex items-start sm:items-center justify-between gap-3">
                 <div>
                     <h3 class="font-bold text-red-900 flex items-center gap-2">
                         ⚠️ Alertas de inventario
@@ -304,7 +304,7 @@
                 </span>
             </div>
 
-            <div class="p-5">
+            <div class="p-4 sm:p-5">
                 @if($lowStockProducts->isEmpty() && $lowStockIngredients->isEmpty())
                     <div class="text-center text-green-600 font-bold py-8 flex flex-col items-center">
                         <span class="text-5xl mb-3">✅</span>
@@ -367,7 +367,7 @@
 
         {{-- TICKETS DEL DÍA --}}
         <div class="bg-white rounded-2xl shadow-sm border border-stone-200 overflow-hidden">
-            <div class="bg-stone-50 px-6 py-4 border-b border-stone-100 flex items-center justify-between gap-3">
+            <div class="bg-stone-50 px-4 sm:px-6 py-4 border-b border-stone-100 flex items-start sm:items-center justify-between gap-3">
                 <div>
                     <h3 class="font-bold text-stone-800 flex items-center gap-2">
                         🧾 Tickets del día
@@ -382,9 +382,9 @@
                 </span>
             </div>
 
-            <div class="max-h-[520px] overflow-y-auto divide-y divide-stone-100 custom-scrollbar">
+            <div class="max-h-[420px] sm:max-h-[520px] overflow-y-auto divide-y divide-stone-100 custom-scrollbar">
                 @forelse($todayOrders as $order)
-                    <div class="p-4 flex items-center justify-between gap-4 hover:bg-stone-50 transition">
+                    <div class="p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 hover:bg-stone-50 transition">
                         <div>
                             <p class="font-bold text-stone-800">
                                 Ticket #{{ str_pad($order->id, 5, '0', STR_PAD_LEFT) }}
@@ -466,7 +466,7 @@
                 maintainAspectRatio: false,
                 plugins: {
                     legend: {
-                        position: 'top'
+                        position: window.innerWidth < 640 ? 'bottom' : 'top'
                     },
                     tooltip: {
                         callbacks: {
@@ -490,6 +490,15 @@
                     }
                 },
                 scales: {
+                    x: {
+                        ticks: {
+                            maxRotation: window.innerWidth < 640 ? 45 : 0,
+                            minRotation: 0,
+                            font: {
+                                size: window.innerWidth < 640 ? 9 : 12
+                            }
+                        }
+                    },
                     y: {
                         beginAtZero: true,
                         ticks: {
