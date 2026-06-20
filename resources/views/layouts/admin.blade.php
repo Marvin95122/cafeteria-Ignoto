@@ -24,16 +24,65 @@
         ::-webkit-scrollbar-track { background: #f5f5f4; }
         ::-webkit-scrollbar-thumb { background: #d6d3d1; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #a8a29e; }
+
+        /* Sidebar compacto para laptops pequeñas */
+        @media (min-width: 1024px) {
+            #sidebar.w-20 nav {
+                padding-top: 0.5rem;
+                padding-bottom: 0.5rem;
+            }
+
+            #sidebar.w-20 nav > :not([hidden]) ~ :not([hidden]) {
+                margin-top: 0.45rem !important;
+            }
+
+            #sidebar.w-20 nav > div {
+                padding-left: 0.45rem !important;
+                padding-right: 0.45rem !important;
+            }
+
+            #sidebar.w-20 nav p.sidebar-text {
+                display: none !important;
+            }
+
+            #sidebar.w-20 nav a {
+                justify-content: center;
+                padding: 0.65rem 0.45rem !important;
+                margin-top: 0.35rem !important;
+            }
+
+            #sidebar.w-20 nav a:first-of-type {
+                margin-top: 0 !important;
+            }
+
+            #sidebar.w-20 nav a span:first-child {
+                width: 2rem;
+            }
+
+            #sidebar.w-20 > div:first-child {
+                padding: 0.75rem !important;
+                justify-content: center;
+            }
+
+            #sidebar.w-20 > div:first-child .h-12 {
+                width: 2.75rem !important;
+                height: 2.75rem !important;
+            }
+
+            #sidebar.w-20 > div:last-child {
+                display: none !important;
+            }
+        }
     </style>
 </head>
 
-<body class="bg-stone-50 text-stone-800">
+<body class="bg-stone-50 text-stone-800 overflow-hidden">
 
-    <div class="flex min-h-screen overflow-hidden bg-stone-100">
+    <div class="flex h-screen overflow-hidden bg-stone-100">
 
         {{-- MENÚ LATERAL (SIDEBAR) --}}
         <aside id="sidebar"
-                class="fixed inset-y-0 left-0 -translate-x-full lg:translate-x-0 lg:relative w-64 bg-amber-900 text-amber-50 shadow-2xl flex flex-col transition-all duration-300 z-50 shrink-0">
+                class="fixed inset-y-0 left-0 -translate-x-full lg:translate-x-0 lg:sticky lg:top-0 w-64 h-screen max-h-screen bg-amber-900 text-amber-50 shadow-2xl flex flex-col overflow-hidden transition-all duration-300 z-50 shrink-0">
             
             <div class="p-6 flex items-center gap-3 border-b border-amber-800 cursor-pointer hover:bg-amber-800 transition-colors" onclick="toggleSidebar()" title="Colapsar/Expandir Menú">
                 <div class="h-12 w-12 rounded-full overflow-hidden bg-white shadow-md border border-white/30 flex items-center justify-center shrink-0">
@@ -48,7 +97,7 @@
                 </span>
             </div>
 
-            <nav class="flex-1 py-4 space-y-5 overflow-y-auto overflow-x-hidden">
+            <nav class="flex-1 min-h-0 py-4 space-y-5 overflow-y-auto overflow-x-hidden custom-scrollbar">
 
                 {{-- OPERACIÓN --}}
                 <div class="px-3">
@@ -361,7 +410,7 @@
                     overlay.classList.add('hidden');
                 }
             });
-            
+
             // Apagar autocompletado del navegador
             document.querySelectorAll('input, form, textarea').forEach(function(elemento) {
                 elemento.setAttribute('autocomplete', 'off');
