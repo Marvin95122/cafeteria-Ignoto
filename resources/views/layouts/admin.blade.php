@@ -3,6 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Cafetería Ignoto - Panel de Control</title>
     
@@ -28,10 +29,11 @@
 
 <body class="bg-stone-50 text-stone-800">
 
-    <div class="flex min-h-screen overflow-hidden">
+    <div class="flex min-h-screen overflow-hidden bg-stone-100">
 
         {{-- MENÚ LATERAL (SIDEBAR) --}}
-        <aside id="sidebar" class="w-64 bg-amber-900 text-amber-50 shadow-2xl flex flex-col transition-all duration-300 z-20 shrink-0">
+        <aside id="sidebar"
+                class="fixed inset-y-0 left-0 -translate-x-full lg:translate-x-0 lg:relative w-64 bg-amber-900 text-amber-50 shadow-2xl flex flex-col transition-all duration-300 z-50 shrink-0">
             
             <div class="p-6 flex items-center gap-3 border-b border-amber-800 cursor-pointer hover:bg-amber-800 transition-colors" onclick="toggleSidebar()" title="Colapsar/Expandir Menú">
                 <div class="h-12 w-12 rounded-full overflow-hidden bg-white shadow-md border border-white/30 flex items-center justify-center shrink-0">
@@ -165,17 +167,22 @@
                 &copy; {{ date('Y') }} Sistema Ignoto
             </div>
         </aside>
+        {{-- FONDO OSCURO PARA MENÚ MÓVIL --}}
+        <div id="mobile-sidebar-overlay"
+            onclick="closeMobileSidebar()"
+            class="fixed inset-0 bg-stone-900/50 backdrop-blur-sm z-40 hidden lg:hidden">
+        </div>
 
         {{-- CONTENIDO PRINCIPAL --}}
-        <main class="flex-1 flex flex-col h-screen overflow-hidden bg-stone-100">
+        <main class="flex-1 min-w-0 flex flex-col h-screen overflow-hidden bg-stone-100">
             
             {{-- HEADER SUPERIOR --}}
-            <header class="flex justify-between items-center bg-white p-4 m-4 mb-0 rounded-xl shadow-sm border border-stone-200 shrink-0">
+            <header class="flex justify-between items-center bg-white px-3 py-3 sm:p-4 m-2 sm:m-4 mb-0 rounded-xl shadow-sm border border-stone-200 shrink-0">
                 <div class="flex items-center gap-4">
                     <button onclick="toggleSidebar()" class="text-stone-500 hover:text-amber-900 hover:bg-amber-50 focus:outline-none p-2 rounded-lg transition-colors">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
                     </button>
-                    <h2 class="font-serif font-bold text-2xl text-amber-900 hidden sm:block">
+                    <h2 class="font-serif font-bold text-xl sm:text-2xl text-amber-900 block truncate max-w-[190px] sm:max-w-none">
                         @if(request()->routeIs('dashboard'))
                             Panel Principal
                         @elseif(request()->routeIs('pos.*'))
@@ -238,8 +245,8 @@
             </header>
 
             {{-- ÁREA DE CONTENIDO SCROLLABLE --}}
-            <div class="flex-1 p-4 overflow-y-auto relative z-0">
-                <div class="max-w-[1600px] mx-auto">
+            <div class="flex-1 p-2 sm:p-4 overflow-y-auto overflow-x-hidden relative z-0">
+                <div class="w-full max-w-[1600px] mx-auto min-w-0">
                     @yield('content')
                 </div>
             </div>
@@ -255,52 +262,106 @@
 
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('mobile-sidebar-overlay');
             const texts = document.querySelectorAll('.sidebar-text');
-            
+            const isMobile = window.innerWidth < 1024;
+
+            if (isMobile) {
+                sidebar.classList.toggle('-translate-x-full');
+
+                if (sidebar.classList.contains('-translate-x-full')) {
+                    overlay.classList.add('hidden');
+                } else {
+                    overlay.classList.remove('hidden');
+
+                    texts.forEach(el => {
+                        el.classList.remove('hidden', 'opacity-0');
+                    });
+                }
+
+                return;
+            }
+
             if (sidebar.classList.contains('w-64')) {
-                // Lo estamos cerrando
                 sidebar.classList.remove('w-64');
                 sidebar.classList.add('w-20');
+
                 texts.forEach(el => el.classList.add('opacity-0', 'hidden'));
-                
-                // Guardamos en la memoria del navegador que está cerrado
-                localStorage.setItem('sidebarState', 'collapsed'); 
+
+                localStorage.setItem('sidebarState', 'collapsed');
             } else {
-                // Lo estamos abriendo
                 sidebar.classList.remove('w-20');
                 sidebar.classList.add('w-64');
+
                 texts.forEach(el => {
                     el.classList.remove('hidden');
                     setTimeout(() => el.classList.remove('opacity-0'), 50);
                 });
-                
-                // Guardamos en la memoria del navegador que está abierto
-                localStorage.setItem('sidebarState', 'expanded'); 
+
+                localStorage.setItem('sidebarState', 'expanded');
             }
+        }
+
+        function closeMobileSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('mobile-sidebar-overlay');
+
+            sidebar.classList.add('-translate-x-full');
+            overlay.classList.add('hidden');
         }
         
         // 2. Apagar autocompletado del navegador
         document.addEventListener('DOMContentLoaded', function() {
             
-            // --- MAGIA: RESTAURAR EL MENÚ ANTES DE QUE EL USUARIO LO VEA ---
+            // RESTAURAR EL MENÚ ANTES DE QUE EL USUARIO LO VEA
             const savedState = localStorage.getItem('sidebarState');
-            if (savedState === 'collapsed') {
-                const sidebar = document.getElementById('sidebar');
-                const texts = document.querySelectorAll('.sidebar-text');
-                
-                // Le quitamos la animación temporalmente para que no se vea cómo se encoge ("brinquito")
+            const sidebar = document.getElementById('sidebar');
+            const texts = document.querySelectorAll('.sidebar-text');
+
+            if (window.innerWidth >= 1024 && savedState === 'collapsed') {
                 sidebar.classList.remove('transition-all', 'duration-300');
-                
-                // Lo hacemos pequeño al instante
+
                 sidebar.classList.remove('w-64');
                 sidebar.classList.add('w-20');
+
                 texts.forEach(el => el.classList.add('opacity-0', 'hidden'));
-                
-                // Le regresamos la animación a los 50 milisegundos por si el usuario lo vuelve a abrir
-                setTimeout(() => { sidebar.classList.add('transition-all', 'duration-300'); }, 50);
+
+                setTimeout(() => {
+                    sidebar.classList.add('transition-all', 'duration-300');
+                }, 50);
+            }
+
+            if (window.innerWidth < 1024) {
+                sidebar.classList.add('-translate-x-full');
+                sidebar.classList.remove('w-20');
+                sidebar.classList.add('w-64');
+
+                texts.forEach(el => {
+                    el.classList.remove('hidden', 'opacity-0');
+                });
             }
             // -----------------------------------------------------------------
 
+            window.addEventListener('resize', function () {
+                const sidebar = document.getElementById('sidebar');
+                const overlay = document.getElementById('mobile-sidebar-overlay');
+                const texts = document.querySelectorAll('.sidebar-text');
+
+                if (window.innerWidth < 1024) {
+                    sidebar.classList.add('-translate-x-full');
+                    sidebar.classList.remove('w-20');
+                    sidebar.classList.add('w-64');
+                    overlay.classList.add('hidden');
+
+                    texts.forEach(el => {
+                        el.classList.remove('hidden', 'opacity-0');
+                    });
+                } else {
+                    sidebar.classList.remove('-translate-x-full');
+                    overlay.classList.add('hidden');
+                }
+            });
+            
             // Apagar autocompletado del navegador
             document.querySelectorAll('input, form, textarea').forEach(function(elemento) {
                 elemento.setAttribute('autocomplete', 'off');
