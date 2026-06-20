@@ -2,34 +2,34 @@
 
 @section('content')
 
-<div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-8">
-    <div class="flex items-center gap-4">
+<div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 sm:gap-4 mb-4 sm:mb-8">
+    <div class="flex items-start sm:items-center gap-3 sm:gap-4 min-w-0">
         <a href="{{ route('products.index') }}"
-           class="p-2 rounded-full hover:bg-stone-200 text-stone-500 transition"
+           class="p-2 rounded-full hover:bg-stone-200 text-stone-500 transition shrink-0"
            title="Volver a productos">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                       d="M10 19l-7-7m0 0l7-7m-7 7h18">
                 </path>
             </svg>
         </a>
 
-        <div>
-            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-100 text-amber-800 text-xs font-bold mb-2">
+        <div class="min-w-0">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-100 text-amber-800 text-[11px] sm:text-xs font-bold mb-2">
                 ☕ Nuevo registro
             </div>
 
-            <h1 class="font-serif text-3xl font-bold text-amber-900">
+            <h1 class="font-serif text-2xl sm:text-3xl font-bold text-amber-900 leading-tight">
                 Nuevo Producto
             </h1>
 
-            <p class="text-stone-500">
+            <p class="text-sm sm:text-base text-stone-500 leading-snug">
                 Registra un producto del menú, define su precio, imagen, inventario y extras.
             </p>
         </div>
     </div>
 
-    <div class="bg-white border border-stone-200 rounded-2xl px-4 py-3 shadow-sm text-sm text-stone-600 max-w-md">
+    <div class="bg-white border border-stone-200 rounded-2xl px-4 py-3 shadow-sm text-xs sm:text-sm text-stone-600 w-full lg:max-w-md">
         <span class="font-bold text-amber-800">Sugerencia:</span>
         usa stock manual para productos ya preparados y stock por receta cuando dependa de materia prima.
     </div>
@@ -37,7 +37,7 @@
 
 {{-- ERRORES --}}
 @if ($errors->any())
-    <div class="mb-6 bg-red-50 border-l-4 border-red-500 text-red-800 p-4 rounded-r shadow-sm animate-pulse">
+    <div class="mb-4 sm:mb-6 bg-red-50 border-l-4 border-red-500 text-red-800 p-4 rounded-r shadow-sm animate-pulse text-sm">
         <strong class="font-bold">¡Ups! Hay un par de detalles:</strong>
         <ul class="list-disc list-inside mt-2 text-sm">
             @foreach ($errors->all() as $error)
@@ -47,35 +47,35 @@
     </div>
 @endif
 
-<div class="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-stone-100 max-w-6xl mx-auto">
+<div class="bg-white p-3 sm:p-5 md:p-8 rounded-2xl shadow-sm border border-stone-100 w-full max-w-6xl mx-auto overflow-hidden">
 
     <form method="POST" action="{{ route('products.store') }}" enctype="multipart/form-data" id="productForm">
         @csrf
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div class="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6 xl:gap-8">
 
-            <div class="lg:col-span-2 space-y-6">
+            <div class="xl:col-span-2 space-y-4 sm:space-y-6 min-w-0">
 
                 {{-- INFORMACIÓN BÁSICA --}}
-                <div class="bg-white border border-stone-200 rounded-2xl p-5 shadow-sm">
-                    <div class="flex items-start justify-between gap-4 mb-5">
+                <div class="bg-white border border-stone-200 rounded-2xl p-4 sm:p-5 shadow-sm">
+                    <div class="flex items-start justify-between gap-3 sm:gap-4 mb-4 sm:mb-5">
                         <div>
-                            <h2 class="font-bold text-stone-800 text-lg flex items-center gap-2">
+                            <h2 class="font-bold text-stone-800 text-base sm:text-lg flex items-center gap-2">
                                 🧾 Información básica
                             </h2>
-                            <p class="text-sm text-stone-500 mt-1">
+                            <p class="text-xs sm:text-sm text-stone-500 mt-1 leading-snug">
                                 Define los datos principales que verá el personal en el catálogo y en el POS.
                             </p>
                         </div>
                     </div>
 
                     {{-- Nombre --}}
-                    <div class="mb-6">
-                        <label class="block font-bold text-stone-700 mb-2">Nombre del Producto</label>
+                    <div class="mb-4 sm:mb-6">
+                        <label class="block font-bold text-stone-700 mb-2 text-sm sm:text-base">Nombre del Producto</label>
                         <input type="text" 
                             name="name" 
                             value="{{ old('name') }}" 
-                            class="w-full border-stone-300 rounded-lg shadow-sm focus:border-amber-500 focus:ring focus:ring-amber-200 focus:ring-opacity-50 transition py-3 px-4"
+                            class="w-full border-stone-300 rounded-lg shadow-sm focus:border-amber-500 focus:ring focus:ring-amber-200 focus:ring-opacity-50 transition py-2.5 sm:py-3 px-3 sm:px-4 text-sm sm:text-base"
                             placeholder="Ej. Latte Especial, Pastel de chocolate, Frappe Oreo" 
                             required>
                         <p class="text-xs text-stone-400 mt-1">
@@ -83,12 +83,12 @@
                         </p>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                         {{-- Categoría --}}
                         <div>
                             <label class="block font-bold text-stone-700 mb-2">Categoría</label>
                             <select name="category_id" 
-                                    class="w-full border-stone-300 rounded-lg shadow-sm focus:border-amber-500 focus:ring focus:ring-amber-200 focus:ring-opacity-50 transition py-3 px-4"
+                                    class="w-full border-stone-300 rounded-lg shadow-sm focus:border-amber-500 focus:ring focus:ring-amber-200 focus:ring-opacity-50 transition py-2.5 sm:py-3 px-3 sm:px-4 text-sm sm:text-base"
                                     required>
                                 <option value="">-- Selecciona --</option>
                                 @foreach($categories as $category)
@@ -112,7 +112,7 @@
                                     step="0.01" 
                                     min="0" 
                                     value="{{ old('price') }}" 
-                                    class="w-full border-stone-300 rounded-lg shadow-sm pl-8 focus:border-amber-500 focus:ring focus:ring-amber-200 focus:ring-opacity-50 transition py-3 px-4"
+                                    class="w-full border-stone-300 rounded-lg shadow-sm pl-8 focus:border-amber-500 focus:ring focus:ring-amber-200 focus:ring-opacity-50 transition py-2.5 sm:py-3 px-3 sm:px-4 text-sm sm:text-base"
                                     placeholder="0.00" 
                                     required>
                             </div>
@@ -126,16 +126,16 @@
                 {{-- Separación visual --}}
 
                 {{-- SECCIÓN DE INVENTARIO / RECETA --}}
-                <div class="bg-amber-50/60 p-5 rounded-2xl border border-amber-100 shadow-sm" x-data="{ dynamicStock: {{ old('use_dynamic_stock') ? 'true' : 'false' }} }">
-                    <div class="flex items-center justify-between mb-4">
-                        <h3 class="font-bold text-amber-900 flex items-center gap-2">
+                <div class="bg-amber-50/60 p-4 sm:p-5 rounded-2xl border border-amber-100 shadow-sm" x-data="{ dynamicStock: {{ old('use_dynamic_stock') ? 'true' : 'false' }} }">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+                        <h3 class="font-bold text-amber-900 flex items-center gap-2 text-sm sm:text-base">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
                             Control de Inventario
                         </h3>
                         
                         {{-- Switch --}}
-                        <div class="flex items-center gap-2">
-                            <span class="text-sm font-medium text-stone-600" :class="{ 'text-stone-400': dynamicStock }">Manual</span>
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <span class="text-xs sm:text-sm font-medium text-stone-600" :class="{ 'text-stone-400': dynamicStock }">Manual</span>
                             <button type="button" 
                                     @click="dynamicStock = !dynamicStock" 
                                     class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2" 
@@ -145,23 +145,23 @@
                                       class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out" 
                                       :class="{ 'translate-x-5': dynamicStock, 'translate-x-0': !dynamicStock }"></span>
                             </button>
-                            <span class="text-sm font-medium text-stone-600" :class="{ 'text-amber-700 font-bold': dynamicStock }">Por Receta (Dinámico)</span>
+                            <span class="text-xs sm:text-sm font-medium text-stone-600" :class="{ 'text-amber-700 font-bold': dynamicStock }">Por Receta</span>
                             <input type="hidden" name="use_dynamic_stock" :value="dynamicStock ? 1 : 0">
                         </div>
                     </div>
 
                     {{-- Opción 1: Stock Manual --}}
                     <div x-show="!dynamicStock" class="transition-opacity duration-300">
-                        <label class="block text-sm font-bold text-stone-600 mb-1">Stock Fijo (Cantidad actual)</label>
+                        <label class="block text-xs sm:text-sm font-bold text-stone-600 mb-1">Stock Fijo (Cantidad actual)</label>
                         <input type="number" name="stock" value="{{ old('stock') }}" 
-                               class="w-full border-stone-300 rounded-lg shadow-sm focus:border-amber-500 focus:ring-amber-200"
+                               class="w-full border-stone-300 rounded-lg shadow-sm focus:border-amber-500 focus:ring-amber-200 py-2.5 text-sm"
                                placeholder="Ej. 50">
                         <p class="text-xs text-stone-400 mt-1">Usa esto si NO quieres descontar ingredientes automáticamente.</p>
                     </div>
 
                     {{-- Opción 2: Receta / Ingredientes --}}
                     <div x-show="dynamicStock" class="transition-opacity duration-300" style="display: none;">
-                        <p class="text-sm text-stone-500 mb-3">
+                        <p class="text-xs sm:text-sm text-stone-500 mb-3 leading-snug">
                             Selecciona los ingredientes que componen este producto. El stock se calculará automáticamente según lo que tengas en almacén.
                         </p>
 
@@ -201,8 +201,8 @@
                         </div>
 
                         {{-- Tabla de la Receta --}}
-                        <div class="bg-white rounded-lg border border-stone-200 overflow-hidden">
-                            <table class="w-full text-sm text-left">
+                        <div class="bg-white rounded-lg border border-stone-200 overflow-x-auto">
+                            <table class="w-full min-w-[430px] text-sm text-left">
                                 <thead class="bg-stone-50 text-stone-500 font-bold">
                                     <tr>
                                         <th class="p-3">Ingrediente</th>
@@ -230,22 +230,22 @@
                         class="w-5 h-5 mt-1 text-green-600 border-stone-300 rounded focus:ring-green-500">
 
                     <div>
-                        <label for="active" class="font-bold text-green-800 cursor-pointer">
+                        <label for="active" class="font-bold text-green-800 cursor-pointer text-sm sm:text-base">
                             Producto disponible para venta
                         </label>
-                        <p class="text-xs text-green-700 mt-1">
+                        <p class="text-xs text-green-700 mt-1 leading-snug">
                             Si está activo, aparecerá disponible para administrarlo y venderlo en el POS.
                         </p>
                     </div>
                 </div>
             </div>
 
-            <div class="lg:col-span-1 space-y-6">
+            <div class="xl:col-span-1 space-y-4 sm:space-y-6 min-w-0">
                 {{-- Fotografía --}}
                 <div>
-                    <label class="block font-bold text-stone-700 mb-2">Fotografía</label>
-                    <div class="min-h-[220px] flex items-center justify-center px-6 pt-5 pb-6 border-2 border-stone-300 border-dashed rounded-xl bg-stone-50 hover:bg-stone-100 transition relative overflow-hidden group">
-                        <img id="image-preview" src="#" alt="Vista previa" class="hidden absolute inset-0 w-full h-full object-contain object-center p-3 rounded-xl bg-white">
+                    <label class="block font-bold text-stone-700 mb-2 text-sm sm:text-base">Fotografía</label>
+                    <div class="min-h-[180px] sm:min-h-[220px] flex items-center justify-center px-4 sm:px-6 pt-5 pb-6 border-2 border-stone-300 border-dashed rounded-xl bg-stone-50 hover:bg-stone-100 transition relative overflow-hidden group">
+                        <img id="image-preview" src="#" alt="Vista previa" class="hidden absolute inset-0 w-full h-full object-contain object-center p-2 sm:p-3 rounded-xl bg-white">
                         <div class="space-y-1 text-center relative z-10" id="upload-placeholder">
                             <svg class="mx-auto h-12 w-12 text-stone-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
                                 <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
@@ -262,27 +262,35 @@
                 </div>
 
                 {{-- SECCIÓN DE EXTRAS --}}
-                <div class="bg-stone-50 p-4 rounded-xl border border-stone-200">
-                    <h3 class="text-sm font-bold text-stone-700 mb-3 flex items-center gap-2">
+                <div class="bg-stone-50 p-3 sm:p-4 rounded-xl border border-stone-200">
+                    <h3 class="text-sm font-bold text-stone-700 mb-2 sm:mb-3 flex items-center gap-2">
                         <span>🍪</span> Extras para el Cliente
                     </h3>
-                    <p class="text-xs text-stone-500 mb-3">Opciones que el cliente paga aparte (ej. Jarabe extra).</p>
+                    <p class="text-xs text-stone-500 mb-3 leading-snug">
+                        Opciones que el cliente paga aparte, como leche extra, crema o toppings.
+                    </p>
                     
                     <div id="extras-container" class="space-y-2 mb-3"></div>
 
                     <button type="button" onclick="addExtra()" 
-                            class="text-xs w-full py-2 bg-white border border-stone-300 rounded text-stone-600 font-bold hover:bg-amber-50 hover:text-amber-700 hover:border-amber-300 transition">
-                        + Agregar Opción Extra
+                            class="text-xs w-full py-2.5 bg-white border border-stone-300 rounded-xl text-stone-600 font-bold hover:bg-amber-50 hover:text-amber-700 hover:border-amber-300 transition">
+                        + Agregar opción extra
                     </button>
                 </div>
             </div>
         </div>
 
         {{-- BOTONES --}}
-        <div class="flex justify-end gap-4 mt-10 pt-6 border-t border-stone-100">
-            <a href="{{ route('products.index') }}" class="px-6 py-3 rounded-lg text-stone-600 font-medium hover:bg-stone-100 transition">Cancelar</a>
-            <button class="bg-amber-800 text-white px-8 py-3 rounded-lg shadow-lg hover:bg-amber-900 font-bold flex items-center gap-2">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+        <div class="flex flex-col sm:flex-row sm:justify-end gap-3 sm:gap-4 mt-8 sm:mt-10 pt-5 sm:pt-6 border-t border-stone-100">
+            <a href="{{ route('products.index') }}"
+            class="w-full sm:w-auto px-6 py-3 rounded-lg text-stone-600 font-medium hover:bg-stone-100 transition text-center">
+                Cancelar
+            </a>
+
+            <button class="w-full sm:w-auto justify-center bg-amber-800 text-white px-8 py-3 rounded-lg shadow-lg hover:bg-amber-900 font-bold flex items-center gap-2">
+                <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
                 Guardar Producto
             </button>
         </div>
@@ -342,20 +350,22 @@
         const row = `
             <tr id="recipe-row-${id}" class="group hover:bg-stone-50">
                 <td class="p-3 text-stone-700 font-medium">
-                    ${name}
+                    <span class="break-words">${name}</span>
                     <input type="hidden" name="ingredients[${recipeIndex}][id]" value="${id}">
                 </td>
                 <td class="p-3">
                     <div class="relative">
                         <input type="number" step="0.01" name="ingredients[${recipeIndex}][quantity]" 
-                               class="w-full border-stone-200 rounded text-sm py-1 px-2 pr-8 focus:ring-amber-500 focus:border-amber-500"
-                               placeholder="0.00" required>
-                        <span class="absolute right-2 top-1.5 text-xs text-stone-400 font-bold">${unit}</span>
+                            class="w-full border-stone-200 rounded text-sm py-1.5 px-2 pr-8 focus:ring-amber-500 focus:border-amber-500"
+                            placeholder="0.00" required>
+                        <span class="absolute right-2 top-2 text-xs text-stone-400 font-bold">${unit}</span>
                     </div>
                 </td>
                 <td class="p-3 text-right">
                     <button type="button" onclick="removeIngredient(${id})" class="text-stone-400 hover:text-red-500 transition">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
                     </button>
                 </td>
             </tr>
@@ -394,16 +404,16 @@
         }
 
         const html = `
-            <div class="bg-stone-50 p-3 rounded-lg border border-stone-200 animate-fade-in-down mb-3 relative group">
+            <div class="bg-white p-3 rounded-xl border border-stone-200 animate-fade-in-down mb-3 relative group">
                 
                 {{-- Fila 1: Nombre y Precio --}}
-                <div class="flex gap-3 mb-2">
+                <div class="grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_7rem] gap-3 mb-3">
                     <div class="flex-1">
                         <label class="text-xs font-bold text-stone-500 mb-1 block">Nombre del Extra</label>
                         <input type="text" name="extras[${extraIndex}][name]" placeholder="Ej. Leche Extra" 
                                class="w-full border-stone-300 rounded px-2 py-1 text-sm focus:ring-amber-500" required>
                     </div>
-                    <div class="w-24">
+                    <div>
                         <label class="text-xs font-bold text-stone-500 mb-1 block">Precio ($)</label>
                         <input type="number" step="0.01" name="extras[${extraIndex}][price]" placeholder="0" 
                                class="w-full border-stone-300 rounded px-2 py-1 text-sm focus:ring-amber-500" required>
@@ -411,14 +421,14 @@
                 </div>
 
                 {{-- Fila 2: Vinculación con Inventario --}}
-                <div class="flex gap-3 items-end bg-white p-2 rounded border border-stone-100">
+                <div class="grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_6rem] gap-3 bg-stone-50 p-3 rounded-xl border border-stone-100">
                     <div class="flex-1">
                         <label class="text-xs text-stone-400 block">Descontar del Inventario (Opcional)</label>
                         <select name="extras[${extraIndex}][ingredient_id]" class="w-full border-stone-200 rounded text-xs py-1 text-stone-600">
                             ${optionsHtml}
                         </select>
                     </div>
-                    <div class="w-24">
+                    <div>
                         <label class="text-xs text-stone-400 block">Cantidad</label>
                         <input type="number" step="0.01" name="extras[${extraIndex}][ingredient_qty]" placeholder="0" 
                                class="w-full border-stone-200 rounded text-xs py-1">
@@ -427,7 +437,7 @@
 
                 {{-- Botón Eliminar --}}
                 <button type="button" onclick="this.parentElement.remove()" 
-                        class="absolute -top-2 -right-2 bg-red-100 text-red-500 rounded-full p-1 hover:bg-red-500 hover:text-white transition shadow-sm">
+                         class="absolute -top-2 -right-2 bg-red-100 text-red-500 rounded-full p-1.5 hover:bg-red-500 hover:text-white transition shadow-sm">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
             </div>
