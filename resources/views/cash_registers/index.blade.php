@@ -243,8 +243,8 @@
                         </span>
                     </div>
                 </div>
-                <div class="overflow-x-auto max-h-[420px] overflow-y-auto">
-                    <table class="w-full min-w-[760px] text-left text-sm">
+                <div class="max-h-[420px] overflow-y-auto overflow-x-hidden">
+                    <table class="w-full text-left text-sm">
                         <thead class="bg-stone-50 border-b border-stone-200">
                             <tr class="text-xs text-stone-500 uppercase tracking-wider">
                                 <th class="px-4 py-3 font-bold">Hora</th>
@@ -337,8 +337,8 @@
                         </span>
                     </div>
                 </div>
-                <div class="overflow-x-auto max-h-[520px] overflow-y-auto">
-                    <table class="w-full min-w-[760px] text-left text-sm">
+                <div class="max-h-[520px] overflow-y-auto overflow-x-hidden">
+                    <table class="w-full text-left text-sm">
                         <thead class="bg-white text-stone-500 uppercase text-xs sticky top-0 z-10 shadow-sm">
                             <tr>
                                 <th class="px-4 py-3">Hora/Cajero</th>
@@ -578,8 +578,8 @@
             </div>
         </form>
 
-        <div class="overflow-x-auto">
-            <table class="w-full min-w-[920px] text-left text-sm text-stone-600">
+        <div class="overflow-x-auto lg:overflow-x-hidden">
+            <table class="w-full lg:min-w-0 min-w-[760px] text-left text-sm text-stone-600">
                 <thead class="bg-white text-stone-500 uppercase text-xs border-b border-stone-200">
                     <tr>
                         <th class="px-4 sm:px-6 py-3 sm:py-4">Fecha / Responsables</th>

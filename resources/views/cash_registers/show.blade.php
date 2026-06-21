@@ -236,8 +236,8 @@
                 </span>
             </div>
 
-            <div class="overflow-x-auto max-h-[560px] overflow-y-auto custom-scrollbar">
-                <table class="w-full min-w-[760px] text-left text-sm">
+            <div class="max-h-[560px] overflow-y-auto overflow-x-hidden custom-scrollbar">
+                <table class="w-full text-left text-sm">
                     <thead class="bg-white text-stone-500 uppercase text-xs sticky top-0 z-10 shadow-sm">
                         <tr>
                             <th class="px-4 py-3">Hora</th>
@@ -366,8 +366,8 @@
                 </span>
             </div>
 
-            <div class="overflow-x-auto max-h-[560px] overflow-y-auto custom-scrollbar">
-                <table class="w-full min-w-[760px] text-left text-sm">
+            <div class="max-h-[560px] overflow-y-auto overflow-x-hidden custom-scrollbar">
+                <table class="w-full text-left text-sm">
                     <thead class="bg-white text-stone-500 uppercase text-xs sticky top-0 z-10 shadow-sm">
                         <tr>
                             <th class="px-4 py-3">Ticket</th>
@@ -657,8 +657,8 @@
                 </span>
             </div>
 
-            <div class="overflow-x-auto">
-                <table class="w-full min-w-[760px] text-left text-sm">
+            <div class="overflow-x-auto lg:overflow-x-hidden">
+                <table class="w-full lg:min-w-0 min-w-[720px] text-left text-sm">
                     <thead class="bg-stone-50 border-b border-stone-200">
                         <tr class="text-xs text-stone-500 uppercase tracking-wider">
                             <th class="px-5 py-3">Fecha</th>
