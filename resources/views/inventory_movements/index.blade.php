@@ -2,27 +2,27 @@
 
 @section('content')
 
-<div class="max-w-7xl mx-auto space-y-6">
+<div class="w-full max-w-[1500px] mx-auto space-y-4 sm:space-y-6">
     
     {{-- ENCABEZADO --}}
-    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-        <div>
-            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-100 text-amber-800 text-xs font-bold mb-3">
+    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 sm:gap-4">
+        <div class="min-w-0">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-100 text-amber-800 text-[11px] sm:text-xs font-bold mb-2 sm:mb-3">
                 📋 Control de movimientos
             </div>
 
-            <h1 class="font-serif text-3xl md:text-4xl font-bold text-amber-900">
+            <h1 class="font-serif text-2xl sm:text-3xl lg:text-4xl font-bold text-amber-900 leading-tight">
                 Bitácora de Inventario
             </h1>
 
-            <p class="text-stone-500 mt-1">
+            <p class="text-sm sm:text-base text-stone-500 mt-1 leading-snug">
                 Consulta entradas, compras, ventas POS, devoluciones y mermas registradas en almacén.
             </p>
         </div>
 
-        <div class="flex flex-col sm:flex-row gap-3">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full lg:w-auto">
             <button onclick="openAdjustmentModal()"
-                    class="inline-flex items-center justify-center gap-2 bg-white border border-stone-200 text-stone-700 hover:bg-stone-50 hover:border-amber-300 font-bold py-3 px-5 rounded-xl transition shadow-sm">
+                    class="w-full inline-flex items-center justify-center gap-2 bg-white border border-stone-200 text-stone-700 hover:bg-stone-50 hover:border-amber-300 font-bold py-3 px-5 rounded-xl transition shadow-sm">
                 <svg class="w-5 h-5 text-amber-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                           d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4">
@@ -32,7 +32,7 @@
             </button>
 
             <a href="{{ route('inventory_movements.create_bulk') }}"
-               class="inline-flex items-center justify-center gap-2 bg-amber-800 hover:bg-amber-900 text-white font-bold py-3 px-5 rounded-xl transition shadow-md">
+               class="w-full inline-flex items-center justify-center gap-2 bg-amber-800 hover:bg-amber-900 text-white font-bold py-3 px-5 rounded-xl transition shadow-md">
                 <span class="text-xl leading-none">🛒</span>
                 Ingresar Compra
             </a>
@@ -40,62 +40,62 @@
     </div>
 
     {{-- TARJETAS RESUMEN --}}
-    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
-        <div class="bg-white p-5 rounded-2xl shadow-sm border border-stone-200 hover:shadow-md transition">
-            <div class="flex items-center justify-between">
+    <div class="grid grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4 xl:gap-5">
+        <div class="bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-stone-200 hover:shadow-md transition">
+            <div class="flex items-center justify-between gap-3">
                 <div>
-                    <p class="text-sm font-bold text-stone-500">Total movimientos</p>
-                    <h3 class="text-3xl font-black text-stone-800 mt-1">
+                    <p class="text-xs sm:text-sm font-bold text-stone-500 leading-tight">Total movimientos</p>
+                    <h3 class="text-2xl sm:text-3xl font-black text-stone-800 mt-1">
                         {{ $totalMovements }}
                     </h3>
                 </div>
 
-                <div class="w-12 h-12 rounded-xl bg-stone-100 flex items-center justify-center text-2xl">
+                <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-stone-100 flex items-center justify-center text-xl sm:text-2xl shrink-0">
                     📋
                 </div>
             </div>
         </div>
 
-        <div class="bg-white p-5 rounded-2xl shadow-sm border border-stone-200 hover:shadow-md transition">
-            <div class="flex items-center justify-between">
+        <div class="bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-stone-200 hover:shadow-md transition">
+            <div class="flex items-center justify-between gap-3">
                 <div>
-                    <p class="text-sm font-bold text-stone-500">Entradas</p>
-                    <h3 class="text-3xl font-black text-green-600 mt-1">
+                    <p class="text-xs sm:text-sm font-bold text-stone-500 leading-tight">Entradas</p>
+                    <h3 class="text-2xl sm:text-3xl font-black text-green-600 mt-1">
                         {{ $entryMovements }}
                     </h3>
                 </div>
 
-                <div class="w-12 h-12 rounded-xl bg-green-100 flex items-center justify-center text-2xl">
+                <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-green-100 flex items-center justify-center text-xl sm:text-2xl shrink-0">
                     ➕
                 </div>
             </div>
         </div>
 
-        <div class="bg-white p-5 rounded-2xl shadow-sm border border-stone-200 hover:shadow-md transition">
-            <div class="flex items-center justify-between">
+        <div class="bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-stone-200 hover:shadow-md transition">
+            <div class="flex items-center justify-between gap-3">
                 <div>
-                    <p class="text-sm font-bold text-stone-500">Ventas POS</p>
-                    <h3 class="text-3xl font-black text-blue-600 mt-1">
+                    <p class="text-xs sm:text-sm font-bold text-stone-500 leading-tight">Ventas POS</p>
+                    <h3 class="text-2xl sm:text-3xl font-black text-blue-600 mt-1">
                         {{ $saleMovements }}
                     </h3>
                 </div>
 
-                <div class="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center text-2xl">
+                <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-blue-100 flex items-center justify-center text-xl sm:text-2xl shrink-0">
                     🧾
                 </div>
             </div>
         </div>
 
-        <div class="bg-white p-5 rounded-2xl shadow-sm border border-stone-200 hover:shadow-md transition">
-            <div class="flex items-center justify-between">
+        <div class="bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-stone-200 hover:shadow-md transition">
+            <div class="flex items-center justify-between gap-3">
                 <div>
-                    <p class="text-sm font-bold text-stone-500">Mermas</p>
-                    <h3 class="text-3xl font-black text-red-600 mt-1">
+                    <p class="text-xs sm:text-sm font-bold text-stone-500 leading-tight">Mermas</p>
+                    <h3 class="text-2xl sm:text-3xl font-black text-red-600 mt-1">
                         {{ $lossMovements }}
                     </h3>
                 </div>
 
-                <div class="w-12 h-12 rounded-xl bg-red-100 flex items-center justify-center text-2xl">
+                <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-red-100 flex items-center justify-center text-xl sm:text-2xl shrink-0">
                     ⚠️
                 </div>
             </div>
@@ -106,32 +106,32 @@
     <div class="bg-white rounded-2xl shadow-sm border border-stone-200 overflow-hidden">
 
         {{-- PESTAÑAS --}}
-        <div class="px-4 pt-4">
+        <div class="px-3 sm:px-4 pt-3 sm:pt-4">
             @php
                 $currentType = request('type', 'all');
             @endphp
 
-            <div class="flex flex-wrap gap-2 bg-stone-100 p-1 rounded-xl w-full">
+            <div class="flex gap-2 bg-stone-100 p-1 rounded-xl w-full overflow-x-auto scrollbar-hide">
                 <a href="{{ route('inventory_movements.index', array_merge(request()->except('page'), ['type' => 'all'])) }}"
-                   class="px-4 py-2 rounded-lg text-sm font-bold transition
+                   class="shrink-0 px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition
                    {{ $currentType === 'all' ? 'bg-white text-stone-800 shadow-sm' : 'text-stone-500 hover:text-stone-700' }}">
                     Todos
                 </a>
 
                 <a href="{{ route('inventory_movements.index', array_merge(request()->except('page'), ['type' => 'entrada'])) }}"
-                   class="px-4 py-2 rounded-lg text-sm font-bold transition
+                   class="shrink-0 px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition
                    {{ $currentType === 'entrada' ? 'bg-white text-green-700 shadow-sm' : 'text-stone-500 hover:text-stone-700' }}">
                     Entradas
                 </a>
 
                 <a href="{{ route('inventory_movements.index', array_merge(request()->except('page'), ['type' => 'merma'])) }}"
-                   class="px-4 py-2 rounded-lg text-sm font-bold transition
+                   class="shrink-0 px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition
                    {{ $currentType === 'merma' ? 'bg-white text-red-700 shadow-sm' : 'text-stone-500 hover:text-stone-700' }}">
                     Mermas
                 </a>
 
                 <a href="{{ route('inventory_movements.index', array_merge(request()->except('page'), ['type' => 'venta'])) }}"
-                   class="px-4 py-2 rounded-lg text-sm font-bold transition
+                   class="shrink-0 px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition
                    {{ $currentType === 'venta' ? 'bg-white text-blue-700 shadow-sm' : 'text-stone-500 hover:text-stone-700' }}">
                     Ventas POS
                 </a>
@@ -141,11 +141,11 @@
         {{-- BUSCADOR Y FILTROS SECUNDARIOS --}}
         <form method="GET"
               action="{{ route('inventory_movements.index') }}"
-              class="p-4 flex flex-col xl:flex-row gap-4 items-center border-b border-stone-100">
+              class="p-3 sm:p-4 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_13rem_11rem_auto] gap-3 sm:gap-4 items-center border-b border-stone-100">
 
             <input type="hidden" name="type" value="{{ request('type', 'all') }}">
 
-            <div class="relative w-full xl:flex-1">
+            <div class="relative w-full sm:col-span-2 xl:col-span-1">
                 <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-stone-400">
                     🔍
                 </span>
@@ -154,12 +154,12 @@
                        name="search"
                        value="{{ request('search') }}"
                        placeholder="Buscar por insumo, motivo o usuario..."
-                       class="w-full pl-10 border-stone-200 rounded-xl text-sm focus:border-amber-500 focus:ring-amber-200 py-3 bg-stone-50">
+                       class="w-full pl-10 pr-3 border-stone-200 rounded-xl text-sm focus:border-amber-500 focus:ring-amber-200 py-2.5 sm:py-3 bg-stone-50">
             </div>
 
             <select name="period"
                     onchange="this.form.submit()"
-                    class="w-full xl:w-52 border-stone-200 rounded-xl text-sm focus:border-amber-500 focus:ring-amber-200 py-3 bg-stone-50">
+                    class="w-full border-stone-200 rounded-xl text-sm focus:border-amber-500 focus:ring-amber-200 py-2.5 sm:py-3 bg-stone-50">
                 <option value="">Todos los periodos</option>
                 <option value="today" {{ request('period') === 'today' ? 'selected' : '' }}>Hoy</option>
                 <option value="week" {{ request('period') === 'week' ? 'selected' : '' }}>Esta semana</option>
@@ -168,7 +168,7 @@
 
             <select name="per_page"
                     onchange="this.form.submit()"
-                    class="w-full xl:w-44 border-stone-200 rounded-xl text-sm focus:border-amber-500 focus:ring-amber-200 py-3 bg-stone-50">
+                    class="w-full border-stone-200 rounded-xl text-sm focus:border-amber-500 focus:ring-amber-200 py-2.5 sm:py-3 bg-stone-50">
                 <option value="10" {{ request('per_page', 20) == 10 ? 'selected' : '' }}>10 por página</option>
                 <option value="20" {{ request('per_page', 20) == 20 ? 'selected' : '' }}>20 por página</option>
                 <option value="50" {{ request('per_page', 20) == 50 ? 'selected' : '' }}>50 por página</option>
@@ -176,35 +176,35 @@
             </select>
 
             <button type="submit"
-                    class="w-full xl:w-auto px-5 py-3 rounded-xl bg-amber-800 text-white text-sm font-bold hover:bg-amber-900 transition">
+                    class="w-full px-5 py-2.5 sm:py-3 rounded-xl bg-amber-800 text-white text-sm font-bold hover:bg-amber-900 transition">
                 Buscar
             </button>
         </form>
 
         @if(request('search') || request('period') || (request('type') && request('type') !== 'all') || request('per_page'))
             <div class="px-4 py-3 bg-stone-50 border-b border-stone-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                <p class="text-sm text-stone-500">
+                <p class="text-xs sm:text-sm text-stone-500">
                     Mostrando movimientos filtrados.
                 </p>
 
                 <a href="{{ route('inventory_movements.index') }}"
-                   class="inline-flex items-center justify-center px-4 py-2 rounded-xl bg-white border border-stone-200 text-stone-700 text-sm font-bold hover:bg-stone-100 transition">
+                   class="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 rounded-xl bg-white border border-stone-200 text-stone-700 text-sm font-bold hover:bg-stone-100 transition">
                     Limpiar filtros
                 </a>
             </div>
         @endif
 
-        {{-- TABLA --}}
-        <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse">
+        {{-- TABLA EN TABLET / PC --}}
+        <div class="hidden md:block overflow-x-auto">
+            <table class="w-full min-w-[980px] text-left border-collapse">
                 <thead class="bg-amber-50 text-amber-900 uppercase tracking-wider text-xs">
                     <tr>
-                        <th class="px-6 py-4 font-bold">Fecha / Hora</th>
-                        <th class="px-6 py-4 font-bold">Insumo</th>
-                        <th class="px-6 py-4 font-bold text-center">Tipo</th>
-                        <th class="px-6 py-4 font-bold text-right">Cantidad</th>
-                        <th class="px-6 py-4 font-bold">Motivo</th>
-                        <th class="px-6 py-4 font-bold">Usuario</th>
+                        <th class="px-5 py-4 font-bold">Fecha / Hora</th>
+                        <th class="px-5 py-4 font-bold">Insumo</th>
+                        <th class="px-5 py-4 font-bold text-center">Tipo</th>
+                        <th class="px-5 py-4 font-bold text-right">Cantidad</th>
+                        <th class="px-5 py-4 font-bold">Motivo</th>
+                        <th class="px-5 py-4 font-bold">Usuario</th>
                     </tr>
                 </thead>
 
@@ -214,10 +214,20 @@
                             $ingredientName = $movement->ingredient->name ?? 'Insumo no disponible';
                             $ingredientUnit = $movement->ingredient->unit ?? '';
                             $userName = $movement->user->name ?? 'Usuario no disponible';
+                            $movementSign = $movement->type === 'entrada' ? '+' : '-';
+                            $typeClass = $movement->type === 'entrada'
+                                ? 'bg-green-100 text-green-700 border-green-200'
+                                : ($movement->type === 'venta'
+                                    ? 'bg-blue-100 text-blue-700 border-blue-200'
+                                    : 'bg-red-100 text-red-700 border-red-200');
+                            $typeLabel = $movement->type === 'entrada'
+                                ? 'Entrada'
+                                : ($movement->type === 'venta' ? 'Venta POS' : 'Merma');
+                            $quantityClass = $movement->type === 'entrada' ? 'text-green-600' : 'text-red-500';
                         @endphp
 
                         <tr class="hover:bg-amber-50/40 transition">
-                            <td class="px-6 py-4 whitespace-nowrap">
+                            <td class="px-5 py-4 whitespace-nowrap">
                                 <div class="text-sm font-bold text-stone-800">
                                     {{ $movement->created_at->format('d M Y') }}
                                 </div>
@@ -227,14 +237,14 @@
                                 </div>
                             </td>
 
-                            <td class="px-6 py-4">
-                                <div class="flex items-center gap-3">
+                            <td class="px-5 py-4">
+                                <div class="flex items-center gap-3 min-w-0">
                                     <div class="w-9 h-9 rounded-xl bg-stone-100 flex items-center justify-center text-sm shadow-inner shrink-0">
                                         📦
                                     </div>
 
-                                    <div>
-                                        <span class="text-sm font-bold text-stone-800 block">
+                                    <div class="min-w-0">
+                                        <span class="text-sm font-bold text-stone-800 block truncate max-w-[210px]">
                                             {{ $ingredientName }}
                                         </span>
 
@@ -245,32 +255,22 @@
                                 </div>
                             </td>
 
-                            <td class="px-6 py-4 text-center">
-                                @if($movement->type === 'entrada')
-                                    <span class="px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-700 border border-green-200">
-                                        Entrada
-                                    </span>
-                                @elseif($movement->type === 'venta')
-                                    <span class="px-3 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-700 border border-blue-200">
-                                        Venta POS
-                                    </span>
-                                @else
-                                    <span class="px-3 py-1 rounded-full text-xs font-bold bg-red-100 text-red-700 border border-red-200">
-                                        Merma
-                                    </span>
-                                @endif
+                            <td class="px-5 py-4 text-center">
+                                <span class="px-3 py-1 rounded-full text-xs font-bold border {{ $typeClass }}">
+                                    {{ $typeLabel }}
+                                </span>
                             </td>
 
-                            <td class="px-6 py-4 text-right">
-                                <span class="text-sm font-black {{ $movement->type === 'entrada' ? 'text-green-600' : 'text-red-500' }}">
-                                    {{ $movement->type === 'entrada' ? '+' : '-' }}{{ floatval($movement->quantity) }}
+                            <td class="px-5 py-4 text-right">
+                                <span class="text-sm font-black {{ $quantityClass }}">
+                                    {{ $movementSign }}{{ floatval($movement->quantity) }}
                                     <span class="text-xs font-normal text-stone-500">
                                         {{ $ingredientUnit }}
                                     </span>
                                 </span>
                             </td>
 
-                            <td class="px-6 py-4">
+                            <td class="px-5 py-4">
                                 <div class="max-w-xs">
                                     <p class="text-sm text-stone-700 truncate" title="{{ $movement->reason }}">
                                         {{ $movement->reason }}
@@ -278,13 +278,13 @@
                                 </div>
                             </td>
 
-                            <td class="px-6 py-4">
-                                <div class="flex items-center gap-2">
+                            <td class="px-5 py-4">
+                                <div class="flex items-center gap-2 min-w-0">
                                     <div class="w-7 h-7 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center text-xs font-bold shrink-0">
                                         {{ substr($userName, 0, 1) }}
                                     </div>
 
-                                    <span class="text-sm text-stone-600">
+                                    <span class="text-sm text-stone-600 truncate max-w-[120px]">
                                         {{ explode(' ', $userName)[0] }}
                                     </span>
                                 </div>
@@ -314,9 +314,120 @@
             </table>
         </div>
 
+        {{-- TARJETAS EN CELULAR --}}
+        <div class="md:hidden p-3 space-y-3 bg-stone-50/50 border-t border-stone-100">
+            @forelse($movements as $movement)
+                @php
+                    $ingredientName = $movement->ingredient->name ?? 'Insumo no disponible';
+                    $ingredientUnit = $movement->ingredient->unit ?? '';
+                    $userName = $movement->user->name ?? 'Usuario no disponible';
+                    $movementSign = $movement->type === 'entrada' ? '+' : '-';
+                    $typeClass = $movement->type === 'entrada'
+                        ? 'bg-green-100 text-green-700 border-green-200'
+                        : ($movement->type === 'venta'
+                            ? 'bg-blue-100 text-blue-700 border-blue-200'
+                            : 'bg-red-100 text-red-700 border-red-200');
+                    $typeLabel = $movement->type === 'entrada'
+                        ? 'Entrada'
+                        : ($movement->type === 'venta' ? 'Venta POS' : 'Merma');
+                    $quantityClass = $movement->type === 'entrada' ? 'text-green-600' : 'text-red-500';
+                @endphp
+
+                <div class="bg-white rounded-2xl border border-stone-100 shadow-sm p-4 overflow-hidden">
+                    <div class="flex items-start justify-between gap-3">
+                        <div class="flex items-start gap-3 min-w-0">
+                            <div class="w-11 h-11 rounded-xl bg-stone-100 flex items-center justify-center text-lg shadow-inner shrink-0">
+                                📦
+                            </div>
+
+                            <div class="min-w-0">
+                                <h3 class="font-bold text-stone-800 text-sm leading-tight break-words">
+                                    {{ $ingredientName }}
+                                </h3>
+
+                                <p class="text-[11px] text-stone-400 uppercase mt-0.5">
+                                    {{ $ingredientUnit ?: 'Sin unidad' }}
+                                </p>
+                            </div>
+                        </div>
+
+                        <span class="shrink-0 px-2.5 py-1 rounded-full text-[11px] font-bold border {{ $typeClass }}">
+                            {{ $typeLabel }}
+                        </span>
+                    </div>
+
+                    <div class="mt-4 grid grid-cols-2 gap-2">
+                        <div class="rounded-xl bg-stone-50 border border-stone-100 p-3">
+                            <p class="text-[10px] uppercase tracking-wide text-stone-400 font-black">
+                                Fecha
+                            </p>
+
+                            <p class="text-xs font-bold text-stone-700 mt-1">
+                                {{ $movement->created_at->format('d/m/Y') }}
+                            </p>
+
+                            <p class="text-[11px] text-stone-400">
+                                {{ $movement->created_at->format('h:i A') }}
+                            </p>
+                        </div>
+
+                        <div class="rounded-xl bg-stone-50 border border-stone-100 p-3 text-right">
+                            <p class="text-[10px] uppercase tracking-wide text-stone-400 font-black">
+                                Cantidad
+                            </p>
+
+                            <p class="text-base font-black mt-1 {{ $quantityClass }}">
+                                {{ $movementSign }}{{ floatval($movement->quantity) }}
+                                <span class="text-[11px] font-normal text-stone-500">
+                                    {{ $ingredientUnit }}
+                                </span>
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="mt-3 rounded-xl bg-white border border-stone-100 p-3">
+                        <p class="text-[10px] uppercase tracking-wide text-stone-400 font-black mb-1">
+                            Motivo
+                        </p>
+
+                        <p class="text-xs text-stone-700 leading-snug break-words">
+                            {{ $movement->reason }}
+                        </p>
+                    </div>
+
+                    <div class="mt-3 flex items-center gap-2 text-xs text-stone-500">
+                        <div class="w-7 h-7 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center text-xs font-bold shrink-0">
+                            {{ substr($userName, 0, 1) }}
+                        </div>
+
+                        <span class="truncate">
+                            {{ $userName }}
+                        </span>
+                    </div>
+                </div>
+            @empty
+                <div class="text-center py-12 px-4 bg-white rounded-2xl border border-dashed border-stone-300">
+                    <span class="text-5xl block mb-3">📋</span>
+
+                    <p class="text-lg font-bold text-stone-600">
+                        No se encontraron movimientos.
+                    </p>
+
+                    <p class="text-sm text-stone-400 mt-1">
+                        Prueba limpiar filtros o registrar un nuevo ajuste.
+                    </p>
+
+                    <a href="{{ route('inventory_movements.index') }}"
+                       class="inline-flex mt-4 px-4 py-2 rounded-xl bg-stone-100 text-stone-700 text-sm font-bold hover:bg-stone-200 transition">
+                        Limpiar filtros
+                    </a>
+                </div>
+            @endforelse
+        </div>
+
         {{-- PAGINACIÓN --}}
-        <div class="p-4 border-t border-stone-100 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <p class="text-sm text-stone-500">
+        <div class="p-3 sm:p-4 pb-6 sm:pb-4 border-t border-stone-100 flex flex-col md:flex-row md:items-center md:justify-between gap-3 sm:gap-4 overflow-x-auto">
+            <p class="text-xs sm:text-sm text-stone-500">
                 Mostrando {{ $movements->firstItem() ?? 0 }} a {{ $movements->lastItem() ?? 0 }}
                 de {{ $movements->total() }} movimiento(s).
             </p>
@@ -325,19 +436,20 @@
                 {{ $movements->links() }}
             </div>
         </div>
+
     </div>
 </div>
 
 {{-- MODAL DE AJUSTE RÁPIDO (Mermas o Entradas chicas) --}}
-<div id="adjustment-modal" class="fixed inset-0 bg-stone-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 opacity-0 transition-opacity duration-300 ease-out">
-    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden transform scale-95 opacity-0 transition-all duration-300 ease-out" id="adjustment-modal-content">
+<div id="adjustment-modal" class="fixed inset-0 bg-stone-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-3 sm:p-4 opacity-0 transition-opacity duration-300 ease-out">
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md max-h-[88vh] overflow-hidden flex flex-col transform scale-95 opacity-0 transition-all duration-300 ease-out" id="adjustment-modal-content">
         
-        <div class="p-6 border-b border-stone-100 flex justify-between items-center bg-stone-50">
-            <h3 class="font-serif font-bold text-2xl text-stone-800">Ajuste de Inventario</h3>
+        <div class="p-4 sm:p-6 border-b border-stone-100 flex justify-between items-center gap-3 bg-stone-50 shrink-0">
+            <h3 class="font-serif font-bold text-xl sm:text-2xl text-stone-800 leading-tight">Ajuste de Inventario</h3>
             <button onclick="closeAdjustmentModal()" class="text-stone-400 hover:text-red-500 transition text-3xl leading-none">&times;</button>
         </div>
         
-        <form action="{{ route('inventory_movements.store') }}" method="POST" id="quick-adjust-form" class="p-6 space-y-5">
+        <form action="{{ route('inventory_movements.store') }}" method="POST" id="quick-adjust-form" class="p-4 sm:p-6 space-y-4 sm:space-y-5 overflow-y-auto custom-scrollbar">
             @csrf
             
             <div>
@@ -357,7 +469,7 @@
                 </button>
             </div>
 
-            <div class="grid grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div>
                     <label class="block text-sm font-bold text-stone-700 mb-2">Tipo de Ajuste</label>
 
@@ -365,7 +477,7 @@
                             id="adjust-type"
                             required
                             onchange="updateReasonPlaceholder()"
-                            class="w-full rounded-xl border-stone-300 focus:border-amber-500 font-bold">
+                            class="w-full rounded-xl border-stone-300 focus:border-amber-500 font-bold text-sm py-2.5">
                         <option value="entrada" class="text-green-600">➕ Entrada (+)</option>
                         <option value="merma" class="text-red-600">➖ Merma (-)</option>
                     </select>
@@ -380,7 +492,7 @@
                         step="0.01"
                         min="0.01"
                         placeholder="0.00"
-                        class="w-full rounded-xl border-stone-300 focus:border-amber-500 font-bold text-lg">
+                        class="w-full rounded-xl border-stone-300 focus:border-amber-500 font-bold text-base sm:text-lg py-2.5">
                 </div>
             </div>
 
@@ -392,7 +504,7 @@
                     id="adjust-reason"
                     required
                     placeholder="Ej: Ajuste por conteo físico"
-                    class="w-full rounded-xl border-stone-300 focus:border-amber-500 text-sm">
+                    class="w-full rounded-xl border-stone-300 focus:border-amber-500 text-sm py-2.5">
             </div>
 
             {{-- GASTO EN CAJA --}}
@@ -456,7 +568,7 @@
                 @endif
             </div>
 
-            <div class="pt-4 border-t border-stone-100 flex gap-3">
+            <div class="pt-4 border-t border-stone-100 flex flex-col sm:flex-row gap-3">
                 <button type="button"
                         onclick="closeAdjustmentModal()"
                         class="flex-1 py-3 text-stone-600 font-bold rounded-xl hover:bg-stone-200 transition">
@@ -473,16 +585,16 @@
 </div>
 
 {{-- MODAL BUSCADOR DE MATERIA PRIMA --}}
-<div id="ingredient-modal" class="fixed inset-0 bg-stone-900/70 backdrop-blur-sm z-[60] hidden flex items-center justify-center p-4 opacity-0 transition-opacity duration-300 ease-out">
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col h-[70vh] transform scale-95 opacity-0 transition-all duration-300 ease-out" id="ingredient-modal-content">
-        <div class="p-5 border-b border-stone-100 flex gap-4 items-center bg-amber-50/50">
+<div id="ingredient-modal" class="fixed inset-0 bg-stone-900/70 backdrop-blur-sm z-[60] hidden flex items-center justify-center p-3 sm:p-4 opacity-0 transition-opacity duration-300 ease-out">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col h-[78vh] sm:h-[70vh] transform scale-95 opacity-0 transition-all duration-300 ease-out" id="ingredient-modal-content">
+        <div class="p-3 sm:p-5 border-b border-stone-100 flex gap-3 sm:gap-4 items-center bg-amber-50/50">
             <div class="relative flex-1">
                 <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-stone-400 text-xl">🔍</span>
-                <input type="text" id="ingredient-search" onkeyup="filterIngredients()" placeholder="Buscar materia prima..." class="w-full pl-12 border-stone-200 rounded-xl text-lg focus:border-amber-500 py-3 shadow-sm">
+                <input type="text" id="ingredient-search" onkeyup="filterIngredients()" placeholder="Buscar materia prima..." class="w-full pl-11 sm:pl-12 border-stone-200 rounded-xl text-sm sm:text-lg focus:border-amber-500 py-2.5 sm:py-3 shadow-sm">
             </div>
             <button type="button" onclick="closeIngredientModal()" class="text-stone-400 hover:text-red-500 transition text-4xl leading-none">&times;</button>
         </div>
-        <div class="flex-1 overflow-y-auto p-5 custom-scrollbar bg-stone-50/50">
+        <div class="flex-1 overflow-y-auto p-3 sm:p-5 custom-scrollbar bg-stone-50/50">
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3" id="ingredients-grid"></div>
         </div>
     </div>
@@ -674,12 +786,12 @@
             btn.type = 'button';
             const safeName = ing.name.replace(/'/g, "\\'");
             btn.setAttribute('onclick', `selectIngredient(${ing.id}, '${safeName}', '${ing.unit || 'Pz'}')`);
-            btn.className = 'bg-white border border-stone-200 p-4 rounded-xl hover:border-amber-400 hover:bg-amber-50 transition text-left flex items-center gap-3';
+            btn.className = 'bg-white border border-stone-200 p-3 sm:p-4 rounded-xl hover:border-amber-400 hover:bg-amber-50 transition text-left flex items-center gap-3 min-w-0';
             
             btn.innerHTML = `
-                <div class="w-10 h-10 rounded-full bg-stone-100 flex items-center justify-center text-xl shadow-inner">📦</div>
-                <div>
-                    <div class="font-bold text-stone-800 text-sm">${ing.name}</div>
+                <div class="w-10 h-10 rounded-full bg-stone-100 flex items-center justify-center text-xl shadow-inner shrink-0">📦</div>
+                <div class="min-w-0">
+                    <div class="font-bold text-stone-800 text-sm break-words">${ing.name}</div>
                     <div class="text-xs text-stone-400 mt-0.5 font-bold uppercase">${ing.unit || 'Pz'}</div>
                 </div>
             `;
@@ -718,5 +830,7 @@
     .custom-scrollbar::-webkit-scrollbar { width: 6px; }
     .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
     .custom-scrollbar::-webkit-scrollbar-thumb { background: #d6d3d1; border-radius: 10px; }
+    .scrollbar-hide::-webkit-scrollbar { display: none; }
+    .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
 </style>
 @endsection
