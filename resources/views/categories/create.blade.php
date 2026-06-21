@@ -2,37 +2,37 @@
 
 @section('content')
 
-<div class="max-w-4xl mx-auto space-y-6">
+<div class="w-full max-w-4xl mx-auto space-y-4 sm:space-y-6">
 
     {{-- ENCABEZADO --}}
-    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-        <div class="flex items-center gap-4">
+    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 sm:gap-4">
+        <div class="flex items-start sm:items-center gap-3 sm:gap-4 min-w-0">
             <a href="{{ route('categories.index') }}"
-               class="p-2 rounded-full hover:bg-stone-200 text-stone-500 transition"
+               class="p-2 rounded-full hover:bg-stone-200 text-stone-500 transition shrink-0"
                title="Volver a categorías">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                           d="M10 19l-7-7m0 0l7-7m-7 7h18">
                     </path>
                 </svg>
             </a>
 
-            <div>
-                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-100 text-amber-800 text-xs font-bold mb-2">
+            <div class="min-w-0">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-100 text-amber-800 text-[11px] sm:text-xs font-bold mb-2">
                     🗂️ Nueva sección
                 </div>
 
-                <h1 class="font-serif text-3xl md:text-4xl font-bold text-amber-900">
+                <h1 class="font-serif text-2xl sm:text-3xl lg:text-4xl font-bold text-amber-900 leading-tight">
                     Nueva Categoría
                 </h1>
 
-                <p class="text-stone-500 mt-1">
+                <p class="text-sm sm:text-base text-stone-500 mt-1 leading-snug">
                     Crea una sección para organizar productos dentro del menú y del punto de venta.
                 </p>
             </div>
         </div>
 
-        <div class="bg-white border border-stone-200 rounded-2xl px-4 py-3 shadow-sm text-sm text-stone-600 max-w-md">
+        <div class="bg-white border border-stone-200 rounded-2xl px-4 py-3 shadow-sm text-xs sm:text-sm text-stone-600 w-full lg:max-w-md">
             <span class="font-bold text-amber-800">Ejemplo:</span>
             Bebidas calientes, Bebidas frías, Frappes, Tisanas o Smoothies.
         </div>
@@ -53,17 +53,17 @@
 
     {{-- FORMULARIO --}}
     <div class="bg-white rounded-2xl shadow-sm border border-stone-100 overflow-hidden">
-        <div class="px-6 py-5 border-b border-stone-100 bg-amber-50">
-            <h2 class="font-bold text-amber-900 text-lg flex items-center gap-2">
+        <div class="px-4 sm:px-6 py-4 sm:py-5 border-b border-stone-100 bg-amber-50">
+            <h2 class="font-bold text-amber-900 text-base sm:text-lg flex items-center gap-2">
                 🧾 Información de la categoría
             </h2>
 
-            <p class="text-sm text-amber-700 mt-1">
+            <p class="text-xs sm:text-sm text-amber-700 mt-1 leading-snug">
                 Define el nombre y estado inicial de la categoría.
             </p>
         </div>
 
-        <form method="POST" action="{{ route('categories.store') }}" class="p-6 md:p-8 space-y-6">
+        <form method="POST" action="{{ route('categories.store') }}" class="p-4 sm:p-6 md:p-8 space-y-4 sm:space-y-6">
             @csrf
 
             <div>
@@ -74,7 +74,7 @@
                 <input type="text"
                        name="name"
                        value="{{ old('name') }}"
-                       class="w-full rounded-xl border-stone-200 bg-stone-50 focus:ring-amber-500 focus:border-amber-500 py-3 px-4 text-lg transition"
+                       class="w-full rounded-xl border-stone-200 bg-stone-50 focus:ring-amber-500 focus:border-amber-500 py-2.5 sm:py-3 px-3 sm:px-4 text-base sm:text-lg transition"
                        placeholder="Ej. Bebidas Calientes"
                        required
                        autofocus>
@@ -93,31 +93,31 @@
                        class="w-5 h-5 mt-1 rounded border-stone-300 text-green-600 focus:ring-green-500">
 
                 <div>
-                    <label for="active" class="font-bold text-green-800 cursor-pointer">
+                    <label for="active" class="font-bold text-green-800 cursor-pointer text-sm sm:text-base">
                         Categoría activa
                     </label>
 
-                    <p class="text-xs text-green-700 mt-1">
+                    <p class="text-xs text-green-700 mt-1 leading-snug">
                         Si está activa, podrá usarse para clasificar productos.
                     </p>
                 </div>
             </div>
 
-            <div class="bg-blue-50 border border-blue-100 rounded-2xl p-4 text-sm text-blue-800">
+            <div class="bg-blue-50 border border-blue-100 rounded-2xl p-4 text-xs sm:text-sm text-blue-800">
                 <p class="font-bold mb-1">Recomendación</p>
                 <p>
                     Usa categorías claras y cortas para que el menú sea fácil de administrar.
                 </p>
             </div>
 
-            <div class="flex flex-col sm:flex-row justify-end gap-3 pt-6 border-t border-stone-100">
+            <div class="flex flex-col sm:flex-row sm:justify-end gap-3 pt-5 sm:pt-6 border-t border-stone-100">
                 <a href="{{ route('categories.index') }}"
-                   class="inline-flex justify-center items-center px-6 py-3 rounded-xl border border-stone-200 text-stone-600 font-bold hover:bg-stone-50 transition">
+                   class="w-full sm:w-auto inline-flex justify-center items-center px-6 py-3 rounded-xl border border-stone-200 text-stone-600 font-bold hover:bg-stone-50 transition">
                     Cancelar
                 </a>
 
                 <button type="submit"
-                        class="inline-flex justify-center items-center gap-2 bg-amber-800 hover:bg-amber-900 text-white font-bold py-3 px-8 rounded-xl shadow-md transition">
+                        class="w-full sm:w-auto inline-flex justify-center items-center gap-2 bg-amber-800 hover:bg-amber-900 text-white font-bold py-3 px-8 rounded-xl shadow-md transition">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                               d="M12 6v6m0 0v6m0-6h6m-6 0H6">
