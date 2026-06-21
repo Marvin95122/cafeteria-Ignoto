@@ -2,32 +2,32 @@
 
 @section('content')
 
-<div class="max-w-7xl mx-auto space-y-6">
+<div class="cash-register-page w-full max-w-[1500px] mx-auto space-y-4 sm:space-y-6">
 
     {{-- ENCABEZADO --}}
     <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
-            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-100 text-amber-800 text-xs font-bold mb-3">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-100 text-amber-800 text-[11px] sm:text-xs font-bold mb-2 sm:mb-3">
                 📂 Detalle de corte
             </div>
 
-            <h1 class="font-serif text-3xl md:text-4xl font-bold text-amber-900">
+            <h1 class="font-serif text-2xl sm:text-3xl lg:text-4xl font-bold text-amber-900 leading-tight">
                 Corte #{{ str_pad($cashRegister->id, 5, '0', STR_PAD_LEFT) }}
             </h1>
 
-            <p class="text-stone-500 mt-1">
+            <p class="text-sm sm:text-base text-stone-500 mt-1 leading-snug">
                 Revisión completa de ventas, gastos, cancelaciones y efectivo del turno.
             </p>
         </div>
 
-        <div class="flex flex-col sm:flex-row gap-3">
+        <div class="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
             <a href="{{ route('cash_registers.index') }}"
-               class="inline-flex items-center justify-center px-5 py-3 rounded-xl bg-white border border-stone-300 text-stone-700 font-bold hover:bg-stone-50 transition">
+               class="w-full sm:w-auto inline-flex items-center justify-center px-5 py-3 rounded-xl bg-white border border-stone-300 text-stone-700 font-bold hover:bg-stone-50 transition">
                 ← Volver a caja
             </a>
 
             @if(auth()->user()->role === 'admin')
-                <span class="inline-flex items-center justify-center px-5 py-3 rounded-xl bg-stone-900 text-white font-bold">
+                <span class="w-full sm:w-auto inline-flex items-center justify-center px-5 py-3 rounded-xl bg-stone-900 text-white font-bold">
                     Modo administrador
                 </span>
             @endif
@@ -67,7 +67,7 @@
 
     {{-- ESTADO DEL CORTE --}}
     <div class="bg-white rounded-2xl shadow-sm border border-stone-200 overflow-hidden">
-        <div class="p-5 flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4">
+        <div class="p-4 sm:p-5 flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4">
             <div class="flex items-center gap-4">
                 <div class="w-14 h-14 rounded-2xl {{ $cashRegister->status === 'abierta' ? 'bg-green-100 text-green-700' : 'bg-stone-100 text-stone-700' }} flex items-center justify-center text-2xl">
                     {{ $cashRegister->status === 'abierta' ? '💰' : '🔒' }}
@@ -113,25 +113,25 @@
     </div>
 
     {{-- RESUMEN FINANCIERO --}}
-    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-5">
+    <div class="grid grid-cols-2 xl:grid-cols-5 gap-3 sm:gap-4 xl:gap-5">
 
-        <div class="bg-white p-5 rounded-2xl shadow-sm border border-stone-200">
+        <div class="bg-white p-4 sm:p-4 sm:p-5 rounded-2xl shadow-sm border border-stone-200">
             <p class="text-sm font-bold text-stone-500">Fondo inicial</p>
-            <h3 class="text-2xl font-black text-stone-800 mt-1">
+            <h3 class="text-xl sm:text-2xl font-black text-stone-800 mt-1">
                 ${{ number_format($cashRegister->opening_amount, 2) }}
             </h3>
         </div>
 
-        <div class="bg-white p-5 rounded-2xl shadow-sm border border-stone-200">
+        <div class="bg-white p-4 sm:p-4 sm:p-5 rounded-2xl shadow-sm border border-stone-200">
             <p class="text-sm font-bold text-stone-500">Ventas efectivo</p>
-            <h3 class="text-2xl font-black text-green-600 mt-1">
+            <h3 class="text-xl sm:text-2xl font-black text-green-600 mt-1">
                 ${{ number_format($stats['sales_cash'], 2) }}
             </h3>
         </div>
 
-        <div class="bg-white p-5 rounded-2xl shadow-sm border border-stone-200">
+        <div class="bg-white p-4 sm:p-4 sm:p-5 rounded-2xl shadow-sm border border-stone-200">
             <p class="text-sm font-bold text-stone-500">Tarjeta / puntos</p>
-            <h3 class="text-2xl font-black text-blue-600 mt-1">
+            <h3 class="text-xl sm:text-2xl font-black text-blue-600 mt-1">
                 ${{ number_format($stats['sales_card'] + $stats['sales_points'], 2) }}
             </h3>
 
@@ -141,16 +141,16 @@
             </p>
         </div>
 
-        <div class="bg-white p-5 rounded-2xl shadow-sm border border-stone-200">
+        <div class="bg-white p-4 sm:p-4 sm:p-5 rounded-2xl shadow-sm border border-stone-200">
             <p class="text-sm font-bold text-stone-500">Gastos activos</p>
-            <h3 class="text-2xl font-black text-red-600 mt-1">
+            <h3 class="text-xl sm:text-2xl font-black text-red-600 mt-1">
                 ${{ number_format($stats['total_expenses'], 2) }}
             </h3>
         </div>
 
         <div class="bg-gradient-to-br from-amber-900 to-stone-900 p-5 rounded-2xl shadow-md border border-amber-800 text-white">
             <p class="text-sm font-bold text-amber-200">Efectivo esperado</p>
-            <h3 class="text-2xl font-black mt-1">
+            <h3 class="text-xl sm:text-2xl font-black mt-1">
                 ${{ number_format($stats['expected_cash'], 2) }}
             </h3>
 
@@ -161,41 +161,41 @@
     </div>
 
     {{-- AUDITORÍA DE CIERRE --}}
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
-        <div class="bg-white p-5 rounded-2xl shadow-sm border border-stone-200">
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-5">
+        <div class="bg-white p-4 sm:p-4 sm:p-5 rounded-2xl shadow-sm border border-stone-200">
             <p class="text-sm font-bold text-stone-500">Efectivo contado</p>
 
-            <h3 class="text-2xl font-black text-blue-700 mt-1">
+            <h3 class="text-xl sm:text-2xl font-black text-blue-700 mt-1">
                 {{ $stats['actual_cash'] !== null ? '$' . number_format($stats['actual_cash'], 2) : 'Pendiente' }}
             </h3>
         </div>
 
-        <div class="bg-white p-5 rounded-2xl shadow-sm border border-stone-200">
+        <div class="bg-white p-4 sm:p-4 sm:p-5 rounded-2xl shadow-sm border border-stone-200">
             <p class="text-sm font-bold text-stone-500">Diferencia</p>
 
             @if($stats['difference'] === null)
-                <h3 class="text-2xl font-black text-stone-500 mt-1">
+                <h3 class="text-xl sm:text-2xl font-black text-stone-500 mt-1">
                     Pendiente
                 </h3>
             @elseif($stats['difference'] == 0)
-                <h3 class="text-2xl font-black text-green-600 mt-1">
+                <h3 class="text-xl sm:text-2xl font-black text-green-600 mt-1">
                     Cuadró exacto
                 </h3>
             @elseif($stats['difference'] > 0)
-                <h3 class="text-2xl font-black text-blue-600 mt-1">
+                <h3 class="text-xl sm:text-2xl font-black text-blue-600 mt-1">
                     Sobraron ${{ number_format($stats['difference'], 2) }}
                 </h3>
             @else
-                <h3 class="text-2xl font-black text-red-600 mt-1">
+                <h3 class="text-xl sm:text-2xl font-black text-red-600 mt-1">
                     Faltaron ${{ number_format(abs($stats['difference']), 2) }}
                 </h3>
             @endif
         </div>
 
-        <div class="bg-white p-5 rounded-2xl shadow-sm border border-stone-200">
+        <div class="bg-white p-4 sm:p-4 sm:p-5 rounded-2xl shadow-sm border border-stone-200">
             <p class="text-sm font-bold text-stone-500">Tickets del corte</p>
 
-            <h3 class="text-2xl font-black text-stone-800 mt-1">
+            <h3 class="text-xl sm:text-2xl font-black text-stone-800 mt-1">
                 {{ $stats['total_tickets'] }}
             </h3>
 
@@ -216,11 +216,11 @@
         </p>
     </div>
 
-    <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+    <div class="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6">
 
         {{-- GASTOS DEL CORTE --}}
         <div class="bg-white rounded-2xl shadow-sm border border-stone-200 overflow-hidden">
-            <div class="bg-red-50 px-6 py-4 border-b border-red-100 flex items-center justify-between gap-3">
+            <div class="bg-red-50 px-4 sm:px-6 py-3 sm:py-4 border-b border-red-100 flex items-center justify-between gap-3">
                 <div>
                     <h3 class="font-bold text-red-900 flex items-center gap-2">
                         💸 Gastos del corte
@@ -237,7 +237,7 @@
             </div>
 
             <div class="overflow-x-auto max-h-[560px] overflow-y-auto custom-scrollbar">
-                <table class="w-full text-left text-sm">
+                <table class="w-full min-w-[760px] text-left text-sm">
                     <thead class="bg-white text-stone-500 uppercase text-xs sticky top-0 z-10 shadow-sm">
                         <tr>
                             <th class="px-4 py-3">Hora</th>
@@ -350,7 +350,7 @@
 
         {{-- VENTAS DEL CORTE --}}
         <div class="bg-white rounded-2xl shadow-sm border border-stone-200 overflow-hidden">
-            <div class="bg-green-50 px-6 py-4 border-b border-green-100 flex items-center justify-between gap-3">
+            <div class="bg-green-50 px-4 sm:px-6 py-3 sm:py-4 border-b border-green-100 flex items-center justify-between gap-3">
                 <div>
                     <h3 class="font-bold text-green-900 flex items-center gap-2">
                         🧾 Tickets del corte
@@ -367,7 +367,7 @@
             </div>
 
             <div class="overflow-x-auto max-h-[560px] overflow-y-auto custom-scrollbar">
-                <table class="w-full text-left text-sm">
+                <table class="w-full min-w-[760px] text-left text-sm">
                     <thead class="bg-white text-stone-500 uppercase text-xs sticky top-0 z-10 shadow-sm">
                         <tr>
                             <th class="px-4 py-3">Ticket</th>
@@ -533,7 +533,7 @@
     {{-- CORRECCIONES ADMINISTRATIVAS --}}
     @if(auth()->user()->role === 'admin')
         <div class="bg-white rounded-2xl shadow-sm border border-stone-200 overflow-hidden">
-            <div class="bg-blue-50 px-6 py-4 border-b border-blue-100">
+            <div class="bg-blue-50 px-4 sm:px-6 py-3 sm:py-4 border-b border-blue-100">
                 <h3 class="font-black text-blue-900 flex items-center gap-2">
                     🛠️ Corrección administrativa
                 </h3>
@@ -641,7 +641,7 @@
 
         {{-- HISTORIAL DE AUDITORÍA --}}
         <div class="bg-white rounded-2xl shadow-sm border border-stone-200 overflow-hidden">
-            <div class="bg-stone-900 px-6 py-4 border-b border-stone-800 flex items-center justify-between gap-3">
+            <div class="bg-stone-900 px-4 sm:px-6 py-3 sm:py-4 border-b border-stone-800 flex items-center justify-between gap-3">
                 <div>
                     <h3 class="font-black text-white flex items-center gap-2">
                         🧾 Auditoría de correcciones
@@ -658,7 +658,7 @@
             </div>
 
             <div class="overflow-x-auto">
-                <table class="w-full text-left text-sm">
+                <table class="w-full min-w-[760px] text-left text-sm">
                     <thead class="bg-stone-50 border-b border-stone-200">
                         <tr class="text-xs text-stone-500 uppercase tracking-wider">
                             <th class="px-5 py-3">Fecha</th>
@@ -949,5 +949,29 @@
         });
     }
 </script>
+
+<style>
+    .cash-register-page {
+        padding-bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px));
+    }
+
+    .cash-register-page table {
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    @media (max-width: 767px) {
+        .cash-register-page .custom-scrollbar,
+        .cash-register-page .overflow-y-auto {
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .cash-register-page input,
+        .cash-register-page select,
+        .cash-register-page textarea {
+            font-size: 16px;
+        }
+    }
+</style>
 
 @endsection

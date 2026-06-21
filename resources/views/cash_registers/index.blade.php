@@ -1,25 +1,25 @@
 @extends('layouts.admin')
 
 @section('content')
-<div class="max-w-7xl mx-auto space-y-6">
+<div class="cash-register-page w-full max-w-[1500px] mx-auto space-y-4 sm:space-y-6">
 
     <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
-            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-100 text-amber-800 text-xs font-bold mb-3">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-100 text-amber-800 text-[11px] sm:text-xs font-bold mb-2 sm:mb-3">
                 💰 Administración de caja
             </div>
 
-            <h1 class="font-serif text-3xl md:text-4xl font-bold text-amber-900">
+            <h1 class="font-serif text-2xl sm:text-3xl lg:text-4xl font-bold text-amber-900 leading-tight">
                 Control de Caja
             </h1>
 
-            <p class="text-stone-500 mt-1">
+            <p class="text-sm sm:text-base text-stone-500 mt-1 leading-snug">
                 Administra apertura, gastos, ventas del turno, cancelaciones y cierre de caja.
             </p>
         </div>
 
         @if($activeRegister)
-            <div class="bg-green-50 text-green-800 px-5 py-4 rounded-2xl font-bold flex items-center gap-3 border border-green-200 shadow-sm">
+            <div class="w-full lg:w-auto bg-green-50 text-green-800 px-4 sm:px-5 py-3 sm:py-4 rounded-2xl font-bold flex items-center gap-3 border border-green-200 shadow-sm">
                 <span class="w-3 h-3 rounded-full bg-green-500 animate-pulse shrink-0"></span>
 
                 <div>
@@ -33,7 +33,7 @@
                 </div>
             </div>
         @else
-            <div class="bg-red-50 text-red-800 px-5 py-4 rounded-2xl font-bold flex items-center gap-3 border border-red-200 shadow-sm">
+            <div class="w-full lg:w-auto bg-red-50 text-red-800 px-4 sm:px-5 py-3 sm:py-4 rounded-2xl font-bold flex items-center gap-3 border border-red-200 shadow-sm">
                 <span class="w-3 h-3 rounded-full bg-red-500 shrink-0"></span>
 
                 <div>
@@ -50,16 +50,16 @@
 
     {{-- SI LA CAJA ESTÁ CERRADA --}}
     @if(!$activeRegister)
-        <div class="bg-white p-8 rounded-3xl shadow-sm border border-stone-200 max-w-xl mx-auto text-center mt-10 mb-10">
-            <div class="w-24 h-24 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-5 shadow-inner">
-                <span class="text-5xl">💰</span>
+        <div class="bg-white p-4 sm:p-8 rounded-3xl shadow-sm border border-stone-200 max-w-xl mx-auto text-center mt-6 sm:mt-10 mb-6 sm:mb-10">
+            <div class="w-20 h-20 sm:w-24 sm:h-24 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-5 shadow-inner">
+                <span class="text-4xl sm:text-5xl">💰</span>
             </div>
 
             <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-100 text-red-700 text-xs font-bold mb-4">
                 Caja sin turno activo
             </div>
 
-            <h2 class="text-3xl font-serif font-bold text-amber-900 mb-2">
+            <h2 class="text-2xl sm:text-3xl font-serif font-bold text-amber-900 mb-2">
                 Abrir Turno de Caja
             </h2>
 
@@ -83,7 +83,7 @@
                         min="0"
                         required
                         placeholder="0.00"
-                        class="w-full pl-10 pr-4 py-4 border-stone-300 rounded-2xl text-2xl font-black focus:border-amber-500 focus:ring-amber-200 bg-stone-50">
+                        class="w-full pl-10 pr-4 py-4 border-stone-300 rounded-2xl text-xl sm:text-2xl font-black focus:border-amber-500 focus:ring-amber-200 bg-stone-50">
                 </div>
 
                 <button type="submit"
@@ -101,13 +101,13 @@
     @else
         
         {{-- ESTADO Y RESUMEN DEL TURNO --}}
-        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-5">
+        <div class="grid grid-cols-2 xl:grid-cols-5 gap-3 sm:gap-4 xl:gap-5">
 
-            <div class="bg-white p-5 rounded-2xl shadow-sm border border-stone-200 hover:shadow-md transition">
+            <div class="bg-white p-4 sm:p-4 sm:p-5 rounded-2xl shadow-sm border border-stone-200 hover:shadow-md transition">
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-sm font-bold text-stone-500">Fondo inicial</p>
-                        <h3 class="text-2xl font-black text-stone-800 mt-1">
+                        <h3 class="text-xl sm:text-2xl font-black text-stone-800 mt-1">
                             ${{ number_format($activeRegister->opening_amount, 2) }}
                         </h3>
                         <p class="text-xs text-stone-400 mt-1">
@@ -121,11 +121,11 @@
                 </div>
             </div>
 
-            <div class="bg-white p-5 rounded-2xl shadow-sm border border-stone-200 hover:shadow-md transition">
+            <div class="bg-white p-4 sm:p-4 sm:p-5 rounded-2xl shadow-sm border border-stone-200 hover:shadow-md transition">
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-sm font-bold text-stone-500">Ventas efectivo</p>
-                        <h3 class="text-2xl font-black text-green-600 mt-1">
+                        <h3 class="text-xl sm:text-2xl font-black text-green-600 mt-1">
                             +${{ number_format($stats['sales_cash'], 2) }}
                         </h3>
                         <p class="text-xs text-stone-400 mt-1">
@@ -139,11 +139,11 @@
                 </div>
             </div>
 
-            <div class="bg-white p-5 rounded-2xl shadow-sm border border-stone-200 hover:shadow-md transition">
+            <div class="bg-white p-4 sm:p-4 sm:p-5 rounded-2xl shadow-sm border border-stone-200 hover:shadow-md transition">
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-sm font-bold text-stone-500">Pagos no efectivos</p>
-                        <h3 class="text-2xl font-black text-blue-600 mt-1">
+                        <h3 class="text-xl sm:text-2xl font-black text-blue-600 mt-1">
                             ${{ number_format($stats['sales_card'] + $stats['sales_points'], 2) }}
                         </h3>
                         <p class="text-xs text-stone-400 mt-1">
@@ -157,11 +157,11 @@
                 </div>
             </div>
 
-            <div class="bg-white p-5 rounded-2xl shadow-sm border border-stone-200 hover:shadow-md transition">
+            <div class="bg-white p-4 sm:p-4 sm:p-5 rounded-2xl shadow-sm border border-stone-200 hover:shadow-md transition">
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-sm font-bold text-stone-500">Gastos activos</p>
-                        <h3 class="text-2xl font-black text-red-600 mt-1">
+                        <h3 class="text-xl sm:text-2xl font-black text-red-600 mt-1">
                             -${{ number_format($stats['total_expenses'], 2) }}
                         </h3>
                         <p class="text-xs text-stone-400 mt-1">
@@ -184,7 +184,7 @@
                     Efectivo esperado
                 </p>
 
-                <h3 class="text-3xl font-black mt-1">
+                <h3 class="text-2xl sm:text-3xl font-black mt-1">
                     ${{ number_format($stats['expected_cash'], 2) }}
                 </h3>
 
@@ -195,7 +195,7 @@
         </div>
 
         {{-- ACCIONES PRINCIPALES --}}
-        <div class="bg-white rounded-2xl shadow-sm border border-stone-200 p-5 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        <div class="bg-white rounded-2xl shadow-sm border border-stone-200 p-4 sm:p-5 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div>
                 <h3 class="font-bold text-stone-800 text-lg">
                     Acciones del turno
@@ -205,25 +205,25 @@
                 </p>
             </div>
 
-            <div class="flex flex-col sm:flex-row gap-3">
+            <div class="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
                 <button onclick="document.getElementById('modal-expense').classList.remove('hidden')" 
-                        class="inline-flex items-center justify-center gap-2 bg-white border border-stone-300 text-stone-700 hover:bg-stone-50 font-bold py-3 px-6 rounded-xl shadow-sm transition">
+                        class="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-white border border-stone-300 text-stone-700 hover:bg-stone-50 font-bold py-3 px-5 sm:px-6 rounded-xl shadow-sm transition">
                     <span>💸</span>
                     Registrar gasto
                 </button>
                 
                 <button onclick="document.getElementById('modal-close').classList.remove('hidden')" 
-                        class="inline-flex items-center justify-center gap-2 bg-amber-800 hover:bg-amber-900 text-white font-bold py-3 px-6 rounded-xl shadow-md transition">
+                        class="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-amber-800 hover:bg-amber-900 text-white font-bold py-3 px-5 sm:px-6 rounded-xl shadow-md transition">
                     <span>🔐</span>
                     Hacer corte de caja
                 </button>
             </div>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 xl:gap-8 mb-4 sm:mb-8">
             {{-- SECCIÓN: GASTOS DEL TURNO --}}
             <div class="bg-white rounded-2xl shadow-sm border border-stone-200 overflow-hidden">
-                <div class="bg-red-50 px-6 py-4 border-b border-red-100 flex items-center justify-between gap-3">
+                <div class="bg-red-50 px-4 sm:px-6 py-3 sm:py-4 border-b border-red-100 flex items-center justify-between gap-3">
                     <div>
                         <h3 class="font-bold text-red-900 flex items-center gap-2">
                             💸 Gastos registrados
@@ -244,7 +244,7 @@
                     </div>
                 </div>
                 <div class="overflow-x-auto max-h-[420px] overflow-y-auto">
-                    <table class="w-full text-left text-sm">
+                    <table class="w-full min-w-[760px] text-left text-sm">
                         <thead class="bg-stone-50 border-b border-stone-200">
                             <tr class="text-xs text-stone-500 uppercase tracking-wider">
                                 <th class="px-4 py-3 font-bold">Hora</th>
@@ -317,7 +317,7 @@
 
             {{-- SECCION: VENTAS DEL TURNO --}}
             <div class="bg-white rounded-2xl shadow-sm border border-stone-200 overflow-hidden">
-                <div class="bg-green-50 px-6 py-4 border-b border-green-100 flex items-center justify-between gap-3">
+                <div class="bg-green-50 px-4 sm:px-6 py-3 sm:py-4 border-b border-green-100 flex items-center justify-between gap-3">
                     <div>
                         <h3 class="font-bold text-green-900 flex items-center gap-2">
                             🧾 Ventas registradas
@@ -338,7 +338,7 @@
                     </div>
                 </div>
                 <div class="overflow-x-auto max-h-[520px] overflow-y-auto">
-                    <table class="w-full text-left text-sm">
+                    <table class="w-full min-w-[760px] text-left text-sm">
                         <thead class="bg-white text-stone-500 uppercase text-xs sticky top-0 z-10 shadow-sm">
                             <tr>
                                 <th class="px-4 py-3">Hora/Cajero</th>
@@ -442,12 +442,12 @@
 
         {{-- MODALES DE GASTO Y CIERRE --}}
         <div id="modal-expense" class="fixed inset-0 bg-stone-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
                 <div class="p-5 border-b border-stone-100 flex justify-between items-center bg-stone-50">
-                    <h3 class="font-bold text-lg text-stone-800">Registrar Salida de Dinero</h3>
+                    <h3 class="font-bold text-base sm:text-lg text-stone-800">Registrar Salida de Dinero</h3>
                     <button onclick="document.getElementById('modal-expense').classList.add('hidden')" class="text-stone-400 hover:text-red-500">✖</button>
                 </div>
-                <form action="{{ route('cash_registers.expense') }}" method="POST" class="p-5">
+                <form action="{{ route('cash_registers.expense') }}" method="POST" class="p-4 sm:p-5">
                     @csrf
                     <div class="mb-4">
                         <label class="block text-sm font-bold text-stone-700 mb-1">Descripción</label>
@@ -471,17 +471,17 @@
         </div>
 
         <div id="modal-close" class="fixed inset-0 bg-stone-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
                 <div class="p-5 border-b border-stone-100 flex justify-between items-center bg-amber-50">
                     <h3 class="font-bold text-lg text-amber-900">Corte de Caja Final</h3>
                     <button onclick="document.getElementById('modal-close').classList.add('hidden')" class="text-stone-400 hover:text-red-500">✖</button>
                 </div>
-                <form action="{{ route('cash_registers.close') }}" method="POST" class="p-5">
+                <form action="{{ route('cash_registers.close') }}" method="POST" class="p-4 sm:p-5">
                     @csrf
                     <input type="hidden" name="expected_amount" value="{{ $stats['expected_cash'] }}">
                     <div class="bg-stone-100 p-4 rounded-lg text-center mb-6">
                         <p class="text-sm text-stone-500 mb-1">El sistema indica que debe haber:</p>
-                        <p class="text-3xl font-black text-stone-800">${{ number_format($stats['expected_cash'], 2) }}</p>
+                        <p class="text-2xl sm:text-3xl font-black text-stone-800">${{ number_format($stats['expected_cash'], 2) }}</p>
                     </div>
                     <div class="mb-4">
                         <label class="block text-sm font-bold text-stone-700 mb-1">¿Cuánto dinero contaste FÍSICAMENTE en el cajón?</label>
@@ -502,9 +502,9 @@
 
     {{-- HISTORIAL COMPLETO DE CORTES --}}
     <div class="bg-white rounded-2xl shadow-sm border border-stone-200 overflow-hidden mt-8">
-        <div class="bg-stone-800 px-6 py-4 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        <div class="bg-stone-800 px-4 sm:px-6 py-3 sm:py-4 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div>
-                <h3 class="font-bold text-white text-lg flex items-center gap-2">
+                <h3 class="font-bold text-white text-base sm:text-lg flex items-center gap-2">
                     <span>📂</span> Historial completo de Cortes de Caja
                 </h3>
 
@@ -519,8 +519,8 @@
         </div>
 
         {{-- FILTROS --}}
-        <form method="GET" action="{{ route('cash_registers.index') }}" class="p-5 bg-stone-50 border-b border-stone-200">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <form method="GET" action="{{ route('cash_registers.index') }}" class="p-4 sm:p-5 bg-stone-50 border-b border-stone-200">
+            <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4">
                 <div>
                     <label class="block text-xs font-black text-stone-500 uppercase tracking-wide mb-1">
                         Desde
@@ -564,14 +564,14 @@
                     </select>
                 </div>
 
-                <div class="flex items-end gap-2">
+                <div class="flex flex-col sm:flex-row sm:items-end gap-2">
                     <button type="submit"
-                            class="flex-1 bg-amber-800 hover:bg-amber-900 text-white font-bold py-2.5 px-4 rounded-xl transition">
+                            class="w-full sm:flex-1 bg-amber-800 hover:bg-amber-900 text-white font-bold py-2.5 px-4 rounded-xl transition">
                         Buscar
                     </button>
 
                     <a href="{{ route('cash_registers.index') }}"
-                    class="bg-white border border-stone-300 hover:bg-stone-100 text-stone-700 font-bold py-2.5 px-4 rounded-xl transition">
+                    class="w-full sm:w-auto text-center bg-white border border-stone-300 hover:bg-stone-100 text-stone-700 font-bold py-2.5 px-4 rounded-xl transition">
                         Limpiar
                     </a>
                 </div>
@@ -579,16 +579,16 @@
         </form>
 
         <div class="overflow-x-auto">
-            <table class="w-full text-left text-sm text-stone-600">
+            <table class="w-full min-w-[920px] text-left text-sm text-stone-600">
                 <thead class="bg-white text-stone-500 uppercase text-xs border-b border-stone-200">
                     <tr>
-                        <th class="px-6 py-4">Fecha / Responsables</th>
-                        <th class="px-6 py-4">Estado</th>
-                        <th class="px-6 py-4 text-right">Fondo Inicial</th>
-                        <th class="px-6 py-4 text-right">Esperado</th>
-                        <th class="px-6 py-4 text-right">Físico</th>
-                        <th class="px-6 py-4 text-center">Diferencia</th>
-                        <th class="px-6 py-4 text-center">Acción</th>
+                        <th class="px-4 sm:px-6 py-3 sm:py-4">Fecha / Responsables</th>
+                        <th class="px-4 sm:px-6 py-3 sm:py-4">Estado</th>
+                        <th class="px-4 sm:px-6 py-3 sm:py-4 text-right">Fondo Inicial</th>
+                        <th class="px-4 sm:px-6 py-3 sm:py-4 text-right">Esperado</th>
+                        <th class="px-4 sm:px-6 py-3 sm:py-4 text-right">Físico</th>
+                        <th class="px-4 sm:px-6 py-3 sm:py-4 text-center">Diferencia</th>
+                        <th class="px-4 sm:px-6 py-3 sm:py-4 text-center">Acción</th>
                     </tr>
                 </thead>
 
@@ -603,7 +603,7 @@
                         @endphp
 
                         <tr class="hover:bg-stone-50 transition">
-                            <td class="px-6 py-4">
+                            <td class="px-4 sm:px-6 py-3 sm:py-4">
                                 <span class="block font-bold text-stone-800">
                                     Corte #{{ str_pad($reg->id, 5, '0', STR_PAD_LEFT) }}
                                 </span>
@@ -627,7 +627,7 @@
                                 </span>
                             </td>
 
-                            <td class="px-6 py-4">
+                            <td class="px-4 sm:px-6 py-3 sm:py-4">
                                 @if($reg->status === 'abierta')
                                     <span class="px-3 py-1 rounded-full bg-green-100 text-green-700 text-xs font-black border border-green-200">
                                         Abierta
@@ -639,19 +639,19 @@
                                 @endif
                             </td>
 
-                            <td class="px-6 py-4 text-right text-stone-600">
+                            <td class="px-4 sm:px-6 py-3 sm:py-4 text-right text-stone-600">
                                 ${{ number_format($reg->opening_amount, 2) }}
                             </td>
 
-                            <td class="px-6 py-4 text-right font-bold text-stone-800">
+                            <td class="px-4 sm:px-6 py-3 sm:py-4 text-right font-bold text-stone-800">
                                 ${{ number_format($reg->expected_amount ?? 0, 2) }}
                             </td>
 
-                            <td class="px-6 py-4 text-right font-bold text-blue-700">
+                            <td class="px-4 sm:px-6 py-3 sm:py-4 text-right font-bold text-blue-700">
                                 {{ $reg->actual_amount !== null ? '$' . number_format($reg->actual_amount, 2) : 'Pendiente' }}
                             </td>
 
-                            <td class="px-6 py-4 text-center">
+                            <td class="px-4 sm:px-6 py-3 sm:py-4 text-center">
                                 @if($reg->status === 'abierta')
                                     <span class="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-bold">
                                         En turno
@@ -675,7 +675,7 @@
                                 @endif
                             </td>
 
-                            <td class="px-6 py-4 text-center">
+                            <td class="px-4 sm:px-6 py-3 sm:py-4 text-center">
                                 <a href="{{ route('cash_registers.show', $reg) }}"
                                 class="inline-flex items-center justify-center px-4 py-2 rounded-xl bg-amber-50 text-amber-800 text-xs font-black border border-amber-100 hover:bg-amber-100 transition">
                                     Ver detalle
@@ -694,7 +694,7 @@
         </div>
 
         @if($history->hasPages())
-            <div class="px-6 py-4 border-t border-stone-100 bg-stone-50">
+            <div class="px-4 sm:px-6 py-3 sm:py-4 border-t border-stone-100 bg-stone-50">
                 {{ $history->links() }}
             </div>
         @endif
@@ -702,12 +702,12 @@
 
     {{-- MODAL CANCELAR TICKET --}}
         <div id="modal-cancel-order" class="fixed inset-0 bg-stone-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border-2 border-red-500">
+            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto border-2 border-red-500">
                 <div class="p-5 border-b border-red-100 flex justify-between items-center bg-red-50">
                     <h3 class="font-bold text-lg text-red-900 flex items-center gap-2"><span>⚠️</span> Cancelar Ticket #<span id="cancel-order-id-display"></span></h3>
                     <button onclick="document.getElementById('modal-cancel-order').classList.add('hidden')" class="text-stone-400 hover:text-red-500">✖</button>
                 </div>
-                <form id="cancel-order-form" method="POST" class="p-5">
+                <form id="cancel-order-form" method="POST" class="p-4 sm:p-5">
                     @csrf
                     <p class="text-sm text-stone-600 mb-4 bg-stone-50 p-3 rounded-lg border border-stone-200">
                         Al cancelar este ticket, <strong>la venta dejará de contar en la caja</strong>. Selecciona si los insumos regresarán al inventario o si quedarán registrados como merma:
@@ -803,4 +803,28 @@
             }
         </script>
 </div>
+<style>
+    .cash-register-page {
+        padding-bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px));
+    }
+
+    .cash-register-page table {
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    @media (max-width: 767px) {
+        .cash-register-page .custom-scrollbar,
+        .cash-register-page .overflow-y-auto {
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .cash-register-page input,
+        .cash-register-page select,
+        .cash-register-page textarea {
+            font-size: 16px;
+        }
+    }
+</style>
+
 @endsection
